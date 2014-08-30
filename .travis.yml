@@ -1,0 +1,12 @@
+language: python
+python: 3.3
+env:
+  - TOX_ENV=pep8
+  - TOX_ENV=pylint-errors
+  - TOX_ENV=pylint-warnings
+  - TOX_ENV=pylint-full
+install:
+  - pip install tox
+script:
+  - tox -e $TOX_ENV
+
