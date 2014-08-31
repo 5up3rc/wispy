@@ -4,7 +4,7 @@
 
     The grammar implementation of the *wispy* engine.
 """
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring, no-init
 
 from modgrammar import (
     Grammar, OR, WORD, REPEAT, ANY_EXCEPT,
@@ -25,12 +25,10 @@ class InputCharacters(Grammar):
 
 
 class SingleLineComment(Grammar):
-    # todo: stops at '# '
     grammar = ("#", OPTIONAL(WHITESPACE), OPTIONAL(InputCharacters))
 
 
 class Keyword(Grammar):
-    # TODO: catches `if` in `ifuntil`.
     grammar = OR("begin", "break", "catch", "class",
                  "continue", "data", "define", "do",
                  "dynamicparam", "else", "elseif", "end",
