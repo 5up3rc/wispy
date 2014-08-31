@@ -16,7 +16,9 @@ from modgrammar import ParseError
 from wispy.grammar import (
     InputCharacter, InputCharacters,
     NewLineCharacter,
-    SingleLineComment,
+    Hashes, NotGreaterThanOrHash,
+    DelimitedCommentSection, DelimitedComment,
+    SingleLineComment, Comment,
     NumericMultiplier,
     LongTypeSuffix, DecimalTypeSuffix, NumericTypeSuffix,
     DecimalDigit, DecimalDigits, DecimalIntegerLiteral,
@@ -28,6 +30,8 @@ from wispy.grammar import (
     VariableCharacter, VariableCharacters,
     VariableScope, VariableNamespace,
     BracedVariableCharacter, BracedVariableCharacters, BracedVariable,
+    TypeCharacter, TypeCharacters, TypeIdentifier, TypeName,
+    ArrayTypeName, GenericTypeName,
 )
 
 
@@ -39,7 +43,6 @@ class GrammarTest(unittest.TestCase):
     def _test_expected_pairs(self, grammar, text_pairs):
         for text, expected in text_pairs:
             parsed = self._parse(grammar, text)
-            #print(text, expected, str(parsed))
             self.assertEqual(str(parsed), expected)
 
     def _test_expected(self, grammar, texts):
@@ -217,3 +220,59 @@ class GrammarTest(unittest.TestCase):
 
         with self.assertRaises(ParseError):
             self._parse(BracedVariable, "${a")
+
+    def test_hashes(self):
+        self._test_expected(Hashes, ["#", "##"])
+
+    def test_not_greater_than_or_hash(self):
+        self._test_expected(NotGreaterThanOrHash, string.ascii_letters)
+        with self.assertRaises(ParseError):
+            self._parse(NotGreaterThanOrHash, "#")
+        with self.assertRaises(ParseError):
+            self._parse(NotGreaterThanOrHash, ">")
+
+    def test_delimited_comment_section(self):
+        self._test_expected(DelimitedCommentSection, [">"])
+        self._test_expected(DelimitedCommentSection, ["#4"])
+        # the hash is optional
+        self._test_expected(DelimitedCommentSection, ["4"])
+
+        with self.assertRaises(ParseError):
+            self._parse(DelimitedCommentSection, "#>")
+        with self.assertRaises(ParseError):
+            self._parse(DelimitedCommentSection, "##")
+
+    def test_delimited_comment(self):
+        literals = ["<##>", "<# trop tropa #>"]
+        self._test_expected(DelimitedComment, literals)
+
+        with self.assertRaises(ParseError):
+            self._parse(DelimitedComment, "#>")
+
+    def test_comment(self):
+        literals = ["<# trop tzop #>", "# hophop"]
+        self._test_expected(Comment, literals)
+
+    def test_type_character(self):
+        literals = list(chain(string.ascii_letters, ["\u005F"]))
+        self._test_expected(TypeCharacter, literals)
+
+    def test_type_characters(self):
+        literals = chain(string.ascii_letters, ["\u005F"])
+        self._test_expected(TypeCharacters,
+                            list(map(lambda x: x + x, literals)))
+
+        # TypeIdentifier is the same as TypeCharacters
+        self._test_expected(TypeIdentifier, string.ascii_letters)
+
+    def test_type_name(self):
+        self._test_expected(TypeName, ["tzop"])
+        self._test_expected(TypeName, ["tzop.hop"])
+
+        with self.assertRaises(ParseError):
+            self._parse(TypeName, ".trop")
+
+    def test_array_type_name(self):
+        self._test_expected(ArrayTypeName, ["tzop[", "tzop.hop["])
+        # GenericTypeName is the same as ArrayTypeName
+        self._test_expected(GenericTypeName, ["hop[", "bop["])
