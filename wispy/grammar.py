@@ -48,11 +48,11 @@ class NumericMultiplier(Grammar):
 
 
 class LongTypeSuffix(Grammar):
-    grammar = WORD("l", max=1)
+    grammar = OR("l", "L")
 
 
 class DecimalTypeSuffix(Grammar):
-    grammar = WORD("d", max=1)
+    grammar = OR("d", "D")
 
 
 class NumericTypeSuffix(Grammar):
