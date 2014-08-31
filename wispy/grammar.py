@@ -328,17 +328,6 @@ class ExpandableHereStringWithSubexprEnd(Grammar):
     grammar = (NewLineCharacter, DoubleQuoteCharacter, "@")
 
 
-class ExpandableStringLiteral(Grammar):
-    grammar = (DoubleQuoteCharacter, OPTIONAL(ExpandableStringCharacters),
-               OPTIONAL(Dollars), DoubleQuoteCharacter)
-
-
-class ExpandableHereStringLiteral(Grammar):
-    grammar = ("@", DoubleQuoteCharacter, OPTIONAL(WHITESPACE),
-               NewLineCharacter, OPTIONAL(ExpandableHereStringCharacters),
-               NewLineCharacter, DoubleQuoteCharacter, "@")
-
-
 class SingleQuoteCharacter(Grammar):
     grammar = OR("\u0027", "\u2018", "\u2019", "\u201A", "\u201B")
 
@@ -357,11 +346,6 @@ class VerbatimStringCharacters(Grammar):
     )
 
 
-class VerbatimStringLiteral(Grammar):
-    grammar = (SingleQuoteCharacter, OPTIONAL(VerbatimStringCharacters),
-               SingleQuoteCharacter)
-
-
 class VerbatimHereStringPart(Grammar):
     grammar = OR(
         EXCEPT(ANY, NewLineCharacter),
@@ -377,15 +361,92 @@ class VerbatimHereStringCharacters(Grammar):
     )
 
 
+class ExpandableStringLiteral(Grammar):
+
+    """Expandable string literal (single-line double-quoted), which is
+    a sequence of zero or more characters delimited by a pair of
+    double-quote-characters.
+
+    Examples are "" and "red".
+    """
+    grammar = (DoubleQuoteCharacter, OPTIONAL(ExpandableStringCharacters),
+               OPTIONAL(Dollars), DoubleQuoteCharacter)
+
+
+class ExpandableHereStringLiteral(Grammar):
+
+    """Expandable here string literal (multi-line double-quoted), which is
+    a sequence of zero or more characters delimited by the character pairs
+    @double-quote-character and double-quote-character@, respectively,
+    all contained on two or more source lines.
+
+    Examples are:
+    ::
+    @"
+    "@
+
+    @"
+    line 1
+    "@
+
+    @"
+    line 1
+    line 2
+    "@
+    """
+    grammar = ("@", DoubleQuoteCharacter, OPTIONAL(WHITESPACE),
+               NewLineCharacter, OPTIONAL(ExpandableHereStringCharacters),
+               NewLineCharacter, DoubleQuoteCharacter, "@")
+
+
+class VerbatimStringLiteral(Grammar):
+
+    """Verbatim string literal (single-line single-quoted), which is a
+    sequence of zero or more characters delimited by a pair
+    of SingleQuoteCharacters.
+
+    Examples are '' and 'red'.
+    """
+
+    grammar = (SingleQuoteCharacter, OPTIONAL(VerbatimStringCharacters),
+               SingleQuoteCharacter)
+
+
 class VerbatimHereStringLiteral(Grammar):
+
+    """Verbatim here string literal (multi-line single-quoted), which is
+    a sequence of zero or more characters delimited by the character pairs
+    @single-quote-character and single-quote-character@, respectively, all
+    contained on two or more source lines.
+
+    Examples are:
+
+    ::
+    @'
+    '@
+
+    @'
+    line 1
+    line 2
+    '@
+    """
     grammar = ("@", SingleQuoteCharacter, OPTIONAL(WHITESPACE),
                NewLineCharacter, OPTIONAL(VerbatimHereStringCharacters),
                NewLineCharacter, SingleQuoteCharacter, "@")
 
 
 class StringLiteral(Grammar):
-    grammar = OR(ExpandableStringLiteral, ExpandableHereStringLiteral,
-                 VerbatimStringLiteral, VerbatimHereStringLiteral)
+
+    """String literal is one of the following:
+        * ExpandableStringLiteral
+        * ExpandableHereStringLiteral
+        * VerbatimStringLiteral
+        * VerbatimHereStringLiteral
+    """
+    grammar = OR(ExpandableStringLiteral,
+                 ExpandableHereStringLiteral,
+                 VerbatimStringLiteral,
+                 VerbatimHereStringLiteral)
 
 
 # Type names.
