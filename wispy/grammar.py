@@ -291,10 +291,7 @@ class Dollars(Grammar):
 
 
 class ExpandableStringCharacters(Grammar):
-    grammar = OR(
-        ExpandableStringPart,
-        (ExpandableStringCharacters, ExpandableStringPart)
-    )
+    grammar = REPEAT(ExpandableStringPart)
 
 
 class ExpandableHereStringPart(Grammar):
@@ -536,3 +533,19 @@ class GenericTokenParts(Grammar):
 
 class GenericToken(Grammar):
     grammar = GenericTokenParts
+
+
+class SimpleNameFirstCharacter(Grammar):
+    grammar = TypeCharacter
+
+
+class SimpleNameCharacter(Grammar):
+    grammar = SimpleNameFirstCharacter
+
+
+class SimpleNameCharacters(Grammar):
+    grammar = REPEAT(SimpleNameCharacter)
+
+
+class SimpleName(Grammar):
+    grammar = (SimpleNameFirstCharacter, SimpleNameCharacters)
