@@ -316,10 +316,7 @@ class ExpandableStringWithSubexprEnd(Grammar):
 
 
 class ExpandableHereStringCharacters(Grammar):
-    grammar = OR(
-        ExpandableHereStringPart,
-        (ExpandableHereStringCharacters, ExpandableHereStringPart)
-    )
+    grammar = REPEAT(ExpandableHereStringPart)
 
 
 class ExpandableHereStringWithSubexprStart(Grammar):
@@ -346,10 +343,7 @@ class VerbatimStringPart(Grammar):
 
 
 class VerbatimStringCharacters(Grammar):
-    grammar = OR(
-        VerbatimStringPart,
-        (VerbatimStringCharacters, VerbatimStringPart)
-    )
+    grammar = REPEAT(VerbatimStringPart)
 
 
 class VerbatimHereStringPart(Grammar):
@@ -361,10 +355,7 @@ class VerbatimHereStringPart(Grammar):
 
 
 class VerbatimHereStringCharacters(Grammar):
-    grammar = OR(
-        VerbatimHereStringPart,
-        (VerbatimHereStringCharacters, VerbatimHereStringPart)
-    )
+    grammar = REPEAT(VerbatimHereStringPart)
 
 
 class ExpandableStringLiteral(Grammar):
