@@ -7,6 +7,7 @@
 
 """
 # pylint: disable=missing-docstring, no-init, too-few-public-methods
+# pylint: disable=anomalous-unicode-escape-in-string
 
 from modgrammar import (
     Grammar, OR, WORD, REPEAT, ANY_EXCEPT,
@@ -16,6 +17,14 @@ from modgrammar import (
 
 class NewLineCharacter(Grammar):
     grammar = OR("\r\n", "\n", "\r")
+
+
+class Hashes(Grammar):
+    grammar = REPEAT("#")
+
+
+class NotGreaterThanOrHash(Grammar):
+    grammar = ANY_EXCEPT("#>")
 
 
 class InputCharacter(Grammar):
@@ -28,6 +37,23 @@ class InputCharacters(Grammar):
 
 class SingleLineComment(Grammar):
     grammar = ("#", OPTIONAL(WHITESPACE), OPTIONAL(InputCharacters))
+
+
+class DelimitedCommentSection(Grammar):
+    grammar = OR(">", (OPTIONAL(Hashes), NotGreaterThanOrHash))
+
+
+class DelimitedCommentText(Grammar):
+    grammar = OR(DelimitedCommentSection,
+                 (REF('DelimitedCommentText', DelimitedCommentSection)))
+
+
+class DelimitedComment(Grammar):
+    grammar = ("<#", OPTIONAL(DelimitedCommentText), Hashes, ">")
+
+
+class Comment(Grammar):
+    grammar = OR(SingleLineComment, DelimitedComment)
 
 
 class Keyword(Grammar):
@@ -116,6 +142,59 @@ class RealLiteral(Grammar):
          OPTIONAL(NumericMultiplier)))
 
 
+class AssignmentOperator(Grammar):
+    grammar = OR(
+        "=", (Dash, "="), "+=", "*=", "/=", "%="
+    )
+
+
+class FileRedirectionOperator(Grammar):
+    grammar = OR(
+        ">>", ">", "<", "2>>", "2>"
+    )
+
+
+class ComparisonOperator(Grammar):
+    grammar = OR(
+        (Dash, "as"), (Dash, "ccontains"), (Dash, "ceq"),
+        (Dash, "cge"), (Dash, "cgt"), (Dash, "cle"),
+        (Dash, "clike"), (Dash, "clt"), (Dash, "cmatch"),
+        (Dash, "cne"), (Dash, "cnotcontains"), (Dash, "cnotlike"),
+        (Dash, "cnotmatch"), (Dash, "contains"), (Dash, "creplace"),
+        (Dash, "csplit"), (Dash, "eq"), (Dash, "ge"),
+        (Dash, "gt"), (Dash, "icontains"), (Dash, "ieq"),
+        (Dash, "ige"), (Dash, "igt"), (Dash, "ile"),
+        (Dash, "ilike"), (Dash, "ilt"), (Dash, "imatch"),
+        (Dash, "ine"), (Dash, "inotcontains"), (Dash, "inotlike"),
+        (Dash, "inotmatch"), (Dash, "ireplace"), (Dash, "is"),
+        (Dash, "isnot"), (Dash, "isplit"), (Dash, "join"),
+        (Dash, "le"), (Dash, "like"), (Dash, "lt"),
+        (Dash, "match"), (Dash, "ne"), (Dash, "notcontains"),
+        (Dash, "notlike"), (Dash, "notmatch"), (Dash, "replace"),
+        (Dash, "split")
+    )
+
+
+class FormatOperator(Grammar):
+    grammar = (Dash, "f")
+
+
+class OperatorOrPunctuator(Grammar):
+    grammar = OR(
+        "{", "}", "[", "]", "(", ")", "@(", "@{", "$(", ";",
+        "&&", "||", "&", "|", ",", "++", "..", "::", ".",
+        "!", "*", "/", "%", "+", "2>&1", "1>&2",
+        Dash, (Dash, Dash),
+        (Dash, "and"), (Dash, "band"), (Dash, "bnot"),
+        (Dash, "bor"), (Dash, "bxor"), (Dash, "not"),
+        (Dash, "or"), (Dash, "xor"),
+        AssignmentOperator,
+        FileRedirectionOperator,
+        ComparisonOperator,
+        FormatOperator
+    )
+
+
 # Variables
 class VariableCharacter(Grammar):
     grammar = OR(
@@ -173,10 +252,7 @@ class BracedVariableCharacter(Grammar):
 
 
 class BracedVariableCharacters(Grammar):
-    grammar = OR(
-        (BracedVariableCharacter),
-        (REF('BracedVariableCharacters'), BracedVariableCharacter)
-    )
+    grammar = REPEAT(BracedVariableCharacter)
 
 
 class BracedVariable(Grammar):
