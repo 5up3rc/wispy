@@ -44,8 +44,7 @@ class DelimitedCommentSection(Grammar):
 
 
 class DelimitedCommentText(Grammar):
-    grammar = OR(DelimitedCommentSection,
-                 (REF('DelimitedCommentText', DelimitedCommentSection)))
+    grammar = REPEAT(DelimitedCommentSection)
 
 
 class DelimitedComment(Grammar):
