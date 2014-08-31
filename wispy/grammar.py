@@ -11,12 +11,20 @@
 
 from modgrammar import (
     Grammar, OR, WORD, REPEAT, ANY_EXCEPT,
-    OPTIONAL, WHITESPACE, ANY,
+    OPTIONAL, WHITESPACE, ANY, REF, EXCEPT
 )
 
 
-class Newline(Grammar):
+class NewLineCharacter(Grammar):
     grammar = OR("\r\n", "\n", "\r")
+
+
+class Hashes(Grammar):
+    grammar = REPEAT("#")
+
+
+class NotGreaterThanOrHash(Grammar):
+    grammar = ANY_EXCEPT("#>")
 
 
 class InputCharacter(Grammar):
@@ -29,6 +37,23 @@ class InputCharacters(Grammar):
 
 class SingleLineComment(Grammar):
     grammar = ("#", OPTIONAL(WHITESPACE), OPTIONAL(InputCharacters))
+
+
+class DelimitedCommentSection(Grammar):
+    grammar = OR(">", (OPTIONAL(Hashes), NotGreaterThanOrHash))
+
+
+class DelimitedCommentText(Grammar):
+    grammar = OR(DelimitedCommentSection,
+                 (REF('DelimitedCommentText', DelimitedCommentSection)))
+
+
+class DelimitedComment(Grammar):
+    grammar = ("<#", OPTIONAL(DelimitedCommentText), Hashes, ">")
+
+
+class Comment(Grammar):
+    grammar = OR(SingleLineComment, DelimitedComment)
 
 
 class Keyword(Grammar):
@@ -233,3 +258,254 @@ class BracedVariableCharacters(Grammar):
 class BracedVariable(Grammar):
     grammar = ("$", "{", OPTIONAL(VariableScope),
                BracedVariableCharacters, "}")
+
+# String Literals
+
+
+class DoubleQuoteCharacter(Grammar):
+    grammar = OR("\u0022", "\u201C", "\u201D", "\u201E")
+
+
+class ExpandableStringPart(Grammar):
+    grammar = OR(
+        ANY_EXCEPT("$\u0022\u201C\u201D\u201E\u0060"),
+        BracedVariable,
+        ("$", ANY_EXCEPT("({\u0022\u201C\u201D\u201E\u0060")),
+        ("$", EscapedCharacter),
+        EscapedCharacter,
+        (DoubleQuoteCharacter, DoubleQuoteCharacter)
+    )
+
+
+class Dollars(Grammar):
+    grammar = REPEAT("$")
+
+
+class ExpandableStringCharacters(Grammar):
+    grammar = REPEAT(ExpandableStringPart)
+
+
+class ExpandableHereStringPart(Grammar):
+    grammar = OR(
+        EXCEPT(ANY_EXCEPT("$", max=1), NewLineCharacter),
+        BracedVariable,
+        ("$", EXCEPT(ANY_EXCEPT("(", max=1), NewLineCharacter)),
+        ("$", NewLineCharacter, EXCEPT(ANY, DoubleQuoteCharacter)),
+        ("$", NewLineCharacter, DoubleQuoteCharacter, ANY_EXCEPT("@")),
+        (NewLineCharacter, EXCEPT(ANY, DoubleQuoteCharacter)),
+        (NewLineCharacter, DoubleQuoteCharacter, ANY_EXCEPT("@"))
+    )
+
+
+class ExpandableStringWithSubexprStart(Grammar):
+    grammar = (DoubleQuoteCharacter, OPTIONAL(ExpandableStringCharacters),
+               "$", "(")
+
+
+class ExpandableStringWithSubexprEnd(Grammar):
+    grammar = DoubleQuoteCharacter
+
+
+class ExpandableHereStringCharacters(Grammar):
+    grammar = OR(
+        ExpandableHereStringPart,
+        (ExpandableHereStringCharacters, ExpandableHereStringPart)
+    )
+
+
+class ExpandableHereStringWithSubexprStart(Grammar):
+    grammar = (
+        "@", DoubleQuoteCharacter, OPTIONAL(WHITESPACE),
+        NewLineCharacter, OPTIONAL(ExpandableHereStringCharacters),
+        "$", "("
+    )
+
+
+class ExpandableHereStringWithSubexprEnd(Grammar):
+    grammar = (NewLineCharacter, DoubleQuoteCharacter, "@")
+
+
+class SingleQuoteCharacter(Grammar):
+    grammar = OR("\u0027", "\u2018", "\u2019", "\u201A", "\u201B")
+
+
+class VerbatimStringPart(Grammar):
+    grammar = OR(
+        EXCEPT(ANY, SingleQuoteCharacter),
+        (SingleQuoteCharacter, SingleQuoteCharacter)
+    )
+
+
+class VerbatimStringCharacters(Grammar):
+    grammar = OR(
+        VerbatimStringPart,
+        (VerbatimStringCharacters, VerbatimStringPart)
+    )
+
+
+class VerbatimHereStringPart(Grammar):
+    grammar = OR(
+        EXCEPT(ANY, NewLineCharacter),
+        (NewLineCharacter, EXCEPT(ANY, SingleQuoteCharacter)),
+        (NewLineCharacter, SingleQuoteCharacter, ANY_EXCEPT("@"))
+    )
+
+
+class VerbatimHereStringCharacters(Grammar):
+    grammar = OR(
+        VerbatimHereStringPart,
+        (VerbatimHereStringCharacters, VerbatimHereStringPart)
+    )
+
+
+class ExpandableStringLiteral(Grammar):
+
+    """Expandable string literal (single-line double-quoted), which is
+    a sequence of zero or more characters delimited by a pair of
+    double-quote-characters.
+
+    Examples are "" and "red".
+    """
+    grammar = (DoubleQuoteCharacter, OPTIONAL(ExpandableStringCharacters),
+               OPTIONAL(Dollars), DoubleQuoteCharacter)
+
+
+class ExpandableHereStringLiteral(Grammar):
+
+    """Expandable here string literal (multi-line double-quoted), which is
+    a sequence of zero or more characters delimited by the character pairs
+    @double-quote-character and double-quote-character@, respectively,
+    all contained on two or more source lines.
+
+    Examples are:
+    ::
+    @"
+    "@
+
+    @"
+    line 1
+    "@
+
+    @"
+    line 1
+    line 2
+    "@
+    """
+    grammar = ("@", DoubleQuoteCharacter, OPTIONAL(WHITESPACE),
+               NewLineCharacter, OPTIONAL(ExpandableHereStringCharacters),
+               NewLineCharacter, DoubleQuoteCharacter, "@")
+
+
+class VerbatimStringLiteral(Grammar):
+
+    """Verbatim string literal (single-line single-quoted), which is a
+    sequence of zero or more characters delimited by a pair
+    of SingleQuoteCharacters.
+
+    Examples are '' and 'red'.
+    """
+
+    grammar = (SingleQuoteCharacter, OPTIONAL(VerbatimStringCharacters),
+               SingleQuoteCharacter)
+
+
+class VerbatimHereStringLiteral(Grammar):
+
+    """Verbatim here string literal (multi-line single-quoted), which is
+    a sequence of zero or more characters delimited by the character pairs
+    @single-quote-character and single-quote-character@, respectively, all
+    contained on two or more source lines.
+
+    Examples are:
+
+    ::
+    @'
+    '@
+
+    @'
+    line 1
+    line 2
+    '@
+    """
+    grammar = ("@", SingleQuoteCharacter, OPTIONAL(WHITESPACE),
+               NewLineCharacter, OPTIONAL(VerbatimHereStringCharacters),
+               NewLineCharacter, SingleQuoteCharacter, "@")
+
+
+class StringLiteral(Grammar):
+
+    """String literal is one of the following:
+        * ExpandableStringLiteral
+        * ExpandableHereStringLiteral
+        * VerbatimStringLiteral
+        * VerbatimHereStringLiteral
+    """
+    grammar = OR(ExpandableStringLiteral,
+                 ExpandableHereStringLiteral,
+                 VerbatimStringLiteral,
+                 VerbatimHereStringLiteral)
+
+
+# Type names.
+
+class TypeCharacter(Grammar):
+    grammar = OR(
+        WORD("A-Z", max=1),  # Letter, Uppercase
+        WORD("a-z", max=1),  # Letter, Lowercase,
+
+        # Letter, Titlecase
+        WORD("\u01C5"), WORD("\u01C8"), WORD("\u01CB"), WORD("\u01F2"),
+        WORD("\u1F88"), WORD("\u1F89"), WORD("\u1F8A"), WORD("\u1F8B"),
+        WORD("\u1F8C"), WORD("\u1F8D"), WORD("\u1F8E"), WORD("\u1F8F"),
+        WORD("\u1F98"), WORD("\u1F99"), WORD("\u1F9A"), WORD("\u1F9B"),
+        WORD("\u1F9C"), WORD("\u1F9D"), WORD("\u1F9E"), WORD("\u1F9F"),
+        WORD("\u1FA8"), WORD("\u1FA9"), WORD("\u1FAA"), WORD("\u1FAB"),
+        WORD("\u1FAC"), WORD("\u1FAD"), WORD("\u1FAE"), WORD("\u1FAF"),
+        WORD("\u1FBC"), WORD("\u1FCC"), WORD("\u1FFC"),
+
+        # Letter, Modifier
+        WORD("\u02B0-\u02EE", max=1),
+        WORD("\u0374"), WORD("\u037A"), WORD("\u0559"), WORD("\u0640"),
+        WORD("\u06E5"), WORD("\u06E6"), WORD("\u07F4"), WORD("\u07F5"),
+        WORD("\u07FA"), WORD("\u081A"), WORD("\u0824"), WORD("\u0828"),
+        # TODO: Add more characters from the 'Letter, Modifier` Category
+        # TODO: Add characters from the 'Letter, Other' Category
+
+        WORD("\u005F"),
+    )
+
+
+class TypeCharacters(Grammar):
+    grammar = REPEAT(TypeCharacter)
+
+
+class TypeIdentifier(Grammar):
+    grammar = TypeCharacters
+
+
+class TypeName(Grammar):
+    grammar = OR(TypeIdentifier, (REF('TypeName'), '.', TypeIdentifier))
+
+
+class ArrayTypeName(Grammar):
+    grammar = (TypeName, "[")
+
+
+class GenericTypeName(Grammar):
+    grammar = ArrayTypeName
+
+
+class SimpleNameFirstCharacter(Grammar):
+    grammar = TypeCharacter
+
+
+class SimpleNameCharacter(Grammar):
+    grammar = SimpleNameFirstCharacter
+
+
+class SimpleNameCharacters(Grammar):
+    grammar = REPEAT(SimpleNameCharacter)
+
+
+class SimpleName(Grammar):
+    grammar = (SimpleNameFirstCharacter, SimpleNameCharacters)
