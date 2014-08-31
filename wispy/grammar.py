@@ -107,7 +107,7 @@ class ExponentPart(Grammar):
 class RealLiteral(Grammar):
     grammar = OR(
         (DecimalDigits, ".", DecimalDigits, OPTIONAL(ExponentPart),
-         OPTIONAL(DecimalTypeSuffix), OPTIONAL(NumericMultiplier)),
+         OPTIONAL(NumericMultiplier)),
 
         (".", DecimalDigits, OPTIONAL(ExponentPart),
          OPTIONAL(DecimalTypeSuffix), OPTIONAL(NumericMultiplier)),
