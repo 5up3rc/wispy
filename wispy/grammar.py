@@ -78,7 +78,8 @@ class HexadecimalDigit(Grammar):
 
 
 class HexadecimalDigits(Grammar):
-    grammar = REPEAT(HexadecimalDigit)
+    grammar = OR(REPEAT(HexadecimalDigit),
+                 (HexadecimalDigit, DecimalDigits))
 
 
 class HexadecimalIntegerLiteral(Grammar):
@@ -88,7 +89,7 @@ class HexadecimalIntegerLiteral(Grammar):
 
 
 class IntegerLiteral(Grammar):
-    grammar = OR(DecimalIntegerLiteral, HexadecimalIntegerLiteral)
+    grammar = OR(HexadecimalIntegerLiteral, DecimalIntegerLiteral)
 
 
 class Dash(Grammar):
@@ -106,7 +107,7 @@ class ExponentPart(Grammar):
 class RealLiteral(Grammar):
     grammar = OR(
         (DecimalDigits, ".", DecimalDigits, OPTIONAL(ExponentPart),
-         OPTIONAL(DecimalTypeSuffix), OPTIONAL(NumericMultiplier)),
+         OPTIONAL(NumericMultiplier)),
 
         (".", DecimalDigits, OPTIONAL(ExponentPart),
          OPTIONAL(DecimalTypeSuffix), OPTIONAL(NumericMultiplier)),
