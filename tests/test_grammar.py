@@ -7,6 +7,7 @@ Tests for wispy.grammar.
 # pylint: disable=missing-docstring, import-error
 
 import unittest
+import string
 
 from modgrammar import ParseError
 from wispy.grammar import (
@@ -16,6 +17,10 @@ from wispy.grammar import (
     NumericMultiplier,
     LongTypeSuffix, DecimalTypeSuffix, NumericTypeSuffix,
     DecimalDigit, DecimalDigits, DecimalIntegerLiteral,
+    HexadecimalDigit, HexadecimalDigits, HexadecimalIntegerLiteral,
+    IntegerLiteral,
+    Dash, Sign,
+    ExponentPart, RealLiteral,
 )
 
 
@@ -135,4 +140,105 @@ class GrammarTest(unittest.TestCase):
         self.assertEqual(str(parsed), "10dkb")
 
         with self.assertRaises(ParseError):
-            self._parse(DecimalIntegerLiteral, "10kbd")
+            self._parse(DecimalIntegerLiteral, "d10kb")
+
+    def test_hexadecimal_digit(self):
+        for digit in string.hexdigits:
+            parsed = self._parse(HexadecimalDigit, digit)
+            self.assertEqual(str(parsed), digit)
+
+        with self.assertRaises(ParseError):
+            self._parse(HexadecimalDigit, "j")
+
+    def test_hexadecimal_digits(self):
+        parsed = self._parse(HexadecimalDigits, "aa")
+        self.assertEqual(str(parsed), "aa")
+
+        parsed = self._parse(HexadecimalDigits, "a1")
+        self.assertEqual(str(parsed), "a1")
+
+        parsed = self._parse(HexadecimalDigits, "a1a2")
+        self.assertEqual(str(parsed), "a1a2")
+
+    def test_hexadecimal_integer_literal(self):
+        parsed = self._parse(HexadecimalIntegerLiteral, "0x1")
+        self.assertEqual(str(parsed), "0x1")
+
+        parsed = self._parse(HexadecimalIntegerLiteral, "0x1L")
+        self.assertEqual(str(parsed), "0x1L")
+        parsed = self._parse(HexadecimalIntegerLiteral, "0x1l")
+        self.assertEqual(str(parsed), "0x1l")
+
+        parsed = self._parse(HexadecimalIntegerLiteral, "0x1kb")
+        self.assertEqual(str(parsed), "0x1kb")
+        parsed = self._parse(HexadecimalIntegerLiteral, "0x2pb")
+        self.assertEqual(str(parsed), "0x2pb")
+
+        parsed = self._parse(HexadecimalIntegerLiteral, "0x1lpb")
+        self.assertEqual(str(parsed), "0x1lpb")
+
+    def test_integer_literal(self):
+        parsed = self._parse(IntegerLiteral, "0d")
+        self.assertEqual(str(parsed), "0d")
+
+        parsed = self._parse(IntegerLiteral, "0xa1")
+        self.assertEqual(str(parsed), "0xa1")
+
+    def test_dash(self):
+        parsed = self._parse(Dash, "-")
+        self.assertEqual(str(parsed), "-")
+
+        parsed = self._parse(Dash, "\u2013")
+        self.assertEqual(str(parsed), "\u2013")
+
+        parsed = self._parse(Dash, "\u2014")
+        self.assertEqual(str(parsed), "\u2014")
+
+    def test_sign(self):
+        parsed = self._parse(Sign, "+")
+        self.assertEqual(str(parsed), "+")
+
+        parsed = self._parse(Sign, "\u2013")
+        self.assertEqual(str(parsed), "\u2013")
+
+    def test_exponent_part(self):
+        parsed = self._parse(ExponentPart, "e44")
+        self.assertEqual(str(parsed), "e44")
+        parsed = self._parse(ExponentPart, "E44")
+        self.assertEqual(str(parsed), "E44")
+
+        parsed = self._parse(ExponentPart, "e-44")
+        self.assertEqual(str(parsed), "e-44")
+        parsed = self._parse(ExponentPart, "E-42")
+        self.assertEqual(str(parsed), "E-42")
+
+    def test_real_literal(self):
+        parsed = self._parse(RealLiteral, "1.4")
+        self.assertEqual(str(parsed), "1.4")
+        parsed = self._parse(RealLiteral, "1.4e44")
+        self.assertEqual(str(parsed), "1.4e44")
+        parsed = self._parse(RealLiteral, "1.4e44d")
+        self.assertEqual(str(parsed), "1.4e44d")
+        parsed = self._parse(RealLiteral, "1.4e44kb")
+        self.assertEqual(str(parsed), "1.4e44kb")
+
+        parsed = self._parse(RealLiteral, ".4")
+        self.assertEqual(str(parsed), ".4")
+        parsed = self._parse(RealLiteral, ".4e44")
+        self.assertEqual(str(parsed), ".4e44")
+        parsed = self._parse(RealLiteral, ".4e4d")
+        self.assertEqual(str(parsed), ".4e4d")
+        parsed = self._parse(RealLiteral, ".4e4dkb")
+        self.assertEqual(str(parsed), ".4e4dkb")
+        parsed = self._parse(RealLiteral, ".4Dkb")
+        self.assertEqual(str(parsed), ".4Dkb")
+        parsed = self._parse(RealLiteral, ".4Dkb")
+
+        parsed = self._parse(RealLiteral, "4e4")
+        self.assertEqual(str(parsed), "4e4")
+        parsed = self._parse(RealLiteral, "4e4D")
+        self.assertEqual(str(parsed), "4e4D")
+        parsed = self._parse(RealLiteral, "4e4d")
+        self.assertEqual(str(parsed), "4e4d")
+        parsed = self._parse(RealLiteral, "4e4dkb")
+        self.assertEqual(str(parsed), "4e4dkb")
