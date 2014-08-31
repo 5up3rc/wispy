@@ -11,7 +11,7 @@
 
 from modgrammar import (
     Grammar, OR, WORD, REPEAT, ANY_EXCEPT,
-    OPTIONAL, WHITESPACE, ANY, REF
+    OPTIONAL, WHITESPACE, ANY,
 )
 
 
