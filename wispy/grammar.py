@@ -89,7 +89,7 @@ class HexadecimalIntegerLiteral(Grammar):
 
 
 class IntegerLiteral(Grammar):
-    grammar = OR(DecimalIntegerLiteral, HexadecimalIntegerLiteral)
+    grammar = OR(HexadecimalIntegerLiteral, DecimalIntegerLiteral)
 
 
 class Dash(Grammar):
