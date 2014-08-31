@@ -173,10 +173,7 @@ class BracedVariableCharacter(Grammar):
 
 
 class BracedVariableCharacters(Grammar):
-    grammar = OR(
-        (BracedVariableCharacter),
-        (REF('BracedVariableCharacters'), BracedVariableCharacter)
-    )
+    grammar = REPEAT(BracedVariableCharacter)
 
 
 class BracedVariable(Grammar):
