@@ -496,3 +496,19 @@ class ArrayTypeName(Grammar):
 
 class GenericTypeName(Grammar):
     grammar = ArrayTypeName
+
+
+class SimpleNameFirstCharacter(Grammar):
+    grammar = TypeCharacter
+
+
+class SimpleNameCharacter(Grammar):
+    grammar = SimpleNameFirstCharacter
+
+
+class SimpleNameCharacters(Grammar):
+    grammar = REPEAT(SimpleNameCharacter)
+
+
+class SimpleName(Grammar):
+    grammar = (SimpleNameFirstCharacter, SimpleNameCharacters)
