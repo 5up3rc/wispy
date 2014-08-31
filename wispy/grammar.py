@@ -260,6 +260,8 @@ class BracedVariable(Grammar):
                BracedVariableCharacters, "}")
 
 # String Literals
+
+
 class DoubleQuoteCharacter(Grammar):
     grammar = OR("\u0022", "\u201C", "\u201D", "\u201E")
 
@@ -307,6 +309,13 @@ class ExpandableStringWithSubexprEnd(Grammar):
     grammar = DoubleQuoteCharacter
 
 
+class ExpandableHereStringCharacters(Grammar):
+    grammar = OR(
+        ExpandableHereStringPart,
+        (ExpandableHereStringCharacters, ExpandableHereStringPart)
+    )
+
+
 class ExpandableHereStringWithSubexprStart(Grammar):
     grammar = (
         "@", DoubleQuoteCharacter, OPTIONAL(WHITESPACE),
@@ -317,13 +326,6 @@ class ExpandableHereStringWithSubexprStart(Grammar):
 
 class ExpandableHereStringWithSubexprEnd(Grammar):
     grammar = (NewLineCharacter, DoubleQuoteCharacter, "@")
-
-
-class ExpandableHereStringCharacters(Grammar):
-    grammar = OR(
-        ExpandableHereStringPart,
-        (ExpandableHereStringCharacters, ExpandableHereStringPart)
-    )
 
 
 class ExpandableStringLiteral(Grammar):
