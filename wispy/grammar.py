@@ -307,10 +307,7 @@ class ExpandableStringWithSubexprEnd(Grammar):
 
 
 class ExpandableHereStringCharacters(Grammar):
-    grammar = OR(
-        ExpandableHereStringPart,
-        (ExpandableHereStringCharacters, ExpandableHereStringPart)
-    )
+    grammar = REPEAT(ExpandableHereStringPart)
 
 
 class ExpandableHereStringWithSubexprStart(Grammar):
