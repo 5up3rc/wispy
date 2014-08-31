@@ -282,10 +282,7 @@ class Dollars(Grammar):
 
 
 class ExpandableStringCharacters(Grammar):
-    grammar = OR(
-        ExpandableStringPart,
-        (ExpandableStringCharacters, ExpandableStringPart)
-    )
+    grammar = REPEAT(ExpandableStringPart)
 
 
 class ExpandableHereStringPart(Grammar):
