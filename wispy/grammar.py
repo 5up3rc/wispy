@@ -78,7 +78,8 @@ class HexadecimalDigit(Grammar):
 
 
 class HexadecimalDigits(Grammar):
-    grammar = REPEAT(HexadecimalDigit)
+    grammar = OR(REPEAT(HexadecimalDigit),
+                 (HexadecimalDigit, DecimalDigits))
 
 
 class HexadecimalIntegerLiteral(Grammar):
