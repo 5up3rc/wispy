@@ -243,6 +243,15 @@ class VariableScope(Grammar):
                  VariableNamespace)
 
 
+class Variable(Grammar):
+    grammar = OR(
+        "$$", "$?", "$^",
+        ("$", OPTIONAL(VariableScope), VariableCharacters),
+        ("@", OPTIONAL(VariableScope), VariableCharacters),
+        BracedVariable
+    )
+
+
 class EscapedCharacter(Grammar):
     grammar = ("\u0060", ANY)
 
@@ -496,3 +505,34 @@ class ArrayTypeName(Grammar):
 
 class GenericTypeName(Grammar):
     grammar = ArrayTypeName
+
+
+# Commands
+class GenericTokenChar(Grammar):
+    grammar = OR(
+        EXCEPT(ANY_EXCEPT("{}();,|&$\u0060"),
+               (DoubleQuoteCharacter + SingleQuoteCharacter + WHITESPACE +
+                NewLineCharacter)),
+        EscapedCharacter
+    )
+
+
+class GenericTokenWithSubexprStart(Grammar):
+    grammar = (GenericTokenParts, "$", "(")
+
+
+class GenericTokenPart(Grammar):
+    grammar = OR(
+        ExpandableStringLiteral,
+        VerbatimHereStringLiteral,
+        Variable,
+        GenericTokenChar
+    )
+
+
+class GenericTokenParts(Grammar):
+    grammar = REPEAT(GenericTokenPart)
+
+
+class GenericToken(Grammar):
+    grammar = GenericTokenParts
