@@ -7,6 +7,7 @@
 
 """
 # pylint: disable=missing-docstring, no-init, too-few-public-methods
+# pylint: disable=anomalous-unicode-escape-in-string
 
 from modgrammar import (
     Grammar, OR, WORD, REPEAT, ANY_EXCEPT,
@@ -114,3 +115,56 @@ class RealLiteral(Grammar):
 
         (DecimalDigits, ExponentPart, OPTIONAL(DecimalTypeSuffix),
          OPTIONAL(NumericMultiplier)))
+
+
+class AssignmentOperator(Grammar):
+    grammar = OR(
+        "=", (Dash, "="), "+=", "*=", "/=", "%="
+    )
+
+
+class FileRedirectionOperator(Grammar):
+    grammar = OR(
+        ">>", ">", "<", "2>>", "2>"
+    )
+
+
+class ComparisonOperator(Grammar):
+    grammar = OR(
+        (Dash, "as"), (Dash, "ccontains"), (Dash, "ceq"),
+        (Dash, "cge"), (Dash, "cgt"), (Dash, "cle"),
+        (Dash, "clike"), (Dash, "clt"), (Dash, "cmatch"),
+        (Dash, "cne"), (Dash, "cnotcontains"), (Dash, "cnotlike"),
+        (Dash, "cnotmatch"), (Dash, "contains"), (Dash, "creplace"),
+        (Dash, "csplit"), (Dash, "eq"), (Dash, "ge"),
+        (Dash, "gt"), (Dash, "icontains"), (Dash, "ieq"),
+        (Dash, "ige"), (Dash, "igt"), (Dash, "ile"),
+        (Dash, "ilike"), (Dash, "ilt"), (Dash, "imatch"),
+        (Dash, "ine"), (Dash, "inotcontains"), (Dash, "inotlike"),
+        (Dash, "inotmatch"), (Dash, "ireplace"), (Dash, "is"),
+        (Dash, "isnot"), (Dash, "isplit"), (Dash, "join"),
+        (Dash, "le"), (Dash, "like"), (Dash, "lt"),
+        (Dash, "match"), (Dash, "ne"), (Dash, "notcontains"),
+        (Dash, "notlike"), (Dash, "notmatch"), (Dash, "replace"),
+        (Dash, "split")
+    )
+
+
+class FormatOperator(Grammar):
+    grammar = (Dash, "f")
+
+
+class OperatorOrPunctuator(Grammar):
+    grammar = OR(
+        "{", "}", "[", "]", "(", ")", "@(", "@{", "$(", ";",
+        "&&", "||", "&", "|", ",", "++", "..", "::", ".",
+        "!", "*", "/", "%", "+", "2>&1", "1>&2",
+        Dash, (Dash, Dash),
+        (Dash, "and"), (Dash, "band"), (Dash, "bnot"),
+        (Dash, "bor"), (Dash, "bxor"), (Dash, "not"),
+        (Dash, "or"), (Dash, "xor"),
+        AssignmentOperator,
+        FileRedirectionOperator,
+        ComparisonOperator,
+        FormatOperator
+    )
