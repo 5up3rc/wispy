@@ -10,11 +10,11 @@
 
 from modgrammar import (
     Grammar, OR, WORD, REPEAT, ANY_EXCEPT,
-    OPTIONAL, WHITESPACE, ANY, REF
+    OPTIONAL, WHITESPACE, ANY, REF, EXCEPT
 )
 
 
-class Newline(Grammar):
+class NewLineCharacter(Grammar):
     grammar = OR("\r\n", "\n", "\r")
 
 
@@ -182,3 +182,130 @@ class BracedVariableCharacters(Grammar):
 class BracedVariable(Grammar):
     grammar = ("$", "{", OPTIONAL(VariableScope),
                BracedVariableCharacters, "}")
+
+
+# String Literals
+class DoubleQuoteCharacter(Grammar):
+    grammar = OR("\u0022", "\u201C", "\u201D", "\u201E")
+
+
+class ExpandableStringPart(Grammar):
+    grammar = OR(
+        ANY_EXCEPT("$\u0022\u201C\u201D\u201E\u0060"),
+        BracedVariable,
+        ("$", ANY_EXCEPT("({\u0022\u201C\u201D\u201E\u0060")),
+        ("$", EscapedCharacter),
+        EscapedCharacter,
+        (DoubleQuoteCharacter, DoubleQuoteCharacter)
+    )
+
+
+class Dollars(Grammar):
+    grammar = REPEAT("$")
+
+
+class ExpandableStringCharacters(Grammar):
+    grammar = OR(
+        ExpandableStringPart,
+        (ExpandableStringCharacters, ExpandableStringPart)
+    )
+
+
+class ExpandableHereStringPart(Grammar):
+    grammar = OR(
+        EXCEPT(ANY_EXCEPT("$", max=1), NewLineCharacter),
+        BracedVariable,
+        ("$", EXCEPT(ANY_EXCEPT("(", max=1), NewLineCharacter)),
+        ("$", NewLineCharacter, EXCEPT(ANY, DoubleQuoteCharacter)),
+        ("$", NewLineCharacter, DoubleQuoteCharacter, ANY_EXCEPT("@")),
+        (NewLineCharacter, EXCEPT(ANY, DoubleQuoteCharacter)),
+        (NewLineCharacter, DoubleQuoteCharacter, ANY_EXCEPT("@"))
+    )
+
+
+class ExpandableStringWithSubexprStart(Grammar):
+    grammar = (DoubleQuoteCharacter, OPTIONAL(ExpandableStringCharacters),
+               "$", "(")
+
+
+class ExpandableStringWithSubexprEnd(Grammar):
+    grammar = DoubleQuoteCharacter
+
+
+class ExpandableHereStringWithSubexprStart(Grammar):
+    grammar = (
+        "@", DoubleQuoteCharacter, OPTIONAL(WHITESPACE),
+        NewLineCharacter, OPTIONAL(ExpandableHereStringCharacters),
+        "$", "("
+    )
+
+
+class ExpandableHereStringWithSubexprEnd(Grammar):
+    grammar = (NewLineCharacter, DoubleQuoteCharacter, "@")
+
+
+class ExpandableHereStringCharacters(Grammar):
+    grammar = OR(
+        ExpandableHereStringPart,
+        (ExpandableHereStringCharacters, ExpandableHereStringPart)
+    )
+
+
+class ExpandableStringLiteral(Grammar):
+    grammar = (DoubleQuoteCharacter, OPTIONAL(ExpandableStringCharacters),
+               OPTIONAL(Dollars), DoubleQuoteCharacter)
+
+
+class ExpandableHereStringLiteral(Grammar):
+    grammar = ("@", DoubleQuoteCharacter, OPTIONAL(WHITESPACE),
+               NewLineCharacter, OPTIONAL(ExpandableHereStringCharacters),
+               NewLineCharacter, DoubleQuoteCharacter, "@")
+
+
+class SingleQuoteCharacter(Grammar):
+    grammar = OR("\u0027", "\u2018", "\u2019", "\u201A", "\u201B")
+
+
+class VerbatimStringPart(Grammar):
+    grammar = OR(
+        EXCEPT(ANY, SingleQuoteCharacter),
+        (SingleQuoteCharacter, SingleQuoteCharacter)
+    )
+
+
+class VerbatimStringCharacters(Grammar):
+    grammar = OR(
+        VerbatimStringPart,
+        (VerbatimStringCharacters, VerbatimStringPart)
+    )
+
+
+class VerbatimStringLiteral(Grammar):
+    grammar = (SingleQuoteCharacter, OPTIONAL(VerbatimStringCharacters),
+               SingleQuoteCharacter)
+
+
+class VerbatimHereStringPart(Grammar):
+    grammar = OR(
+        EXCEPT(ANY, NewLineCharacter),
+        (NewLineCharacter, EXCEPT(ANY, SingleQuoteCharacter)),
+        (NewLineCharacter, SingleQuoteCharacter, ANY_EXCEPT("@"))
+    )
+
+
+class VerbatimHereStringCharacters(Grammar):
+    grammar = OR(
+        VerbatimHereStringPart,
+        (VerbatimHereStringCharacters, VerbatimHereStringPart)
+    )
+
+
+class VerbatimHereStringLiteral(Grammar):
+    grammar = ("@", SingleQuoteCharacter, OPTIONAL(WHITESPACE),
+               NewLineCharacter, OPTIONAL(VerbatimHereStringCharacters),
+               NewLineCharacter, SingleQuoteCharacter, "@")
+
+
+class StringLiteral(Grammar):
+    grammar = OR(ExpandableStringLiteral, ExpandableHereStringLiteral,
+                 VerbatimStringLiteral, VerbatimHereStringLiteral)
