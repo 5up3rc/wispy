@@ -335,7 +335,7 @@ class VerbatimStringPart(Grammar):
 
 class VerbatimStringCharacters(Grammar):
     grammar = REPEAT(VerbatimStringPart)
-   
+
 
 class VerbatimHereStringPart(Grammar):
     grammar = OR(
