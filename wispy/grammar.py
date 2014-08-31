@@ -4,7 +4,7 @@
 
     The grammar implementation of the *wispy* engine.
 """
-# pylint: disable=missing-docstring, no-init
+# pylint: disable=missing-docstring, no-init, too-few-public-methods
 
 from modgrammar import (
     Grammar, OR, WORD, REPEAT, ANY_EXCEPT,
