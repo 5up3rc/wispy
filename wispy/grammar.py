@@ -334,11 +334,8 @@ class VerbatimStringPart(Grammar):
 
 
 class VerbatimStringCharacters(Grammar):
-    grammar = OR(
-        VerbatimStringPart,
-        (VerbatimStringCharacters, VerbatimStringPart)
-    )
-
+    grammar = REPEAT(VerbatimStringPart)
+   
 
 class VerbatimHereStringPart(Grammar):
     grammar = OR(
@@ -349,10 +346,7 @@ class VerbatimHereStringPart(Grammar):
 
 
 class VerbatimHereStringCharacters(Grammar):
-    grammar = OR(
-        VerbatimHereStringPart,
-        (VerbatimHereStringCharacters, VerbatimHereStringPart)
-    )
+    grammar = REPEAT(VerbatimHereStringPart)
 
 
 class ExpandableStringLiteral(Grammar):

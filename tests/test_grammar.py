@@ -15,7 +15,7 @@ from itertools import chain
 from modgrammar import ParseError
 from wispy.grammar import (
     InputCharacter, InputCharacters,
-    Newline,
+    NewLineCharacter,
     SingleLineComment,
     NumericMultiplier,
     LongTypeSuffix, DecimalTypeSuffix, NumericTypeSuffix,
@@ -47,7 +47,7 @@ class GrammarTest(unittest.TestCase):
         self._test_expected_pairs(grammar, text_pairs)
 
     def test_newline(self):
-        self._test_expected(Newline, ["\r", "\n", "\r\n"])
+        self._test_expected(NewLineCharacter, ["\r", "\n", "\r\n"])
 
     def test_input_character(self):
         self._test_expected_pairs(InputCharacter, [("abc", "a")])
