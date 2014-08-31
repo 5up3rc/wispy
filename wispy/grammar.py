@@ -243,15 +243,6 @@ class VariableScope(Grammar):
                  VariableNamespace)
 
 
-class Variable(Grammar):
-    grammar = OR(
-        "$$", "$?", "$^",
-        ("$", OPTIONAL(VariableScope), VariableCharacters),
-        ("@", OPTIONAL(VariableScope), VariableCharacters),
-        BracedVariable
-    )
-
-
 class EscapedCharacter(Grammar):
     grammar = ("\u0060", ANY)
 
@@ -267,6 +258,15 @@ class BracedVariableCharacters(Grammar):
 class BracedVariable(Grammar):
     grammar = ("$", "{", OPTIONAL(VariableScope),
                BracedVariableCharacters, "}")
+
+
+class Variable(Grammar):
+    grammar = OR(
+        "$$", "$?", "$^",
+        ("$", OPTIONAL(VariableScope), VariableCharacters),
+        ("@", OPTIONAL(VariableScope), VariableCharacters),
+        BracedVariable
+    )
 
 # String Literals
 
@@ -505,10 +505,6 @@ class GenericTokenChar(Grammar):
     )
 
 
-class GenericTokenWithSubexprStart(Grammar):
-    grammar = (GenericTokenParts, "$", "(")
-
-
 class GenericTokenPart(Grammar):
     grammar = OR(
         ExpandableStringLiteral,
@@ -520,6 +516,10 @@ class GenericTokenPart(Grammar):
 
 class GenericTokenParts(Grammar):
     grammar = REPEAT(GenericTokenPart)
+
+
+class GenericTokenWithSubexprStart(Grammar):
+    grammar = (GenericTokenParts, "$", "(")
 
 
 class GenericToken(Grammar):
