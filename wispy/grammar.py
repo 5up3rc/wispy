@@ -15,7 +15,7 @@ from modgrammar import (
 
 
 class Newline(Grammar):
-    grammar = OR("\n", "\r", "\r\n")
+    grammar = OR("\r\n", "\n", "\r")
 
 
 class InputCharacter(Grammar):
