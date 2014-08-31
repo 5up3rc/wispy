@@ -8,6 +8,7 @@ Tests for wispy.grammar.
 
 import unittest
 import string
+from itertools import chain
 
 from modgrammar import ParseError
 from wispy.grammar import (
@@ -21,6 +22,10 @@ from wispy.grammar import (
     IntegerLiteral,
     Dash, Sign,
     ExponentPart, RealLiteral,
+    EscapedCharacter,
+    VariableCharacter, VariableCharacters,
+    VariableScope, VariableNamespace,
+    BracedVariableCharacter, BracedVariableCharacters, BracedVariable,
 )
 
 
@@ -217,8 +222,6 @@ class GrammarTest(unittest.TestCase):
         self.assertEqual(str(parsed), "1.4")
         parsed = self._parse(RealLiteral, "1.4e44")
         self.assertEqual(str(parsed), "1.4e44")
-        parsed = self._parse(RealLiteral, "1.4e44d")
-        self.assertEqual(str(parsed), "1.4e44d")
         parsed = self._parse(RealLiteral, "1.4e44kb")
         self.assertEqual(str(parsed), "1.4e44kb")
 
@@ -242,3 +245,66 @@ class GrammarTest(unittest.TestCase):
         self.assertEqual(str(parsed), "4e4d")
         parsed = self._parse(RealLiteral, "4e4dkb")
         self.assertEqual(str(parsed), "4e4dkb")
+
+    def test_escaped_character(self):
+        parsed = self._parse(EscapedCharacter, "\u0060a")
+        self.assertEqual(str(parsed), "\u0060a")
+
+    def test_braced_variable_character(self):
+        parsed = self._parse(BracedVariableCharacter, "a")
+        self.assertEqual(str(parsed), "a")
+
+        parsed = self._parse(BracedVariableCharacter, "\u0060a")
+        self.assertEqual(str(parsed), "\u0060a")
+
+        with self.assertRaises(ParseError):
+            self._parse(BracedVariableCharacter, "`")
+        with self.assertRaises(ParseError):
+            self._parse(BracedVariableCharacter, "}")
+
+    def test_braced_variable_characters(self):
+        parsed = self._parse(BracedVariableCharacters, "aaa")
+        self.assertEqual(str(parsed), "aaa")
+
+    def test_variable_character(self):
+        for letter in chain(string.digits, string.ascii_letters):
+            parsed = self._parse(VariableCharacter, letter)
+            self.assertEqual(str(parsed), letter)
+
+        parsed = self._parse(VariableCharacter, "?")
+        self.assertEqual(str(parsed), "?")
+
+    def test_variable_characters(self):
+        parsed = self._parse(VariableCharacters, "a")
+        self.assertEqual(str(parsed), "a")
+
+        parsed = self._parse(VariableCharacters, "abc")
+        self.assertEqual(str(parsed), "abc")
+
+    def test_variable_namespace(self):
+        parsed = self._parse(VariableNamespace, "abc:")
+        self.assertEqual(str(parsed), "abc:")
+
+        parsed = self._parse(VariableNamespace, "a:")
+        self.assertEqual(str(parsed), "a:")
+
+        with self.assertRaises(ParseError):
+            self._parse(VariableNamespace, ":a")
+
+    def test_variable_scope(self):
+        for scope in ("globe:", "local:", "private:", "script:"):
+            parsed = self._parse(VariableScope, scope)
+            self.assertEqual(str(parsed), scope)
+
+        parsed = self._parse(VariableScope, "abc:")
+        self.assertEqual(str(parsed), "abc:")
+
+    def test_braced_variable(self):
+        parsed = self._parse(BracedVariable, "${global:a}")
+        self.assertEqual(str(parsed), "${global:a}")
+
+        parsed = self._parse(BracedVariable, "${a}")
+        self.assertEqual(str(parsed), "${a}")
+
+        with self.assertRaises(ParseError):
+            self._parse(BracedVariable, "${a")
