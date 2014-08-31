@@ -10,7 +10,7 @@
 
 from modgrammar import (
     Grammar, OR, WORD, REPEAT, ANY_EXCEPT,
-    OPTIONAL, WHITESPACE, ANY
+    OPTIONAL, WHITESPACE, ANY, REF
 )
 
 
@@ -141,7 +141,7 @@ class VariableCharacter(Grammar):
         WORD("0-9"),
         WORD("\u0660-\u0669"),  # ARABIC-INDIC DIGIT
         WORD("\u06F0-\u06F9"),  # EXTENDED ARABIC-INDIC DIGIT
-        # TODO: Add more haracter from the 'Number, Decimal Digit' Category
+        # TODO: Add more character from the 'Number, Decimal Digit' Category
         WORD("\u005F"),         # The underscore character
         WORD("?")
     )
@@ -174,7 +174,7 @@ class BracedVariableCharacter(Grammar):
 class BracedVariableCharacters(Grammar):
     grammar = OR(
         (BracedVariableCharacter),
-        (BracedVariableCharacters, BracedVariableCharacter)
+        (REF('BracedVariableCharacters'), BracedVariableCharacter)
     )
 
 
