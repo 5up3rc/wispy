@@ -54,3 +54,4 @@ docs/_build/
 
 # Temporary files
 *.swp
+*.orig
