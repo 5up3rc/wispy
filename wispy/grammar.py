@@ -2,7 +2,9 @@
     wispy.grammar
     ~~~~~~~~~~~~~
 
-    The grammar implementation of the *wispy* engine.
+    The Powershell grammar implementation of the *wispy* engine.
+    The version used is PowerShell Language Specification Version 3.0.
+
 """
 # pylint: disable=missing-docstring, no-init, too-few-public-methods
 
@@ -38,13 +40,11 @@ class Keyword(Grammar):
                  "switch", "throw", "trap", "try",
                  "until", "using", "var", "while")
 
-
-class HexadecimalDigit(Grammar):
-    grammar = WORD('0-9a-fA-F', max=1)
+# Literals
 
 
-class HexadecimalDigits(Grammar):
-    grammar = REPEAT(HexadecimalDigit)
+class NumericMultiplier(Grammar):
+    grammar = REPEAT(OR("kb", "mb", "tb", "pb", "gb"), max=1)
 
 
 class LongTypeSuffix(Grammar):
@@ -59,16 +59,6 @@ class NumericTypeSuffix(Grammar):
     grammar = OR(DecimalTypeSuffix, LongTypeSuffix)
 
 
-class NumericMultiplier(Grammar):
-    grammar = REPEAT(OR("kb", "mb", "tb", "pb", "gb"), max=1)
-
-
-class HexadecimalIntegerLiteral(Grammar):
-    grammar = ("0x", HexadecimalDigits,
-               OPTIONAL(LongTypeSuffix),
-               OPTIONAL(NumericMultiplier))
-
-
 class DecimalDigit(Grammar):
     grammar = WORD('0-9', max=1)
 
@@ -81,3 +71,45 @@ class DecimalIntegerLiteral(Grammar):
     grammar = (DecimalDigits,
                OPTIONAL(DecimalTypeSuffix),
                OPTIONAL(NumericMultiplier))
+
+
+class HexadecimalDigit(Grammar):
+    grammar = WORD('0-9a-fA-F', max=1)
+
+
+class HexadecimalDigits(Grammar):
+    grammar = REPEAT(HexadecimalDigit)
+
+
+class HexadecimalIntegerLiteral(Grammar):
+    grammar = ("0x", HexadecimalDigits,
+               OPTIONAL(LongTypeSuffix),
+               OPTIONAL(NumericMultiplier))
+
+
+class IntegerLiteral(Grammar):
+    grammar = OR(DecimalIntegerLiteral, HexadecimalIntegerLiteral)
+
+
+class Dash(Grammar):
+    grammar = OR("-", "\u2013", "\u2014", "\u2015")
+
+
+class Sign(Grammar):
+    grammar = OR("+", Dash, max=1)
+
+
+class ExponentPart(Grammar):
+    grammar = (OR("e", "E"), OPTIONAL(Sign), DecimalDigits)
+
+
+class RealLiteral(Grammar):
+    grammar = OR(
+        (DecimalDigits, ".", DecimalDigits, OPTIONAL(ExponentPart),
+         OPTIONAL(DecimalTypeSuffix), OPTIONAL(NumericMultiplier)),
+
+        (".", DecimalDigits, OPTIONAL(ExponentPart),
+         OPTIONAL(DecimalTypeSuffix), OPTIONAL(NumericMultiplier)),
+
+        (DecimalDigits, ExponentPart, OPTIONAL(DecimalTypeSuffix),
+         OPTIONAL(NumericMultiplier)))
