@@ -11,12 +11,20 @@
 
 from modgrammar import (
     Grammar, OR, WORD, REPEAT, ANY_EXCEPT,
-    OPTIONAL, WHITESPACE, ANY,
+    OPTIONAL, WHITESPACE, ANY, REF,
 )
 
 
 class Newline(Grammar):
     grammar = OR("\r\n", "\n", "\r")
+
+
+class Hashes(Grammar):
+    grammar = REPEAT("#")
+
+
+class NotGreaterThanOrHash(Grammar):
+    grammar = ANY_EXCEPT("#>")
 
 
 class InputCharacter(Grammar):
@@ -29,6 +37,23 @@ class InputCharacters(Grammar):
 
 class SingleLineComment(Grammar):
     grammar = ("#", OPTIONAL(WHITESPACE), OPTIONAL(InputCharacters))
+
+
+class DelimitedCommentSection(Grammar):
+    grammar = OR(">", (OPTIONAL(Hashes), NotGreaterThanOrHash))
+
+
+class DelimitedCommentText(Grammar):
+    grammar = OR(DelimitedCommentSection,
+                 (REF('DelimitedCommentText', DelimitedCommentSection)))
+
+
+class DelimitedComment(Grammar):
+    grammar = ("<#", OPTIONAL(DelimitedCommentText), Hashes, ">")
+
+
+class Comment(Grammar):
+    grammar = OR(SingleLineComment, DelimitedComment)
 
 
 class Keyword(Grammar):
