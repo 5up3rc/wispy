@@ -20,7 +20,7 @@ from wispy.grammar import (
     SingleQuoteCharacter,
     Keyword,
     ExpandableStringPart,
-    GenericTokenChar,
+    GenericTokenChar, GenericTokenPart,
     InputCharacter, InputCharacters,
     NewLineCharacter,
     Hashes, NotGreaterThanOrHash,
@@ -143,6 +143,40 @@ class GrammarTest(unittest.TestCase):
         for char in invalid:
             with self.assertRaises(ParseError):
                 self._parse(GenericTokenChar, char)
+
+    def test_generic_token_part(self):
+        self._test_expected(GenericTokenPart, string.ascii_letters)
+
+        variable_items = [
+            "$totalCost", "$Maximum_Count_26", "${Maximum_Count_26}",
+            "${Name with`twhite space and `{punctuation`}}",
+            r"${E:\File.txt}", "$$", "$?", "$^",
+            "$global:test_variable",
+            "$local:test_variable",
+            "$private:test_variable",
+            "$script:test_variable",
+            "@global:test_variable",
+            "@local:test_variable",
+            "@private:test_variable",
+            "@script:test_variable",
+        ]
+        self._test_expected(GenericTokenPart, variable_items)
+
+        # Test ExpandableStringLiteral support in GenericTokenPart
+        double_quotes = ["\u0022", "\u201C", "\u201D", "\u201E"]
+        expandable_characters = [
+            '$totalCost',
+            '$Maximum_Count_26',
+            '${Maximum_Count_26}',
+            '${Name with`twhite space and `{punctuation`}}',
+            '${E:\File.txt}'
+        ]
+        tests = [quote + char + quote
+                 for char in expandable_characters
+                 for quote in double_quotes]
+        self._test_expected(GenericTokenPart, tests)
+
+        self._test_expected(GenericTokenPart, ["@' \n\n'@", "@'\nyoshi\n'@"])
 
     def test_newline(self):
         self._test_expected(NewLineCharacter, ["\r", "\n", "\r\n"])
