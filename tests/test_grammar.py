@@ -34,7 +34,9 @@ from wispy.grammar import (
     ExponentPart, RealLiteral,
     EscapedCharacter,
     VariableCharacter, VariableCharacters,
-    VariableScope, VariableNamespace,
+    VariableScope, VariableNamespace, VerbatimStringLiteral,
+    VerbatimHereStringLiteral, VerbatimStringPart, VerbatimStringCharacters,
+    VerbatimHereStringCharacters,
     BracedVariableCharacter, BracedVariableCharacters, BracedVariable,
     TypeCharacter, TypeCharacters, TypeIdentifier, TypeName,
     ArrayTypeName, GenericTypeName,
@@ -327,3 +329,39 @@ class GrammarTest(unittest.TestCase):
         self._test_expected(ArrayTypeName, ["tzop[", "tzop.hop["])
         # GenericTypeName is the same as ArrayTypeName
         self._test_expected(GenericTypeName, ["hop[", "bop["])
+
+    def test_verbatim_string_literal(self):
+        self._test_expected(VerbatimStringLiteral, ["''", "'red'"])
+        with self.assertRaises(ParseError):
+            self._parse(VerbatimStringLiteral, "red")
+
+    def test_verbatim_here_string_literal(self):
+        test_ok = [
+            "@'\n\n'@",
+            "@'\nline1\n'@",
+            "@'\nline1\nline2\n'@"
+        ]
+        test_fail = ["@'\n'@", "@'\n@", "@'\nline\n@"]
+        self._test_expected(VerbatimHereStringLiteral, test_ok)
+        for item in test_fail:
+            with self.assertRaises(ParseError):
+                self._parse(VerbatimHereStringLiteral, item)
+
+    def test_verbatim_string_part(self):
+        test_ok = ["a", "b", "c", "''"]
+        self._test_expected(VerbatimStringPart, test_ok)
+        with self.assertRaises(ParseError):
+            self._parse(VerbatimStringPart, "'a")
+
+    def test_verbatim_string_characters(self):
+        test_ok = [
+            "any except single-quote-character\n''",
+            "line1\n''"
+        ]
+        self._test_expected(VerbatimStringCharacters, test_ok)
+
+    def test_verbatim_here_string_characters(self):
+        test_ok = [
+            "line1\nexcept_singe_quote_character\n'any_char"
+        ]
+        self._test_expected(VerbatimHereStringCharacters, test_ok)
