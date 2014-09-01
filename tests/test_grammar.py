@@ -20,6 +20,7 @@ from wispy.grammar import (
     FileRedirectionOperator, FormatOperator,
     SingleQuoteCharacter,
     Keyword,
+    ExpandableStringPart,
     InputCharacter, InputCharacters,
     NewLineCharacter,
     Hashes, NotGreaterThanOrHash,
@@ -101,6 +102,32 @@ class GrammarTest(unittest.TestCase):
                     "switch", "throw", "trap", "try",
                     "until", "using", "var", "while")
         self._test_expected(Keyword, literals)
+
+    def test_expandable_string_part(self):
+        for char in "$\u0022\u201C\u201D\u201E\u0060":
+            with self.assertRaises(ParseError):
+                self._parse(ExpandableStringPart, char)
+
+        for char in "({\u0022\u201C\u201D\u201E\u0060":
+            with self.assertRaises(ParseError):
+                self._parse(ExpandableStringPart, "$" + char)
+
+        self._test_expected(ExpandableStringPart,
+                            list(map(lambda x: "$" + x, string.ascii_letters)))
+        self._test_expected(ExpandableStringPart, ["$\u0060a"])
+        self._test_expected(ExpandableStringPart, ["\u0060b"])
+
+        quotes = list(map(lambda x: x + x,
+                          ["\u0022", "\u201C", "\u201D", "\u201E"]))
+        self._test_expected(ExpandableStringPart, quotes)
+        elements = [
+            '$totalCost',
+            '$Maximum_Count_26',
+            '${Maximum_Count_26}',
+            '${Name with`twhite space and `{punctuation`}}',
+            '${E:\File.txt}'
+        ]
+        self._test_expected(ExpandableStringPart, elements)
 
     def test_newline(self):
         self._test_expected(NewLineCharacter, ["\r", "\n", "\r\n"])
