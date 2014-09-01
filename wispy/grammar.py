@@ -498,15 +498,14 @@ class GenericTypeName(Grammar):
 # Commands
 class GenericTokenChar(Grammar):
     grammar = OR(
-        EXCEPT(
-            ANY_EXCEPT("{}();,|&$\u0060"),
-            ANY(
-                DoubleQuoteCharacter,
-                SingleQuoteCharacter,
-                WHITESPACE,
-                NewLineCharacter
-            )
-        ),
+        EXCEPT(ANY,
+               OR(
+                   DoubleQuoteCharacter,
+                   SingleQuoteCharacter,
+                   WHITESPACE,
+                   NewLineCharacter,
+                   "{", "}", "(", ")", ";", ",", "|", "&", "$", "\u0060",
+               )),
         EscapedCharacter
     )
 

@@ -20,6 +20,7 @@ from wispy.grammar import (
     SingleQuoteCharacter,
     Keyword,
     ExpandableStringPart,
+    GenericTokenChar,
     InputCharacter, InputCharacters,
     NewLineCharacter,
     Hashes, NotGreaterThanOrHash,
@@ -129,6 +130,18 @@ class GrammarTest(unittest.TestCase):
             '${E:\File.txt}'
         ]
         self._test_expected(ExpandableStringPart, elements)
+
+    def test_generic_token_char(self):
+        self._test_expected(GenericTokenChar, ["\u0060a"])
+        self._test_expected(GenericTokenChar, string.ascii_letters)
+
+        invalid = chain(["\u0027", "\u2018", "\u2019", "\u201A", "\u201B"],
+                        ["\u0022", "\u201C", "\u201D", "\u201E"],
+                        ["\n", "\r"],
+                        "{}();,|&$\u0060")
+        for char in invalid:
+            with self.assertRaises(ParseError):
+                self._parse(GenericTokenChar, char)
 
     def test_newline(self):
         self._test_expected(NewLineCharacter, ["\r", "\n", "\r\n"])
