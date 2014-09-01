@@ -43,6 +43,7 @@ from wispy.grammar import (
     AssignmentOperator, ComparisonOperator, OperatorOrPunctuator,
     TypeCharacter, TypeCharacters, TypeIdentifier, TypeName,
     ArrayTypeName, GenericTypeName,
+    ExpandableStringCharacters
 )
 
 
@@ -490,3 +491,20 @@ class GrammarTest(unittest.TestCase):
         for item in test_fail:
             with self.assertRaises(ParseError):
                 self._parse(Variable, item)
+
+    def test_expandable_string_characters(self):
+        test_ok = [
+            "a", "ab", "abc",
+            "$something", "${global:a}", "${a}",
+            '""'
+        ]
+
+        test_fail = [
+            "$", "\u0022", "\u201C", "\u201D", "\u201E", "\u0060",
+            'a$variable"', "a$variable`"
+        ]
+
+        self._test_expected(ExpandableStringCharacters, test_ok)
+        for item in test_fail:
+            with self.assertRaises(ParseError):
+                self._parse(ExpandableStringCharacters, item)
