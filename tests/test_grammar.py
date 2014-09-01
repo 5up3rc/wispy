@@ -38,7 +38,8 @@ from wispy.grammar import (
 class GrammarTest(unittest.TestCase):
 
     def _parse(self, grammar, text):
-        return grammar.parser().parse_text(text, eof=True)
+        return grammar.parser().parse_text(text,
+                                           eof=True, matchtype='complete')
 
     def _test_expected_pairs(self, grammar, text_pairs):
         for text, expected in text_pairs:
