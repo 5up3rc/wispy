@@ -110,8 +110,6 @@ class GrammarTest(unittest.TestCase):
         numbers = list(map(str, range(10)))
         self._test_expected(DecimalDigit, numbers)
 
-        self._test_expected_pairs(DecimalDigit, [("10", "1")])
-
         with self.assertRaises(ParseError):
             self._parse(DecimalDigit, "a")
 
