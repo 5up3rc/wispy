@@ -36,7 +36,7 @@ from wispy.grammar import (
     VariableCharacter, VariableCharacters,
     VariableScope, VariableNamespace, VerbatimStringLiteral,
     VerbatimHereStringLiteral, VerbatimStringPart, VerbatimStringCharacters,
-    VerbatimHereStringCharacters, VerbatimHereStringPart,
+    VerbatimHereStringCharacters, VerbatimHereStringPart, Variable,
     BracedVariableCharacter, BracedVariableCharacters, BracedVariable,
     TypeCharacter, TypeCharacters, TypeIdentifier, TypeName,
     ArrayTypeName, GenericTypeName,
@@ -378,3 +378,26 @@ class GrammarTest(unittest.TestCase):
             "a\na\n'a"
         ]
         self._test_expected(VerbatimHereStringCharacters, test_ok)
+
+    def test_variable(self):
+        test_ok = [
+            "$totalCost", "$Maximum_Count_26", "${Maximum_Count_26}",
+            "${Name with`twhite space and `{punctuation`}}",
+            r"${E:\File.txt}", "$$", "$?", "$^",
+            "$global:test_variable",
+            "$local:test_variable",
+            "$private:test_variable",
+            "$script:test_variable",
+            "@global:test_variable",
+            "@local:test_variable",
+            "@private:test_variable",
+            "@script:test_variable",
+        ]
+        test_fail = [
+            "test_variable", "test:variable", "${incomplete",
+            "$incomplete}", "$@variable"
+        ]
+        self._test_expected(Variable, test_ok)
+        for item in test_fail:
+            with self.assertRaises(ParseError):
+                self._parse(Variable, item)
