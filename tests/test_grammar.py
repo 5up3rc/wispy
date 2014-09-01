@@ -17,9 +17,9 @@ from wispy.grammar import (
     SimpleNameFirstCharacter, SimpleNameCharacter,
     SimpleNameCharacters, SimpleName,
     Dollars, DoubleQuoteCharacter,
-    FileRedirectionOperator, FormatOperator,
     SingleQuoteCharacter,
     Keyword,
+    ExpandableStringPart,
     InputCharacter, InputCharacters,
     NewLineCharacter,
     Hashes, NotGreaterThanOrHash,
@@ -38,6 +38,8 @@ from wispy.grammar import (
     VerbatimHereStringLiteral, VerbatimStringPart, VerbatimStringCharacters,
     VerbatimHereStringCharacters, VerbatimHereStringPart, Variable,
     BracedVariableCharacter, BracedVariableCharacters, BracedVariable,
+    FileRedirectionOperator, FormatOperator,
+    AssignmentOperator, ComparisonOperator, OperatorOrPunctuator,
     TypeCharacter, TypeCharacters, TypeIdentifier, TypeName,
     ArrayTypeName, GenericTypeName,
 )
@@ -101,6 +103,32 @@ class GrammarTest(unittest.TestCase):
                     "switch", "throw", "trap", "try",
                     "until", "using", "var", "while")
         self._test_expected(Keyword, literals)
+
+    def test_expandable_string_part(self):
+        for char in "$\u0022\u201C\u201D\u201E\u0060":
+            with self.assertRaises(ParseError):
+                self._parse(ExpandableStringPart, char)
+
+        for char in "({\u0022\u201C\u201D\u201E\u0060":
+            with self.assertRaises(ParseError):
+                self._parse(ExpandableStringPart, "$" + char)
+
+        self._test_expected(ExpandableStringPart,
+                            list(map(lambda x: "$" + x, string.ascii_letters)))
+        self._test_expected(ExpandableStringPart, ["$\u0060a"])
+        self._test_expected(ExpandableStringPart, ["\u0060b"])
+
+        quotes = list(map(lambda x: x + x,
+                          ["\u0022", "\u201C", "\u201D", "\u201E"]))
+        self._test_expected(ExpandableStringPart, quotes)
+        elements = [
+            '$totalCost',
+            '$Maximum_Count_26',
+            '${Maximum_Count_26}',
+            '${Name with`twhite space and `{punctuation`}}',
+            '${E:\File.txt}'
+        ]
+        self._test_expected(ExpandableStringPart, elements)
 
     def test_newline(self):
         self._test_expected(NewLineCharacter, ["\r", "\n", "\r\n"])
@@ -242,6 +270,54 @@ class GrammarTest(unittest.TestCase):
 
     def test_braced_variable_characters(self):
         self._test_expected(BracedVariableCharacters, ["aaa"])
+
+    def test_assignment_operator(self):
+        literals = [
+            "=", "-=", "+=",
+            "*=", "/=", "%="
+        ]
+        self._test_expected(AssignmentOperator, literals)
+
+        with self.assertRaises(ParseError):
+            self._parse(AssignmentOperator, "&=")
+
+    def test_comparison_operator(self):
+        ops = [
+            "as", "ccontains", "ceq",
+            "cge", "cgt", "cle",
+            "clike", "clt", "cmatch",
+            "cne", "cnotcontains", "cnotlike",
+            "cnotmatch", "contains", "creplace",
+            "csplit", "eq", "ge",
+            "gt", "icontains", "ieq",
+            "ige", "igt", "ile",
+            "ilike", "ilt", "imatch",
+            "ine", "inotcontains", "inotlike",
+            "inotmatch", "ireplace", "is",
+            "isnot", "isplit", "join",
+            "le", "like", "lt",
+            "match", "ne", "notcontains",
+            "notlike", "notmatch", "replace",
+            "split"
+        ]
+        literals = ["-{}".format(op) for op in ops]
+        self._test_expected(ComparisonOperator, literals)
+
+    def test_operator_or_punctuator(self):
+        literals = [
+            "{", "}", "[", "]", "(", ")", "@(", "@{", "$(", ";",
+            "&&", "||", "&", "|", ",", "++", "..", "::", ".",
+            "!", "*", "/", "%", "+", "2>&1", "1>&2",
+            "-", "--",
+            "-and", "-band", "-bnot",
+            "-bor", "-bxor", "-not",
+            "-or", "-xor",
+            "+=", "*=",
+            ">>",
+            "-inotlike",
+            "-f"
+        ]
+        self._test_expected(OperatorOrPunctuator, literals)
 
     def test_variable_character(self):
         literals = list(chain(string.digits, string.ascii_letters, ["?"]))
