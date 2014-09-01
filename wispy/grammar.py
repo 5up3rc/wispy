@@ -12,12 +12,17 @@
 from modgrammar import (
     Grammar, OR, WORD, REPEAT, ANY_EXCEPT,
     OPTIONAL, WHITESPACE, ANY, EXCEPT,
-    LIST_OF,
+    LIST_OF, REF
 )
 
 
+# Line terminators
 class NewLineCharacter(Grammar):
     grammar = OR("\r\n", "\n", "\r")
+
+
+class NewLines(Grammar):
+    grammar = REPEAT(NewLineCharacter)
 
 
 class Hashes(Grammar):
@@ -546,3 +551,395 @@ class SimpleNameCharacters(Grammar):
 
 class SimpleName(Grammar):
     grammar = (SimpleNameFirstCharacter, SimpleNameCharacters)
+
+
+# Statements
+
+class RedirectedFileName(Grammar):
+    grammar = OR(CommandArgument, PrimaryExpression)
+
+
+class Redirection(Grammar):
+    grammar = OR(
+        "2>&1", "1>&2",
+        (FileRedirectionOperator, RedirectedFileName)
+    )
+
+
+class Redirections(Grammar):
+    grammar = REPEAT(Redirection)
+
+
+class CommandElement(Grammar):
+    grammar = OR(CommandParameter, CommandArgument, Redirections)
+
+
+class CommandElements(Grammar):
+    grammar = REPEAT(CommandElement)
+
+
+class CommandNameExpr(Grammar):
+    grammar = OR(CommandName, PrimaryExpression)
+
+
+class CommandArgument(Grammar):
+    grammar = CommandNameExpr
+
+
+class CommandName(Grammar):
+    grammar = OR(GenericToken, GenericTokenWithSubexprStart)
+
+
+class CommandModule(Grammar):
+    grammar = PrimaryExpression
+
+
+class CommandInvocationOperator(Grammar):
+    grammar = OR("&", ".")
+
+
+class Command(Grammar):
+    grammar = OR(
+        (CommandName, OPTIONAL(CommandElements)),
+        (CommandInvocationOperator, OPTIONAL(CommandModule), CommandNameExpr,
+         OPTIONAL(CommandElements))
+    )
+
+
+class PipelineTail(Grammar):
+    grammar = OR(
+        ("|", OPTIONAL(NewLines), Command),
+        ("|", OPTIONAL(NewLines), Command, REF('PipelineTail'))
+    )
+
+
+class SwitchParameter(Grammar):
+    grammar = OR("-regex", "-wildcard", "-exact", "-casesensitive")
+
+
+class SwtichParameters(Grammar):
+    grammar = REPEAT(SwitchParameter)
+
+
+class SwitchFilename(Grammar):
+    grammar = OR(CommandArgument, PrimaryExpression)
+
+
+class SwitchCondition(Grammar):
+    grammar = OR(
+        ("(", OPTIONAL(NewLines), Pipeline, OPTIONAL(NewLines), ")"),
+        ("-file", OPTIONAL(NewLines), SwitchFilename)
+    )
+
+
+class SwitchClauseCondition(Grammar):
+    grammar = (CommandArgument, PrimaryExpression)
+
+
+class SwitchClause(Grammar):
+    grammar = (SwitchClauseCondition, StatementBlock,
+               OPTIONAL(StatementTerminators))
+
+
+class SwitchClauses(Grammar):
+    grammar = REPEAT(SwitchClause)
+
+
+class SwitchBody(Grammar):
+    grammar = (
+        OPTIONAL(NewLines), "{", OPTIONAL(NewLines), SwitchClauses, "}"
+    )
+
+
+class ForInitializer(Grammar):
+    grammar = Pipeline
+
+
+class ForCondition(Grammar):
+    grammar = Pipeline
+
+
+class ForIterator(Grammar):
+    grammar = Pipeline
+
+
+class WhileCondition(Grammar):
+    grammar = (OPTIONAL(NewLines), Pipeline)
+
+
+class ElseIfClause(Grammar):
+    grammar = (
+        OPTIONAL(NewLines), "elseif", OPTIONAL(NewLines), "(",
+        OPTIONAL(NewLines), Pipeline, OPTIONAL(NewLines), ")",
+        StatementBlock
+    )
+
+
+class ElseIfClauses(Grammar):
+    grammar = REPEAT(ElseIfClause)
+
+
+class ElseClause(Grammar):
+    grammar = (OPTIONAL(NewLines), "else", StatementBlock)
+
+
+class StatementTerminator(Grammar):
+    grammar = OR(";", NewLineCharacter)
+
+
+class StatementTerminators(Grammar):
+    grammar = REPEAT(StatementTerminator)
+
+
+class ScriptParameterDefault(Grammar):
+    grammar = (
+        OPTIONAL(NewLines), "=", OPTIONAL(NewLines), Expression
+    )
+
+
+class ScriptParameter(Grammar):
+    grammar = (
+        OPTIONAL(NewLines), OPTIONAL(AttributeList), OPTIONAL(NewLines),
+        Variable, OPTIONAL(ScriptParameterDefault)
+    )
+
+
+class LabelExpression(Grammar):
+    grammar = OR(SimpleName, UnaryExpression)
+
+
+class FinallyClause(Grammar):
+    grammar = (OPTIONAL(NewLines), "finally", StatementBlock)
+
+
+class CatchTypeList(Grammar):
+    grammar = OPTIONAL(
+        (OPTIONAL(NewLines), TypeLiteral),
+        (REF('CatchTypeList'), OPTIONAL(NewLines), ",", OPTIONAL(NewLines),
+         TypeLiteral)
+    )
+
+
+class CatchClause(Grammar):
+    grammar = (OPTIONAL(NewLines), "catch", OPTIONAL(CatchTypeList),
+               StatementBlock)
+
+
+class CatchClauses(Grammar):
+    grammar = REPEAT(CatchClause)
+
+
+class DataName(Grammar):
+    grammar = SimpleName
+
+
+class DataCommand(Grammar):
+    grammar = CommandNameExpr
+
+
+class DataCommandsList(Grammar):
+    grammar = OR(
+        (OPTIONAL(NewLines), DataCommand),
+        (REF('DataCommandsList'), OPTIONAL(NewLines), DataCommand)
+    )
+
+
+class DataCommandsAllowed(Grammar):
+    grammar = (OPTIONAL(NewLines), "-supportedcommand", DataCommandsList)
+
+
+class IfStatement(Grammar):
+    grammar = (
+        "if", OPTIONAL(NewLines), "(", OPTIONAL(NewLines), Pipeline,
+        OPTIONAL(NewLines), ")", StatementBlock, OPTIONAL(ElseIfClauses),
+        OPTIONAL(ElseClause)
+    )
+
+
+class ForStatement(Grammar):
+    grammar = OR(
+        (
+            "for", OPTIONAL(NewLines), "(", OPTIONAL(ForInitializer),
+            StatementTerminator, OPTIONAL(NewLines), OPTIONAL(ForCondition),
+            StatementTerminator, OPTIONAL(NewLines), OPTIONAL(ForIterator),
+            OPTIONAL(NewLines), ")", StatementBlock
+        ),
+        (
+            "for", OPTIONAL(NewLines), "(", OPTIONAL(ForInitializer),
+            StatementTerminator, OPTIONAL(NewLines), OPTIONAL(ForCondition),
+            OPTIONAL(NewLines), ")", StatementBlock
+        ),
+        (
+            "for", OPTIONAL(NewLines), "(", OPTIONAL(ForInitializer),
+            OPTIONAL(NewLines), ")", StatementBlock
+        ),
+    )
+
+
+class ForeachStatement(Grammar):
+    grammar = (
+        "foreach", OPTIONAL(NewLines), "(", OPTIONAL(NewLines), Variable,
+        OPTIONAL(NewLines), "in", OPTIONAL(NewLines), Pipeline,
+        OPTIONAL(NewLines), ")", StatementBlock
+    )
+
+
+class SwitchStatement(Grammar):
+    grammar = (
+        Switch, OPTIONAL(NewLines), OPTIONAL(SwitchParameters),
+        SwitchContition, SwitchBody
+    )
+
+
+class DoStatement(Grammar):
+    grammar = OR(
+        (
+            "do", StatementBlock, OPTIONAL(NewLines), "while",
+            OPTIONAL(NewLines), "(", WhileCondition, OPTIONAL(NewLines), ")"
+        ),
+        (
+            "do", StatementBlock, OPTIONAL(NewLines), "until",
+            OPTIONAL(NewLines), "(", WhileCondition, OPTIONAL(NewLines), ")"
+        )
+    )
+
+
+class WhileStatement(Grammar):
+    grammar = (
+        "while", OPTIONAL(NewLines), "(", OPTIONAL(NewLines), WhileCondition,
+        OPTIONAL(NewLines), ")", StatementBlock
+    )
+
+
+class TrapStatement(Grammar):
+    grammar = (
+        "trap", OPTIONAL(NewLines), OPTIONAL(TypeLiteral),
+        OPTIONAL(NewLines), StatementBlock
+    )
+
+
+class TryStatement(Grammar):
+    grammar = OR(
+        ("try", StatementBlock, CatchClauses),
+        ("try", StatementBlock, FinallyClause),
+        ("try", StatementBlock, CatchClauses, FinallyClause)
+    )
+
+
+class DataStatement(Grammar):
+    grammar = (
+        "data", OPTIONAL(NewLines), DataName, OPTIONAL(DataCommandsAllowed),
+        StatementBlock
+    )
+
+
+class FlowControlStatement(Grammar):
+    grammar = OR(
+        ("break", OPTIONAL(LabelExpression)),
+        ("continue", OPTIONAL(LabelExpression)),
+        ("throw", OPTIONAL(Pipeline)),
+        ("return", OPTIONAL(Pipeline)),
+        ("exit", OPTIONAL(Pipeline))
+    )
+
+
+class LabeledStatement(Grammar):
+    grammar = OR(
+        SwitchStatement,
+        ForeachStatement,
+        ForStatement,
+        WhileStatement,
+        DoStatement
+    )
+
+
+class Statement(Grammar):
+
+    """A statement specifies some sort of action that is to be performed.
+
+    Unless indicated otherwise within this clause,statements are executed 
+    in lexical order."""
+
+    grammar = OR(
+        IfStatement,
+        (OPTIONAL(Label), LabeledStatement),
+        FunctionStatement,
+        (FlowControlStatement, StatementTerminator),
+        TrapStatement,
+        TryStatement,
+        DataStatement,
+        (Pipeline, StatementTerminator)
+    )
+
+
+class StatementList(Grammar):
+    grammar = REPEAT(Statement)
+
+
+class StatementBlock(Grammar):
+
+    """A statement-block allows a set of statements to be grouped 
+    into a single syntactic unit."""
+
+    grammar = (
+        OPTIONAL(NewLines), "{", OPTIONAL(StatementList),
+        OPTIONAL(NewLines), "}"
+    )
+
+
+class AssignmentExpression(Grammar):
+    grammar = (Expression, AssignmentOperator, Statement)
+
+
+class Pipeline(Grammar):
+    grammar = OR(
+        AssignmentExpression,
+        (Expression, OPTIONAL(Redirections), OPTIONAL(PipelineTail)),
+        (Command, OPTIONAL(PipelineTail))
+    )
+
+
+class BlockName(Grammar):
+    grammar = OR("dynamicparam", "begin", "process", "end")
+
+
+class NamedBlock(Grammar):
+    grammar = (BlockName, StatementBlock, OPTIONAL(StatementTerminators))
+
+
+class NamedBlockList(Grammar):
+    grammar = REPEAT(NamedBlock)
+
+
+class ScriptBlockBody(Grammar):
+    grammar = OR(NamedBlockList, StatementList)
+
+
+class ParamBlock(Grammar):
+    grammar = (
+        OPTIONAL(NewLines), OPTIONAL(AttributeList), OPTIONAL(NewLines),
+        Param, OPTIONAL(NewLines), "(", OPTIONAL(ParameterList),
+        OPTIONAL(NewLines), ")"
+    )
+
+
+class ParameterList(Grammar):
+    grammar = OR(
+        ScriptParameter,
+        (REF('ParameterList'), OPTIONAL(NewLines), ScriptParameter)
+    )
+
+
+class FunctionParameterDeclaration(Grammar):
+    grammar = (OPTIONAL(NewLines), "(", ParameterList, OPTIONAL(NewLines), ")")
+
+
+class FunctionName(Grammar):
+    grammar = CommandArgument
+
+
+class FunctionStatement(Grammar):
+    grammar = (
+        OR("function", "filter"), OPTIONAL(NewLines), FunctionName,
+        OPTIONAL(FunctionParameterDeclaration), "{", ScriptBlock, "}"
+    )
