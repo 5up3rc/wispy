@@ -14,10 +14,16 @@ from itertools import chain
 
 from modgrammar import ParseError
 from wispy.grammar import (
+    SimpleNameFirstCharacter, SimpleNameCharacter,
+    SimpleNameCharacters, SimpleName,
+    Dollars, DoubleQuoteCharacter,
+    FileRedirectionOperator, FormatOperator,
+    SingleQuoteCharacter,
+    Keyword,
     InputCharacter, InputCharacters,
     NewLineCharacter,
     Hashes, NotGreaterThanOrHash,
-    DelimitedCommentSection, DelimitedComment,
+    DelimitedCommentSection, DelimitedComment, DelimitedCommentText,
     SingleLineComment, Comment,
     NumericMultiplier,
     LongTypeSuffix, DecimalTypeSuffix, NumericTypeSuffix,
@@ -50,23 +56,66 @@ class GrammarTest(unittest.TestCase):
         text_pairs = zip(texts, texts)
         self._test_expected_pairs(grammar, text_pairs)
 
+    def test_simple_name_first_character(self):
+        self._test_expected(SimpleNameFirstCharacter, string.ascii_letters)
+
+    def test_simple_name_character(self):
+        self._test_expected(SimpleNameCharacter, string.ascii_letters)
+
+    def test_simple_name_characters(self):
+        literals = chain(string.ascii_letters, ["\u005F"])
+        self._test_expected(SimpleNameCharacters,
+                            list(map(lambda x: x + x, literals)))
+
+    def test_simple_name(self):
+        self._test_expected(SimpleName, ["tzop", "trop", "pop"])
+
+    def test_dollars(self):
+        self._test_expected(Dollars, ["$", "$$"])
+
+    def test_double_quote_character(self):
+        self._test_expected(DoubleQuoteCharacter,
+                            ["\u0022", "\u201C", "\u201D", "\u201E"])
+
+    def test_file_redirection_operator(self):
+        self._test_expected(FileRedirectionOperator,
+                            [">>", ">", "<", "2>>", "2>"])
+
+    def test_single_quote_character(self):
+        literals = ["\u0027", "\u2018", "\u2019", "\u201A", "\u201B"]
+        self._test_expected(SingleQuoteCharacter, literals)
+
+    def test_format_operator(self):
+        literals = list(map(lambda x: x + "f", ["-", "\u2013", "\u2014"]))
+        self._test_expected(FormatOperator, literals)
+
+    def test_keyword(self):
+        literals = ("begin", "break", "catch", "class",
+                    "continue", "data", "define", "do",
+                    "dynamicparam", "else", "elseif", "end",
+                    "exit", "filter", "finally", "for",
+                    "foreach", "from", "function", "if",
+                    "in", "param", "process", "return",
+                    "switch", "throw", "trap", "try",
+                    "until", "using", "var", "while")
+        self._test_expected(Keyword, literals)
+
     def test_newline(self):
         self._test_expected(NewLineCharacter, ["\r", "\n", "\r\n"])
 
     def test_input_character(self):
-        self._test_expected_pairs(InputCharacter, [("abc", "a")])
-        self._test_expected(InputCharacter, ["@"])
+        self._test_expected(InputCharacter, string.ascii_letters)
 
         with self.assertRaises(ParseError):
             self._parse(InputCharacter, "\n")
 
     def test_input_characters(self):
-        pairs = [
-            ("hoptrop", "hoptrop"),
-            ("troptzop\n", "troptzop"),
-            ("t", "t")
-        ]
-        self._test_expected_pairs(InputCharacters, pairs)
+        elements = ["hoptrop", "troptzop", "t"]
+        self._test_expected(InputCharacters, elements)
+
+        for element in ("\r", "\n", "\r\n"):
+            with self.assertRaises(ParseError):
+                self._parse(InputCharacters, "tropatropa" + element)
 
     def test_single_line_comment(self):
         pairs = [
@@ -240,6 +289,9 @@ class GrammarTest(unittest.TestCase):
             self._parse(DelimitedCommentSection, "#>")
         with self.assertRaises(ParseError):
             self._parse(DelimitedCommentSection, "##")
+
+    def test_delimited_comment_text(self):
+        self._test_expected(DelimitedCommentText, [">", ">>", "#4#4"])
 
     def test_delimited_comment(self):
         literals = ["<##>", "<# trop tropa #>"]
