@@ -20,7 +20,8 @@ from wispy.grammar import (
     SingleQuoteCharacter,
     Keyword,
     ExpandableStringPart,
-    GenericTokenChar, GenericTokenPart,
+    GenericTokenChar, GenericTokenPart, GenericTokenParts,
+    GenericToken, GenericTokenWithSubexprStart,
     InputCharacter, InputCharacters,
     NewLineCharacter,
     Hashes, NotGreaterThanOrHash,
@@ -177,6 +178,23 @@ class GrammarTest(unittest.TestCase):
         self._test_expected(GenericTokenPart, tests)
 
         self._test_expected(GenericTokenPart, ["@' \n\n'@", "@'\nyoshi\n'@"])
+
+    def test_generic_token_parts(self):
+        # Mostly tested by test_generic_token_part
+        self._test_expected(GenericTokenParts, ["@' \n\n'@", "@'\nyoshi\n'@"])
+        self._test_expected(GenericTokenParts, ["@script:test_variable"])
+
+    def test_generic_token(self):
+        # GenericToken is GenericTokenParts
+        self._test_expected(GenericToken, ["@script:test_variable"])
+
+    def test_generic_token_with_subexpr_start(self):
+        elements = [
+            "@script:test_variable$(",
+            '$Maximum_Count_26$(',
+            '${Maximum_Count_26}$('
+        ]
+        self._test_expected(GenericTokenWithSubexprStart, elements)
 
     def test_newline(self):
         self._test_expected(NewLineCharacter, ["\r", "\n", "\r\n"])
