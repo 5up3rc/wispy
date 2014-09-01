@@ -35,7 +35,7 @@ from wispy.grammar import (
     VariableCharacter, VariableCharacters,
     VariableScope, VariableNamespace, VerbatimStringLiteral,
     VerbatimHereStringLiteral, VerbatimStringPart, VerbatimStringCharacters,
-    VerbatimHereStringCharacters,
+    VerbatimHereStringCharacters, VerbatimHereStringPart,
     BracedVariableCharacter, BracedVariableCharacters, BracedVariable,
     FileRedirectionOperator, FormatOperator,
     AssignmentOperator, ComparisonOperator, OperatorOrPunctuator,
@@ -384,6 +384,18 @@ class GrammarTest(unittest.TestCase):
         with self.assertRaises(ParseError):
             self._parse(VerbatimStringLiteral, "red")
 
+    def test_verbatim_here_string_part(self):
+        test_ok = [
+            "l",
+            "\nl",
+            "\n'a"
+        ]
+        test_fail = ["\n", "\n'", "\n'@"]
+        self._test_expected(VerbatimHereStringPart, test_ok)
+        for item in test_fail:
+            with self.assertRaises(ParseError):
+                self._parse(VerbatimHereStringPart, item)
+
     def test_verbatim_here_string_literal(self):
         test_ok = [
             "@'\n\n'@",
@@ -411,6 +423,7 @@ class GrammarTest(unittest.TestCase):
 
     def test_verbatim_here_string_characters(self):
         test_ok = [
-            "line1\nexcept_singe_quote_character\n'any_char"
+            "line1\nexcept_singe_quote_character\n'any_char",
+            "a\na\n'a"
         ]
         self._test_expected(VerbatimHereStringCharacters, test_ok)
