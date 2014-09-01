@@ -59,9 +59,9 @@ class Comment(Grammar):
 class Keyword(Grammar):
     grammar = OR("begin", "break", "catch", "class",
                  "continue", "data", "define", "do",
-                 "dynamicparam", "else", "elseif", "end",
-                 "exit", "filter", "finally", "for",
-                 "foreach", "from", "function", "if",
+                 "dynamicparam", "elseif", "else", "end",
+                 "exit", "filter", "finally", "foreach",
+                 "for", "from", "function", "if",
                  "in", "param", "process", "return",
                  "switch", "throw", "trap", "try",
                  "until", "using", "var", "while")
