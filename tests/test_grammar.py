@@ -14,9 +14,16 @@ from itertools import chain
 
 from modgrammar import ParseError
 from wispy.grammar import (
+    SimpleNameFirstCharacter, SimpleNameCharacter,
+    SimpleNameCharacters, SimpleName,
+    Dollars, DoubleQuoteCharacter,
+    SingleQuoteCharacter,
+    Keyword,
     InputCharacter, InputCharacters,
     NewLineCharacter,
-    SingleLineComment,
+    Hashes, NotGreaterThanOrHash,
+    DelimitedCommentSection, DelimitedComment, DelimitedCommentText,
+    SingleLineComment, Comment,
     NumericMultiplier,
     LongTypeSuffix, DecimalTypeSuffix, NumericTypeSuffix,
     DecimalDigit, DecimalDigits, DecimalIntegerLiteral,
@@ -26,16 +33,22 @@ from wispy.grammar import (
     ExponentPart, RealLiteral,
     EscapedCharacter,
     VariableCharacter, VariableCharacters,
-    VariableScope, VariableNamespace,
+    VariableScope, VariableNamespace, VerbatimStringLiteral,
+    VerbatimHereStringLiteral, VerbatimStringPart, VerbatimStringCharacters,
+    VerbatimHereStringCharacters,
     BracedVariableCharacter, BracedVariableCharacters, BracedVariable,
-    AssignmentOperator, ComparisonOperator, OperatorOrPunctuator
+    FileRedirectionOperator, FormatOperator,
+    AssignmentOperator, ComparisonOperator, OperatorOrPunctuator,
+    TypeCharacter, TypeCharacters, TypeIdentifier, TypeName,
+    ArrayTypeName, GenericTypeName,
 )
 
 
 class GrammarTest(unittest.TestCase):
 
     def _parse(self, grammar, text):
-        return grammar.parser().parse_text(text, eof=True)
+        return grammar.parser().parse_text(text,
+                                           eof=True, matchtype='complete')
 
     def _test_expected_pairs(self, grammar, text_pairs):
         for text, expected in text_pairs:
@@ -46,23 +59,66 @@ class GrammarTest(unittest.TestCase):
         text_pairs = zip(texts, texts)
         self._test_expected_pairs(grammar, text_pairs)
 
+    def test_simple_name_first_character(self):
+        self._test_expected(SimpleNameFirstCharacter, string.ascii_letters)
+
+    def test_simple_name_character(self):
+        self._test_expected(SimpleNameCharacter, string.ascii_letters)
+
+    def test_simple_name_characters(self):
+        literals = chain(string.ascii_letters, ["\u005F"])
+        self._test_expected(SimpleNameCharacters,
+                            list(map(lambda x: x + x, literals)))
+
+    def test_simple_name(self):
+        self._test_expected(SimpleName, ["tzop", "trop", "pop"])
+
+    def test_dollars(self):
+        self._test_expected(Dollars, ["$", "$$"])
+
+    def test_double_quote_character(self):
+        self._test_expected(DoubleQuoteCharacter,
+                            ["\u0022", "\u201C", "\u201D", "\u201E"])
+
+    def test_file_redirection_operator(self):
+        self._test_expected(FileRedirectionOperator,
+                            [">>", ">", "<", "2>>", "2>"])
+
+    def test_single_quote_character(self):
+        literals = ["\u0027", "\u2018", "\u2019", "\u201A", "\u201B"]
+        self._test_expected(SingleQuoteCharacter, literals)
+
+    def test_format_operator(self):
+        literals = list(map(lambda x: x + "f", ["-", "\u2013", "\u2014"]))
+        self._test_expected(FormatOperator, literals)
+
+    def test_keyword(self):
+        literals = ("begin", "break", "catch", "class",
+                    "continue", "data", "define", "do",
+                    "dynamicparam", "else", "elseif", "end",
+                    "exit", "filter", "finally", "for",
+                    "foreach", "from", "function", "if",
+                    "in", "param", "process", "return",
+                    "switch", "throw", "trap", "try",
+                    "until", "using", "var", "while")
+        self._test_expected(Keyword, literals)
+
     def test_newline(self):
         self._test_expected(NewLineCharacter, ["\r", "\n", "\r\n"])
 
     def test_input_character(self):
-        self._test_expected_pairs(InputCharacter, [("abc", "a")])
-        self._test_expected(InputCharacter, ["@"])
+        self._test_expected(InputCharacter, string.ascii_letters)
 
         with self.assertRaises(ParseError):
             self._parse(InputCharacter, "\n")
 
     def test_input_characters(self):
-        pairs = [
-            ("hoptrop", "hoptrop"),
-            ("troptzop\n", "troptzop"),
-            ("t", "t")
-        ]
-        self._test_expected_pairs(InputCharacters, pairs)
+        elements = ["hoptrop", "troptzop", "t"]
+        self._test_expected(InputCharacters, elements)
+
+        for element in ("\r", "\n", "\r\n"):
+            with self.assertRaises(ParseError):
+                self._parse(InputCharacters, "tropatropa" + element)
 
     def test_single_line_comment(self):
         pairs = [
@@ -105,8 +161,6 @@ class GrammarTest(unittest.TestCase):
     def test_decimal_digit(self):
         numbers = list(map(str, range(10)))
         self._test_expected(DecimalDigit, numbers)
-
-        self._test_expected_pairs(DecimalDigit, [("10", "1")])
 
         with self.assertRaises(ParseError):
             self._parse(DecimalDigit, "a")
@@ -265,3 +319,98 @@ class GrammarTest(unittest.TestCase):
 
         with self.assertRaises(ParseError):
             self._parse(BracedVariable, "${a")
+
+    def test_hashes(self):
+        self._test_expected(Hashes, ["#", "##"])
+
+    def test_not_greater_than_or_hash(self):
+        self._test_expected(NotGreaterThanOrHash, string.ascii_letters)
+        with self.assertRaises(ParseError):
+            self._parse(NotGreaterThanOrHash, "#")
+        with self.assertRaises(ParseError):
+            self._parse(NotGreaterThanOrHash, ">")
+
+    def test_delimited_comment_section(self):
+        self._test_expected(DelimitedCommentSection, [">"])
+        self._test_expected(DelimitedCommentSection, ["#4"])
+        # the hash is optional
+        self._test_expected(DelimitedCommentSection, ["4"])
+
+        with self.assertRaises(ParseError):
+            self._parse(DelimitedCommentSection, "#>")
+        with self.assertRaises(ParseError):
+            self._parse(DelimitedCommentSection, "##")
+
+    def test_delimited_comment_text(self):
+        self._test_expected(DelimitedCommentText, [">", ">>", "#4#4"])
+
+    def test_delimited_comment(self):
+        literals = ["<##>", "<# trop tropa #>"]
+        self._test_expected(DelimitedComment, literals)
+
+        with self.assertRaises(ParseError):
+            self._parse(DelimitedComment, "#>")
+
+    def test_comment(self):
+        literals = ["<# trop tzop #>", "# hophop"]
+        self._test_expected(Comment, literals)
+
+    def test_type_character(self):
+        literals = list(chain(string.ascii_letters, ["\u005F"]))
+        self._test_expected(TypeCharacter, literals)
+
+    def test_type_characters(self):
+        literals = chain(string.ascii_letters, ["\u005F"])
+        self._test_expected(TypeCharacters,
+                            list(map(lambda x: x + x, literals)))
+
+        # TypeIdentifier is the same as TypeCharacters
+        self._test_expected(TypeIdentifier, string.ascii_letters)
+
+    def test_type_name(self):
+        self._test_expected(TypeName, ["tzop"])
+        self._test_expected(TypeName, ["tzop.hop"])
+
+        with self.assertRaises(ParseError):
+            self._parse(TypeName, ".trop")
+
+    def test_array_type_name(self):
+        self._test_expected(ArrayTypeName, ["tzop[", "tzop.hop["])
+        # GenericTypeName is the same as ArrayTypeName
+        self._test_expected(GenericTypeName, ["hop[", "bop["])
+
+    def test_verbatim_string_literal(self):
+        self._test_expected(VerbatimStringLiteral, ["''", "'red'"])
+        with self.assertRaises(ParseError):
+            self._parse(VerbatimStringLiteral, "red")
+
+    def test_verbatim_here_string_literal(self):
+        test_ok = [
+            "@'\n\n'@",
+            "@'\nline1\n'@",
+            "@'\nline1\nline2\n'@"
+        ]
+        test_fail = ["@'\n'@", "@'\n@", "@'\nline\n@"]
+        self._test_expected(VerbatimHereStringLiteral, test_ok)
+        for item in test_fail:
+            with self.assertRaises(ParseError):
+                self._parse(VerbatimHereStringLiteral, item)
+
+    def test_verbatim_string_part(self):
+        test_ok = ["a", "b", "c", "''"]
+        self._test_expected(VerbatimStringPart, test_ok)
+        with self.assertRaises(ParseError):
+            self._parse(VerbatimStringPart, "'a")
+
+    def test_verbatim_string_characters(self):
+        test_ok = [
+            "any except single-quote-character\n''",
+            "line1\n''"
+        ]
+        self._test_expected(VerbatimStringCharacters, test_ok)
+
+    def test_verbatim_here_string_characters(self):
+        test_ok = [
+            "line1\nexcept_singe_quote_character\n'any_char"
+        ]
+        self._test_expected(VerbatimHereStringCharacters, test_ok)

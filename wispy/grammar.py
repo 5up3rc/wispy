@@ -11,7 +11,8 @@
 
 from modgrammar import (
     Grammar, OR, WORD, REPEAT, ANY_EXCEPT,
-    OPTIONAL, WHITESPACE, ANY, REF, EXCEPT
+    OPTIONAL, WHITESPACE, ANY, EXCEPT,
+    LIST_OF,
 )
 
 
@@ -44,8 +45,7 @@ class DelimitedCommentSection(Grammar):
 
 
 class DelimitedCommentText(Grammar):
-    grammar = OR(DelimitedCommentSection,
-                 (REF('DelimitedCommentText', DelimitedCommentSection)))
+    grammar = REPEAT(DelimitedCommentSection)
 
 
 class DelimitedComment(Grammar):
@@ -59,9 +59,9 @@ class Comment(Grammar):
 class Keyword(Grammar):
     grammar = OR("begin", "break", "catch", "class",
                  "continue", "data", "define", "do",
-                 "dynamicparam", "else", "elseif", "end",
-                 "exit", "filter", "finally", "for",
-                 "foreach", "from", "function", "if",
+                 "dynamicparam", "elseif", "else", "end",
+                 "exit", "filter", "finally", "foreach",
+                 "for", "from", "function", "if",
                  "in", "param", "process", "return",
                  "switch", "throw", "trap", "try",
                  "until", "using", "var", "while")
@@ -484,7 +484,7 @@ class TypeIdentifier(Grammar):
 
 
 class TypeName(Grammar):
-    grammar = OR(TypeIdentifier, (REF('TypeName'), '.', TypeIdentifier))
+    grammar = LIST_OF(TypeIdentifier, sep=".")
 
 
 class ArrayTypeName(Grammar):
