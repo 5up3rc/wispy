@@ -166,12 +166,12 @@ class ComparisonOperator(Grammar):
         (Dash, "ige"), (Dash, "igt"), (Dash, "ile"),
         (Dash, "ilike"), (Dash, "ilt"), (Dash, "imatch"),
         (Dash, "ine"), (Dash, "inotcontains"), (Dash, "inotlike"),
-        (Dash, "inotmatch"), (Dash, "ireplace"), (Dash, "is"),
+        (Dash, "inotmatch"), (Dash, "ireplace"), (Dash, "split"),
         (Dash, "isnot"), (Dash, "isplit"), (Dash, "join"),
         (Dash, "le"), (Dash, "like"), (Dash, "lt"),
         (Dash, "match"), (Dash, "ne"), (Dash, "notcontains"),
         (Dash, "notlike"), (Dash, "notmatch"), (Dash, "replace"),
-        (Dash, "split")
+        (Dash, "is")
     )
 
 
@@ -181,17 +181,17 @@ class FormatOperator(Grammar):
 
 class OperatorOrPunctuator(Grammar):
     grammar = OR(
+        AssignmentOperator,
+        ComparisonOperator,
+        FormatOperator,
         "{", "}", "[", "]", "(", ")", "@(", "@{", "$(", ";",
         "&&", "||", "&", "|", ",", "++", "..", "::", ".",
         "!", "*", "/", "%", "+", "2>&1", "1>&2",
-        Dash, (Dash, Dash),
+        FileRedirectionOperator,
         (Dash, "and"), (Dash, "band"), (Dash, "bnot"),
         (Dash, "bor"), (Dash, "bxor"), (Dash, "not"),
         (Dash, "or"), (Dash, "xor"),
-        AssignmentOperator,
-        FileRedirectionOperator,
-        ComparisonOperator,
-        FormatOperator
+        (Dash, Dash), Dash,
     )
 
 

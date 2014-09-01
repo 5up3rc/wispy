@@ -28,6 +28,7 @@ from wispy.grammar import (
     VariableCharacter, VariableCharacters,
     VariableScope, VariableNamespace,
     BracedVariableCharacter, BracedVariableCharacters, BracedVariable,
+    AssignmentOperator, ComparisonOperator, OperatorOrPunctuator
 )
 
 
@@ -39,7 +40,6 @@ class GrammarTest(unittest.TestCase):
     def _test_expected_pairs(self, grammar, text_pairs):
         for text, expected in text_pairs:
             parsed = self._parse(grammar, text)
-            #print(text, expected, str(parsed))
             self.assertEqual(str(parsed), expected)
 
     def _test_expected(self, grammar, texts):
@@ -189,6 +189,54 @@ class GrammarTest(unittest.TestCase):
 
     def test_braced_variable_characters(self):
         self._test_expected(BracedVariableCharacters, ["aaa"])
+
+    def test_assignment_operator(self):
+        literals = [
+            "=", "-=", "+=",
+            "*=", "/=", "%="
+        ]
+        self._test_expected(AssignmentOperator, literals)
+
+        with self.assertRaises(ParseError):
+            self._parse(AssignmentOperator, "&=")
+
+    def test_comparison_operator(self):
+        ops = [
+            "as", "ccontains", "ceq",
+            "cge", "cgt", "cle",
+            "clike", "clt", "cmatch",
+            "cne", "cnotcontains", "cnotlike",
+            "cnotmatch", "contains", "creplace",
+            "csplit", "eq", "ge",
+            "gt", "icontains", "ieq",
+            "ige", "igt", "ile",
+            "ilike", "ilt", "imatch",
+            "ine", "inotcontains", "inotlike",
+            "inotmatch", "ireplace", "is",
+            "isnot", "isplit", "join",
+            "le", "like", "lt",
+            "match", "ne", "notcontains",
+            "notlike", "notmatch", "replace",
+            "split"
+        ]
+        literals = ["-{}".format(op) for op in ops]
+        self._test_expected(ComparisonOperator, literals)
+
+    def test_operator_or_punctuator(self):
+        literals = [
+            "{", "}", "[", "]", "(", ")", "@(", "@{", "$(", ";",
+            "&&", "||", "&", "|", ",", "++", "..", "::", ".",
+            "!", "*", "/", "%", "+", "2>&1", "1>&2",
+            "-", "--",
+            "-and", "-band", "-bnot",
+            "-bor", "-bxor", "-not",
+            "-or", "-xor",
+            "+=", "*=",
+            ">>",
+            "-inotlike",
+            "-f"
+        ]
+        self._test_expected(OperatorOrPunctuator, literals)
 
     def test_variable_character(self):
         literals = list(chain(string.digits, string.ascii_letters, ["?"]))
