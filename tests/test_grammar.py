@@ -22,6 +22,8 @@ from wispy.grammar import (
     ExpandableStringPart,
     GenericTokenChar, GenericTokenPart, GenericTokenParts,
     GenericToken, GenericTokenWithSubexprStart,
+    Dimension,
+    TypeSpec, GenericTypeArguments, TypeLiteral,
     InputCharacter, InputCharacters,
     NewLineCharacter,
     Hashes, NotGreaterThanOrHash,
@@ -195,6 +197,21 @@ class GrammarTest(unittest.TestCase):
             '${Maximum_Count_26}$('
         ]
         self._test_expected(GenericTokenWithSubexprStart, elements)
+
+    def test_dimension(self):
+        self._test_expected(Dimension, [",", ",,"])
+
+    def test_type_spec(self):
+        self._test_expected(TypeSpec, ["int[,]", "int[]"])
+        self._test_expected(TypeSpec, ["int", "float", "double"])
+        self._test_expected(TypeSpec, ["Dictionary[float,double]"])
+
+    def test_type_literal(self):
+        self._test_expected(TypeLiteral, ["[object[]]", "[int]", "[int[,,]]"])
+
+    def test_generic_type_arguments(self):
+        self._test_expected(GenericTypeArguments,
+                            ["int,float", "int[,],float[,]"])
 
     def test_newline(self):
         self._test_expected(NewLineCharacter, ["\r", "\n", "\r\n"])

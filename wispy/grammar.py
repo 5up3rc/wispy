@@ -12,7 +12,7 @@
 from modgrammar import (
     Grammar, OR, WORD, REPEAT, ANY_EXCEPT,
     OPTIONAL, WHITESPACE, ANY, EXCEPT,
-    LIST_OF,
+    LIST_OF, REF,
 )
 
 
@@ -493,6 +493,26 @@ class ArrayTypeName(Grammar):
 
 class GenericTypeName(Grammar):
     grammar = ArrayTypeName
+
+
+class Dimension(Grammar):
+    grammar = REPEAT(",")
+
+
+class TypeSpec(Grammar):
+    grammar = OR(
+        (GenericTypeName, REF("GenericTypeArguments"), "]"),
+        (ArrayTypeName, OPTIONAL(Dimension), "]"),
+        TypeName
+    )
+
+
+class TypeLiteral(Grammar):
+    grammar = ("[", TypeSpec, "]")
+
+
+class GenericTypeArguments(Grammar):
+    grammar = LIST_OF(TypeSpec, sep=",")
 
 
 # Commands
