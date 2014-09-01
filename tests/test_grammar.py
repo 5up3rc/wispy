@@ -17,7 +17,6 @@ from wispy.grammar import (
     SimpleNameFirstCharacter, SimpleNameCharacter,
     SimpleNameCharacters, SimpleName,
     Dollars, DoubleQuoteCharacter,
-    FileRedirectionOperator, FormatOperator,
     SingleQuoteCharacter,
     Keyword,
     ExpandableStringPart,
@@ -37,8 +36,10 @@ from wispy.grammar import (
     VariableCharacter, VariableCharacters,
     VariableScope, VariableNamespace, VerbatimStringLiteral,
     VerbatimHereStringLiteral, VerbatimStringPart, VerbatimStringCharacters,
-    VerbatimHereStringCharacters,
+    VerbatimHereStringCharacters, VerbatimHereStringPart,
     BracedVariableCharacter, BracedVariableCharacters, BracedVariable,
+    FileRedirectionOperator, FormatOperator,
+    AssignmentOperator, ComparisonOperator, OperatorOrPunctuator,
     TypeCharacter, TypeCharacters, TypeIdentifier, TypeName,
     ArrayTypeName, GenericTypeName,
 )
@@ -270,6 +271,54 @@ class GrammarTest(unittest.TestCase):
     def test_braced_variable_characters(self):
         self._test_expected(BracedVariableCharacters, ["aaa"])
 
+    def test_assignment_operator(self):
+        literals = [
+            "=", "-=", "+=",
+            "*=", "/=", "%="
+        ]
+        self._test_expected(AssignmentOperator, literals)
+
+        with self.assertRaises(ParseError):
+            self._parse(AssignmentOperator, "&=")
+
+    def test_comparison_operator(self):
+        ops = [
+            "as", "ccontains", "ceq",
+            "cge", "cgt", "cle",
+            "clike", "clt", "cmatch",
+            "cne", "cnotcontains", "cnotlike",
+            "cnotmatch", "contains", "creplace",
+            "csplit", "eq", "ge",
+            "gt", "icontains", "ieq",
+            "ige", "igt", "ile",
+            "ilike", "ilt", "imatch",
+            "ine", "inotcontains", "inotlike",
+            "inotmatch", "ireplace", "is",
+            "isnot", "isplit", "join",
+            "le", "like", "lt",
+            "match", "ne", "notcontains",
+            "notlike", "notmatch", "replace",
+            "split"
+        ]
+        literals = ["-{}".format(op) for op in ops]
+        self._test_expected(ComparisonOperator, literals)
+
+    def test_operator_or_punctuator(self):
+        literals = [
+            "{", "}", "[", "]", "(", ")", "@(", "@{", "$(", ";",
+            "&&", "||", "&", "|", ",", "++", "..", "::", ".",
+            "!", "*", "/", "%", "+", "2>&1", "1>&2",
+            "-", "--",
+            "-and", "-band", "-bnot",
+            "-bor", "-bxor", "-not",
+            "-or", "-xor",
+            "+=", "*=",
+            ">>",
+            "-inotlike",
+            "-f"
+        ]
+        self._test_expected(OperatorOrPunctuator, literals)
+
     def test_variable_character(self):
         literals = list(chain(string.digits, string.ascii_letters, ["?"]))
         self._test_expected(VariableCharacter, literals)
@@ -362,6 +411,18 @@ class GrammarTest(unittest.TestCase):
         with self.assertRaises(ParseError):
             self._parse(VerbatimStringLiteral, "red")
 
+    def test_verbatim_here_string_part(self):
+        test_ok = [
+            "l",
+            "\nl",
+            "\n'a"
+        ]
+        test_fail = ["\n", "\n'", "\n'@"]
+        self._test_expected(VerbatimHereStringPart, test_ok)
+        for item in test_fail:
+            with self.assertRaises(ParseError):
+                self._parse(VerbatimHereStringPart, item)
+
     def test_verbatim_here_string_literal(self):
         test_ok = [
             "@'\n\n'@",
@@ -389,6 +450,7 @@ class GrammarTest(unittest.TestCase):
 
     def test_verbatim_here_string_characters(self):
         test_ok = [
-            "line1\nexcept_singe_quote_character\n'any_char"
+            "line1\nexcept_singe_quote_character\n'any_char",
+            "a\na\n'a"
         ]
         self._test_expected(VerbatimHereStringCharacters, test_ok)
