@@ -278,7 +278,7 @@ class Variable(Grammar):
         BracedVariable
     )
 
-# String Literals
+# StringLiteral Literals
 
 
 class DoubleQuoteCharacter(Grammar):
@@ -1067,3 +1067,133 @@ class Statement(Grammar):
 class AssignmentExpression(Grammar):
     # FIXME: Remove REF after the Expression grammar is added.
     grammar = (REF('Expression'), AssignmentOperator, Statement)
+
+
+# Expressions
+class ExpandableHereStringWithSubexprPart(Grammar):
+    # FIXME: Remove REF after the SubExpression grammar is added.
+    grammar = OR(REF('SubExpression'), ExpandableHereStringPart)
+
+
+class ExpandableHereStringWithSubexprCharacters(Grammar):
+    grammar = REPEAT(ExpandableHereStringWithSubexprPart)
+
+
+class ExpandableStringWithSubexprPart(Grammar):
+    # FIXME: Remove REF after the SubExpression grammar is added.
+    grammar = OR(REF('SubExpression'), ExpandableStringPart)
+
+
+class ExpandableStringWithSubexprCharacters(Grammar):
+    grammar = REPEAT(ExpandableStringWithSubexprPart)
+
+
+class ExpandableStringLiteralWithSubexpr(Grammar):
+    grammar = OR(
+        (
+            ExpandableStringWithSubexprStart, OPTIONAL(StatementList),
+            ")", ExpandableStringWithSubexprCharacters,
+            ExpandableStringWithSubexprEnd
+        ),
+        (
+            ExpandableHereStringWithSubexprStart, OPTIONAL(StatementList),
+            ExpandableHereStringWithSubexprCharacters,
+            ExpandableHereStringWithSubexprEnd
+        )
+    )
+
+
+class StringLiteralWithSubexpression(Grammar):
+    # FIXME: Remove REF after the ExpandableHereStringLiteralWithSubexpr
+    # grammar is added.
+    grammar = OR(
+        ExpandableStringLiteralWithSubexpr,
+        REF('ExpandableHereStringLiteralWithSubexpr')
+    )
+
+
+class MemberName(Grammar):
+    # FIXME: Remove REF after the Value grammar is added.
+    # FIXME: Remove REF after the ExpressionWithUnaryOperator grammar is added.
+    grammar = OR(
+        SimpleName, StringLiteral, StringLiteralWithSubexpression,
+        REF('ExpressionWithUnaryOperator'), REF('Value')
+    )
+
+
+class RangeArgumentExpression(Grammar):
+    # FIXME: Remove REF after the Expression grammar is added.
+    grammar = OR(
+        REF('UnaryExpression'),
+        (REF('RangeExpression'), "..", OPTIONAL(NewLines),
+         REF('UnaryExpression'))
+    )
+
+
+class FormatArgumentExpression(Grammar):
+    grammar = OR(
+        RangeArgumentExpression,
+        (
+            REF('FormatArgumentExpression'), FormatOperator,
+            OPTIONAL(NewLines), RangeArgumentExpression
+        )
+    )
+
+
+class MultiplicativeArgumentExpression(Grammar):
+    grammar = OR(
+        FormatArgumentExpression,
+        (
+            REF('MultiplicativeArgumentExpression'), OR("*", "/", "%"),
+            OPTIONAL(NewLines), FormatArgumentExpression
+        ),
+
+    )
+
+
+class AdditiveArgumentExpression(Grammar):
+    grammar = OR(
+        MultiplicativeArgumentExpression,
+        (
+            AdditiveArgumentExpression, "+", OPTIONAL(NewLines),
+            MultiplicativeArgumentExpression
+        ),
+        (
+            AdditiveArgumentExpression, Dash, OPTIONAL(NewLines),
+            MultiplicativeArgumentExpression
+        )
+    )
+
+
+class ComparisonArgumentExpression(Grammar):
+    grammar = OR(
+        AdditiveArgumentExpression,
+        (
+            ComparisonArgumentExpression, ComparisonOperator,
+            OPTIONAL(NewLines), AdditiveArgumentExpression
+        )
+    )
+
+
+class BitwiseArgumentExpression(Grammar):
+    grammar = OR(
+        ComparisonArgumentExpression,
+        (
+            REF('BitwiseArgumentExpression'), OR("-band", "-bor", "-bxor"),
+            OPTIONAL(NewLines), ComparisonArgumentExpression
+        )
+    )
+
+
+class LogicalArgumentExpression(Grammar):
+    grammar = OR(
+        BitwiseArgumentExpression,
+        (
+            REF('LogicalArgumentExpression'), OR("-and", "-or", "-xor"),
+            OPTIONAL(NewLines), BitwiseArgumentExpression
+        ),
+    )
+
+
+class ArgumentExpression(Grammar):
+    grammar = (OPTIONAL(NewLines), LogicalArgumentExpression)
