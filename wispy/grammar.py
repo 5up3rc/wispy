@@ -1243,12 +1243,11 @@ class ComparisonExpression(Grammar):
 class AdditiveExpression(Grammar):
     grammar = OR(
         REF("MultiplicativeExpression"),
+        (
+            REF("AdditiveExpression"), OR("+", Dash), OPTIONAL(NewLines),
+            REF("MultiplicativeExpression")
+        )
 
-        (REF("AdditiveExpression"), "+", OPTIONAL(NewLines),
-         REF("MultiplicativeExpression")),
-
-        (REF("AdditiveExpression"), Dash,
-         OPTIONAL(NewLines), REF("MultiplicativeExpression")),
     )
 
 
