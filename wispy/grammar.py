@@ -620,13 +620,149 @@ class SimpleName(Grammar):
     grammar = (SimpleNameFirstCharacter, SimpleNameCharacters)
 
 
+class Value(Grammar):
+    grammar = OR(
+        REF("ParenthesizedExpression"),
+        REF("SubExpression"),
+        REF("ArrayExpression"),
+        REF("ScriptBlockExpression"),
+        REF("HashLiteralExpression"),
+        REF("Literal"),
+        TypeLiteral,
+        Variable
+    )
+
+
+class PrimaryExpression(Grammar):
+    grammar = OR(
+        Value,
+        REF("MemberAccess"),
+        REF("ElementAccess"),
+        REF("InvocationExpression"),
+        REF("PostIncrementExpression"),
+        REF("PostDecrementExpression"),
+    )
+
+
+class ExpressionWithUnaryOperator(Grammar):
+    grammar = OR(
+        (",", OPTIONAL(NewLines), REF("UnaryExpression")),
+        ("-bnot", OPTIONAL(NewLines), REF("UnaryExpression")),
+        ("-not", OPTIONAL(NewLines), REF("UnaryExpression")),
+        ("-split", OPTIONAL(NewLines), REF("UnaryExpression")),
+        ("-join", OPTIONAL(NewLines), REF("UnaryExpression")),
+        ("!", OPTIONAL(NewLines), REF("UnaryExpression")),
+        ("+", OPTIONAL(NewLines), REF("UnaryExpression")),
+        (Dash, OPTIONAL(NewLines), REF("UnaryExpression")),
+        REF("PreIncrementExpression"),
+        REF("PreDecrementExpression"),
+        REF("CastExpression"),
+    )
+
+
+class UnaryExpression(Grammar):
+    grammar = OR(
+        PrimaryExpression,
+        REF("ExpressionWithUnaryOperator")
+    )
+
+
+class PreIncrementExpression(Grammar):
+    grammar = ("++", OPTIONAL(NewLines), REF("UnaryExpression"))
+
+
+class PreDecrementExpression(Grammar):
+    grammar = (Dash, Dash, OPTIONAL(NewLines), REF("UnaryExpression"))
+
+
+class CastExpression(Grammar):
+    grammar = (TypeLiteral, REF("UnaryExpression"))
+
+
+class ArrayLiteralExpression(Grammar):
+    grammar = OR(
+        UnaryExpression,
+        (UnaryExpression, ",", OPTIONAL(NewLines),
+         REF("ArrayLiteralExpression"))
+    )
+
+
+class RangeExpression(Grammar):
+    grammar = OR(
+        ArrayLiteralExpression,
+        (REF("RangeExpression"), "..", OPTIONAL(NewLines),
+         ArrayLiteralExpression)
+    )
+
+
+class FormatExpression(Grammar):
+    grammar = OR(
+        RangeExpression,
+
+        (REF("FormatExpression"), REF("FormatOperator"),
+         OPTIONAL(NewLines), RangeExpression)
+    )
+
+
+class MultiplicativeExpression(Grammar):
+    grammar = OR(
+        FormatExpression,
+        (
+            REF("MultiplicativeExpression"), OR("*", "/", "%"),
+            OPTIONAL(NewLines), FormatExpression
+        )
+    )
+
+
+class AdditiveExpression(Grammar):
+    grammar = OR(
+        MultiplicativeExpression,
+        (
+            REF("AdditiveExpression"), OR("+", Dash), OPTIONAL(NewLines),
+            MultiplicativeExpression
+        )
+
+    )
+
+
+class ComparisonExpression(Grammar):
+    grammar = OR(
+        AdditiveExpression,
+        (REF("ComparisonExpression"), REF("ComparisonOperator"),
+         OPTIONAL(NewLines), AdditiveExpression)
+    )
+
+
+class BitwiseExpression(Grammar):
+    grammar = OR(
+        REF('ComparisonExpression'),
+        (
+            REF('BitwiseExpression'), OR("-band", "-bor", "-bxor"),
+            OPTIONAL(NewLines), REF("ComparisonExpression")
+        )
+    )
+
+
+class LogicalExpression(Grammar):
+    grammar = OR(
+        BitwiseExpression,
+        (
+            REF('LogicalExpression'), OR("-and", "-or", "-xor"),
+            OPTIONAL(NewLines), BitwiseExpression
+        )
+    )
+
+
+class Expression(Grammar):
+    grammar = LogicalExpression
+
+
 # Attributes
 class AttributeArgument(Grammar):
-    # FIXME: Remove REF after the Expression grammar is added.
     grammar = OR(
-        (OPTIONAL(NewLines), REF('Expression')),
+        (OPTIONAL(NewLines), Expression),
         (OPTIONAL(NewLines), SimpleName, "=", OPTIONAL(NewLines),
-         REF('Expression'))
+         Expression)
     )
 
 
@@ -674,8 +810,7 @@ class CommandName(Grammar):
 
 
 class CommandNameExpr(Grammar):
-    # FIXME: Remove REF after the PrimaryExpression grammar is added.
-    grammar = OR(CommandName, REF('PrimaryExpression'))
+    grammar = OR(CommandName, PrimaryExpression)
 
 
 class CommandArgument(Grammar):
@@ -691,8 +826,7 @@ class CommandElements(Grammar):
 
 
 class RedirectedFileName(Grammar):
-    # FIXME: Remove REF after the PrimaryExpression grammar is added.
-    grammar = OR(CommandArgument, REF('PrimaryExpression'))
+    grammar = OR(CommandArgument, PrimaryExpression)
 
 
 class Redirection(Grammar):
@@ -707,8 +841,7 @@ class Redirections(Grammar):
 
 
 class CommandModule(Grammar):
-    # FIXME: Remove REF after the PrimaryExpression grammar is added.
-    grammar = REF('PrimaryExpression')
+    grammar = PrimaryExpression
 
 
 class CommandInvocationOperator(Grammar):
@@ -731,10 +864,9 @@ class PipelineTail(Grammar):
 
 
 class Pipeline(Grammar):
-    # FIXME: Remove REF after the Expression grammar is added.
     grammar = OR(
         REF('AssignmentExpression'),
-        (REF('Expression'), OPTIONAL(Redirections), OPTIONAL(PipelineTail)),
+        (Expression, OPTIONAL(Redirections), OPTIONAL(PipelineTail)),
         (Command, OPTIONAL(PipelineTail))
     )
 
@@ -807,9 +939,8 @@ class ElseClause(Grammar):
 
 
 class ScriptParameterDefault(Grammar):
-    # FIXME: Remove REF after the Expression grammar is added.
     grammar = (
-        OPTIONAL(NewLines), "=", OPTIONAL(NewLines), REF('Expression')
+        OPTIONAL(NewLines), "=", OPTIONAL(NewLines), Expression
     )
 
 
@@ -821,8 +952,7 @@ class ScriptParameter(Grammar):
 
 
 class LabelExpression(Grammar):
-    # FIXME: Remove REF after the UnaryExpression grammar is added.
-    grammar = OR(SimpleName, REF('UnaryExpression'))
+    grammar = OR(SimpleName, UnaryExpression)
 
 
 class FinallyClause(Grammar):
@@ -949,8 +1079,7 @@ class SwitchParameters(Grammar):
 
 
 class SwitchFilename(Grammar):
-    # FIXME: Remove REF after the PrimaryExpression grammar is added.
-    grammar = OR(CommandArgument, REF('PrimaryExpression'))
+    grammar = OR(CommandArgument, PrimaryExpression)
 
 
 class SwitchCondition(Grammar):
@@ -961,8 +1090,7 @@ class SwitchCondition(Grammar):
 
 
 class SwitchClauseCondition(Grammar):
-    # FIXME: Remove REF after the PrimaryExpression grammar is added.
-    grammar = (CommandArgument, REF('PrimaryExpression'))
+    grammar = (CommandArgument, PrimaryExpression)
 
 
 class SwitchClause(Grammar):
@@ -1064,203 +1192,6 @@ class Statement(Grammar):
     )
 
 
-class AssignmentExpression(Grammar):
-    # FIXME: Remove REF after the Expression grammar is added.
-    grammar = (REF('Expression'), AssignmentOperator, Statement)
-
-
-# Expressions
-class ExpandableHereStringWithSubexprPart(Grammar):
-    # FIXME: Remove REF after the SubExpression grammar is added.
-    grammar = OR(REF('SubExpression'), ExpandableHereStringPart)
-
-
-class ExpandableHereStringWithSubexprCharacters(Grammar):
-    grammar = REPEAT(ExpandableHereStringWithSubexprPart)
-
-
-class ExpandableStringWithSubexprPart(Grammar):
-    # FIXME: Remove REF after the SubExpression grammar is added.
-    grammar = OR(REF('SubExpression'), ExpandableStringPart)
-
-
-class ExpandableStringWithSubexprCharacters(Grammar):
-    grammar = REPEAT(ExpandableStringWithSubexprPart)
-
-
-class ExpandableStringLiteralWithSubexpr(Grammar):
-    grammar = OR(
-        (
-            ExpandableStringWithSubexprStart, OPTIONAL(StatementList),
-            ")", ExpandableStringWithSubexprCharacters,
-            ExpandableStringWithSubexprEnd
-        ),
-        (
-            ExpandableHereStringWithSubexprStart, OPTIONAL(StatementList),
-            ExpandableHereStringWithSubexprCharacters,
-            ExpandableHereStringWithSubexprEnd
-        )
-    )
-
-
-class StringLiteralWithSubexpression(Grammar):
-    # FIXME: Remove REF after the ExpandableHereStringLiteralWithSubexpr
-    # grammar is added.
-    grammar = OR(
-        ExpandableStringLiteralWithSubexpr,
-        REF('ExpandableHereStringLiteralWithSubexpr')
-    )
-
-
-class MemberName(Grammar):
-    # FIXME: Remove REF after the Value grammar is added.
-    # FIXME: Remove REF after the ExpressionWithUnaryOperator grammar is added.
-    grammar = OR(
-        SimpleName, StringLiteral, StringLiteralWithSubexpression,
-        REF('ExpressionWithUnaryOperator'), REF('Value')
-    )
-
-
-class Expression(Grammar):
-    grammar = REF('LogicalExpression')
-
-
-class LogicalExpression(Grammar):
-    grammar = OR(
-        REF('BitwiseExpression'),
-        (
-            REF('LogicalExpression'), OR("-and", "-or", "-xor"),
-            OPTIONAL(NewLines), REF("BitwiseExpression")
-        )
-    )
-
-
-class BitwiseExpression(Grammar):
-    grammar = OR(
-        REF('ComparisonExpression'),
-        (
-            REF('BitwiseExpression'), OR("-band", "-bor", "-bxor"),
-            OPTIONAL(NewLines), REF("ComparisonExpression")
-        )
-    )
-
-
-class ComparisonExpression(Grammar):
-    grammar = OR(
-        REF("AdditiveExpression"),
-
-        (REF("ComparisonExpression"), REF("ComparisonOperator"),
-         OPTIONAL(NewLines), REF("AdditiveExpression"))
-    )
-
-
-class AdditiveExpression(Grammar):
-    grammar = OR(
-        REF("MultiplicativeExpression"),
-        (
-            REF("AdditiveExpression"), OR("+", Dash), OPTIONAL(NewLines),
-            REF("MultiplicativeExpression")
-        )
-
-    )
-
-
-class MultiplicativeExpression(Grammar):
-    grammar = OR(
-        REF("FormatExpression"),
-        (
-            REF("MultiplicativeExpression"), OR("*", "/", "%"),
-            OPTIONAL(NewLines), REF("FormatExpression")
-        )
-    )
-
-
-class FormatExpression(Grammar):
-    grammar = OR(
-        REF("RangeExpression"),
-
-        (REF("FormatExpression"), REF("FormatOperator"),
-         OPTIONAL(NewLines), REF("RangeExpression"))
-    )
-
-
-class RangeExpression(Grammar):
-    grammar = OR(
-        REF("ArrayLiteralExpression"),
-
-        (REF("RangeExpression"), "..", OPTIONAL(NewLines),
-         REF("ArrayLiteralExpression"))
-    )
-
-
-class ArrayLiteralExpression(Grammar):
-    grammar = OR(
-        REF("UnaryExpression"),
-
-        (REF("UnaryExpression"), ",", OPTIONAL(NewLines),
-         REF("ArrayLiteralExpression"))
-    )
-
-
-class UnaryExpression(Grammar):
-    grammar = OR(
-        REF("PrimaryExpression"),
-        REF("ExpressionWithUnaryOperator")
-    )
-
-
-class ExpressionWithUnaryOperator(Grammar):
-    grammar = OR(
-        (",", OPTIONAL(NewLines), REF("UnaryExpression")),
-        ("-bnot", OPTIONAL(NewLines), REF("UnaryExpression")),
-        ("-not", OPTIONAL(NewLines), REF("UnaryExpression")),
-        ("-split", OPTIONAL(NewLines), REF("UnaryExpression")),
-        ("-join", OPTIONAL(NewLines), REF("UnaryExpression")),
-        ("!", OPTIONAL(NewLines), REF("UnaryExpression")),
-        ("+", OPTIONAL(NewLines), REF("UnaryExpression")),
-        (Dash, OPTIONAL(NewLines), REF("UnaryExpression")),
-        REF("PreIncrementExpression"),
-        REF("PreDecrementExpression"),
-        REF("CastExpression"),
-    )
-
-
-class PreIncrementExpression(Grammar):
-    grammar = ("++", OPTIONAL(NewLines), REF("UnaryExpression"))
-
-
-class PreDecrementExpression(Grammar):
-    grammar = (Dash, Dash, OPTIONAL(NewLines), REF("UnaryExpression"))
-
-
-class CastExpression(Grammar):
-    grammar = (TypeLiteral, REF("UnaryExpression"))
-
-
-class PrimaryExpression(Grammar):
-    grammar = OR(
-        REF("Value"),
-        REF("MemberAccess"),
-        REF("ElementAccess"),
-        REF("InvocationExpression"),
-        REF("PostIncrementExpression"),
-        REF("PostDecrementExpression"),
-    )
-
-
-class Value(Grammar):
-    grammar = OR(
-        REF("ParenthesizedExpression"),
-        REF("SubExpression"),
-        REF("ArrayExpression"),
-        REF("ScriptBlockExpression"),
-        REF("HashLiteralExpression"),
-        REF("Literal"),
-        TypeLiteral,
-        Variable
-    )
-
-
 class ParenthesizedExpression(Grammar):
     grammar = (OPTIONAL(NewLines), Pipeline, OPTIONAL(NewLines))
 
@@ -1309,10 +1240,6 @@ class PostIncrementExpression(Grammar):
 
 class PostDecrement(Grammar):
     grammar = (PrimaryExpression, Dash, Dash)
-
-
-class MemberAccess(Grammar):
-    grammar = (PrimaryExpression, OR(".", "::"), MemberName)
 
 
 class ElementAccess(Grammar):
@@ -1403,6 +1330,61 @@ class ArgumentExpressionList(Grammar):
 class ArgumentList(Grammar):
     grammar = ("(", OPTIONAL(ArgumentExpressionList),
                OPTIONAL(NewLines), ")")
+
+
+class AssignmentExpression(Grammar):
+    grammar = (Expression, AssignmentOperator, Statement)
+
+
+class ExpandableHereStringWithSubexprPart(Grammar):
+    grammar = OR(SubExpression, ExpandableHereStringPart)
+
+
+class ExpandableHereStringWithSubexprCharacters(Grammar):
+    grammar = REPEAT(ExpandableHereStringWithSubexprPart)
+
+
+class ExpandableStringWithSubexprPart(Grammar):
+    grammar = OR(SubExpression, ExpandableStringPart)
+
+
+class ExpandableStringWithSubexprCharacters(Grammar):
+    grammar = REPEAT(ExpandableStringWithSubexprPart)
+
+
+class ExpandableStringLiteralWithSubexpr(Grammar):
+    grammar = OR(
+        (
+            ExpandableStringWithSubexprStart, OPTIONAL(StatementList),
+            ")", ExpandableStringWithSubexprCharacters,
+            ExpandableStringWithSubexprEnd
+        ),
+        (
+            ExpandableHereStringWithSubexprStart, OPTIONAL(StatementList),
+            ExpandableHereStringWithSubexprCharacters,
+            ExpandableHereStringWithSubexprEnd
+        )
+    )
+
+
+class StringLiteralWithSubexpression(Grammar):
+    # FIXME: Remove REF after the ExpandableHereStringLiteralWithSubexpr
+    # grammar is added.
+    grammar = OR(
+        ExpandableStringLiteralWithSubexpr,
+        REF('ExpandableHereStringLiteralWithSubexpr')
+    )
+
+
+class MemberName(Grammar):
+    grammar = OR(
+        SimpleName, StringLiteral, StringLiteralWithSubexpression,
+        ExpressionWithUnaryOperator, Value
+    )
+
+
+class MemberAccess(Grammar):
+    grammar = (PrimaryExpression, OR(".", "::"), MemberName)
 
 
 class InvocationExpression(Grammar):
