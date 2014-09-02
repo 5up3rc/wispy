@@ -1220,14 +1220,10 @@ class LogicalExpression(Grammar):
 class BitwiseExpression(Grammar):
     grammar = OR(
         REF('ComparisonExpression'),
-        (REF('BitwiseExpression'), "-band",
-         OPTIONAL(NewLines), REF("ComparisonExpression")),
-
-        (REF('BitwiseExpression'), "-bor",
-         OPTIONAL(NewLines), REF("ComparisonExpression")),
-
-        (REF('BitwiseExpression'), "-bxor",
-         OPTIONAL(NewLines), REF("ComparisonExpression")),
+        (
+            REF('BitwiseExpression'), OR("-band", "-bor", "-bxor"),
+            OPTIONAL(NewLines), REF("ComparisonExpression")
+        )
     )
 
 
