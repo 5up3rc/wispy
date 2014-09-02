@@ -18,8 +18,8 @@ from wispy.grammar import (
     SimpleNameCharacters, SimpleName,
     Dollars, DoubleQuoteCharacter,
     SingleQuoteCharacter,
-    Keyword,
-    ExpandableStringPart,
+    Keyword, StringLiteral,
+    ExpandableStringPart, ExpandableStringLiteral, ExpandableHereStringLiteral,
     GenericTokenChar, GenericTokenPart, GenericTokenParts,
     GenericToken, GenericTokenWithSubexprStart,
     InputCharacter, InputCharacters,
@@ -129,9 +129,34 @@ class GrammarTest(unittest.TestCase):
             '$Maximum_Count_26',
             '${Maximum_Count_26}',
             '${Name with`twhite space and `{punctuation`}}',
-            '${E:\File.txt}'
+            r'${E:\File.txt}'
         ]
         self._test_expected(ExpandableStringPart, elements)
+
+    def test_expandable_string_literal(self):
+        literals = [
+            "\"\"", "\"test\"",
+            "\"variable$$\"", "\"$$somet$$hing$$$$\"",
+            "\"$$$$$$\""
+        ]
+        self._test_expected(ExpandableStringLiteral, literals)
+
+    def test_expandable_here_string_literal(self):
+        literals = [
+            "@\"\n\n\"@",
+            "@\"\nline1\n\"@",
+            "@\"\nline1\nline2\nline3\n\"@"
+        ]
+        self._test_expected(ExpandableHereStringLiteral, literals)
+
+    def test_string_literal(self):
+        literals = [
+            "\"tralalala\"",
+            "'tralalala'",
+            "@\"\ntest1\ntest2\n\"@",
+            "@'\ntest1\ntest2\n'@"
+        ]
+        self._test_expected(StringLiteral, literals)
 
     def test_generic_token_char(self):
         self._test_expected(GenericTokenChar, ["\u0060a"])
@@ -170,7 +195,7 @@ class GrammarTest(unittest.TestCase):
             '$Maximum_Count_26',
             '${Maximum_Count_26}',
             '${Name with`twhite space and `{punctuation`}}',
-            '${E:\File.txt}'
+            r'${E:\File.txt}'
         ]
         tests = [quote + char + quote
                  for char in expandable_characters
