@@ -20,6 +20,10 @@ from wispy.grammar import (
     SingleQuoteCharacter,
     Keyword,
     ExpandableStringPart,
+    GenericTokenChar, GenericTokenPart, GenericTokenParts,
+    GenericToken, GenericTokenWithSubexprStart,
+    Dimension,
+    TypeSpec, GenericTypeArguments, TypeLiteral,
     InputCharacter, InputCharacters,
     NewLineCharacter,
     Hashes, NotGreaterThanOrHash,
@@ -130,6 +134,84 @@ class GrammarTest(unittest.TestCase):
             '${E:\File.txt}'
         ]
         self._test_expected(ExpandableStringPart, elements)
+
+    def test_generic_token_char(self):
+        self._test_expected(GenericTokenChar, ["\u0060a"])
+        self._test_expected(GenericTokenChar, string.ascii_letters)
+
+        invalid = chain(["\u0027", "\u2018", "\u2019", "\u201A", "\u201B"],
+                        ["\u0022", "\u201C", "\u201D", "\u201E"],
+                        ["\n", "\r"],
+                        "{}();,|&$\u0060")
+        for char in invalid:
+            with self.assertRaises(ParseError):
+                self._parse(GenericTokenChar, char)
+
+    def test_generic_token_part(self):
+        self._test_expected(GenericTokenPart, string.ascii_letters)
+
+        variable_items = [
+            "$totalCost", "$Maximum_Count_26", "${Maximum_Count_26}",
+            "${Name with`twhite space and `{punctuation`}}",
+            r"${E:\File.txt}", "$$", "$?", "$^",
+            "$global:test_variable",
+            "$local:test_variable",
+            "$private:test_variable",
+            "$script:test_variable",
+            "@global:test_variable",
+            "@local:test_variable",
+            "@private:test_variable",
+            "@script:test_variable",
+        ]
+        self._test_expected(GenericTokenPart, variable_items)
+
+        # Test ExpandableStringLiteral support in GenericTokenPart
+        double_quotes = ["\u0022", "\u201C", "\u201D", "\u201E"]
+        expandable_characters = [
+            '$totalCost',
+            '$Maximum_Count_26',
+            '${Maximum_Count_26}',
+            '${Name with`twhite space and `{punctuation`}}',
+            '${E:\File.txt}'
+        ]
+        tests = [quote + char + quote
+                 for char in expandable_characters
+                 for quote in double_quotes]
+        self._test_expected(GenericTokenPart, tests)
+
+        self._test_expected(GenericTokenPart, ["@' \n\n'@", "@'\nyoshi\n'@"])
+
+    def test_generic_token_parts(self):
+        # Mostly tested by test_generic_token_part
+        self._test_expected(GenericTokenParts, ["@' \n\n'@", "@'\nyoshi\n'@"])
+        self._test_expected(GenericTokenParts, ["@script:test_variable"])
+
+    def test_generic_token(self):
+        # GenericToken is GenericTokenParts
+        self._test_expected(GenericToken, ["@script:test_variable"])
+
+    def test_generic_token_with_subexpr_start(self):
+        elements = [
+            "@script:test_variable$(",
+            '$Maximum_Count_26$(',
+            '${Maximum_Count_26}$('
+        ]
+        self._test_expected(GenericTokenWithSubexprStart, elements)
+
+    def test_dimension(self):
+        self._test_expected(Dimension, [",", ",,"])
+
+    def test_type_spec(self):
+        self._test_expected(TypeSpec, ["int[,]", "int[]"])
+        self._test_expected(TypeSpec, ["int", "float", "double"])
+        self._test_expected(TypeSpec, ["Dictionary[float,double]"])
+
+    def test_type_literal(self):
+        self._test_expected(TypeLiteral, ["[object[]]", "[int]", "[int[,,]]"])
+
+    def test_generic_type_arguments(self):
+        self._test_expected(GenericTypeArguments,
+                            ["int,float", "int[,],float[,]"])
 
     def test_newline(self):
         self._test_expected(NewLineCharacter, ["\r", "\n", "\r\n"])
