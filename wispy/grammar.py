@@ -1331,7 +1331,7 @@ class FormatArgumentExpression(Grammar):
     grammar = OR(
         RangeArgumentExpression,
         (
-            FormatArgumentExpression, FormatOperator,
+            REF('FormatArgumentExpression'), FormatOperator,
             OPTIONAL(NewLines), RangeArgumentExpression
         )
     )
@@ -1341,7 +1341,7 @@ class MultiplicativeArgumentExpression(Grammar):
     grammar = OR(
         FormatArgumentExpression,
         (
-            MultiplicativeArgumentExpression, OR("*", "/", "%"),
+            REF('MultiplicativeArgumentExpression'), OR("*", "/", "%"),
             OPTIONAL(NewLines), FormatArgumentExpression
         ),
 
@@ -1352,7 +1352,7 @@ class AdditiveArgumentExpression(Grammar):
     grammar = OR(
         MultiplicativeArgumentExpression,
         (
-            AdditiveArgumentExpression, OR("+", Dash),
+            REF('AdditiveArgumentExpression'), OR("+", Dash),
             OPTIONAL(NewLines), MultiplicativeArgumentExpression
         )
     )
@@ -1362,7 +1362,7 @@ class ComparisonArgumentExpression(Grammar):
     grammar = OR(
         AdditiveArgumentExpression,
         (
-            ComparisonArgumentExpression, ComparisonOperator,
+            REF('ComparisonArgumentExpression'), ComparisonOperator,
             OPTIONAL(NewLines), AdditiveArgumentExpression
         )
     )
@@ -1372,7 +1372,7 @@ class BitwiseArgumentExpression(Grammar):
     grammar = OR(
         ComparisonArgumentExpression,
         (
-            BitwiseArgumentExpression, OR("-band", "-bor", "-bxor"),
+            REF('BitwiseArgumentExpression'), OR("-band", "-bor", "-bxor"),
             OPTIONAL(NewLines), ComparisonArgumentExpression
         )
     )
@@ -1382,7 +1382,7 @@ class LogicalArgumentExpression(Grammar):
     grammar = OR(
         BitwiseArgumentExpression,
         (
-            LogicalArgumentExpression, OR("-and", "-or", "-xor"),
+            REF('LogicalArgumentExpression'), OR("-and", "-or", "-xor"),
             OPTIONAL(NewLines), BitwiseArgumentExpression
         ),
     )
