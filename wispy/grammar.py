@@ -619,9 +619,53 @@ class SimpleName(Grammar):
     grammar = (SimpleNameFirstCharacter, SimpleNameCharacters)
 
 
+# Attributes
+class AttributeArgument(Grammar):
+    grammar = OR(
+        (OPTIONAL(NewLines), Expression),
+        (OPTIONAL(NewLines), SimpleName, "=", OPTIONAL(NewLines), Expression)
+    )
+
+
+class AttributeArguments(Grammar):
+    grammar = OR(
+        AttributeArgument,
+        (AttributeArgument, OPTIONAL(NewLines), ",",
+         REF('AttributeArguments'))
+    )
+
+
+class AttributeName(Grammar):
+
+    """The :class `AttributeName`: is a reserved attribute type or some
+    implementation-defined attribute type."""
+    grammar = TypeSpec
+
+
+class Attribute(Grammar):
+
+    """An attribute consists of an :class `AttributeName`: and an optional
+    list of positional and named arguments.
+
+    The positional arguments (if any) precede the named arguments.
+    A positional argument consists of a :class `SimpleName`:, followed by an 
+    equal sign, followed by an :class `Expression`:."""
+
+    grammar = OR(
+        ("[", AttributeName, "(", AttributeArguments, OPTIONAL(NewLines),
+         ")", OPTIONAL(NewLines), "]"),
+        TypeLiteral
+    )
+
+
+class AttributeList(Grammar):
+    grammar = OR(
+        Attribute,
+        (REF('AttributeList'), OPTIONAL(NewLines), Attribute)
+    )
+
+
 # Statements
-
-
 class CommandName(Grammar):
     grammar = OR(GenericToken, GenericTokenWithSubexprStart)
 
