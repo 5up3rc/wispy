@@ -24,6 +24,10 @@ class Hashes(Grammar):
     grammar = REPEAT("#")
 
 
+class Colon(Grammar):
+    grammar = WORD(":")
+
+
 class NotGreaterThanOrHash(Grammar):
     grammar = ANY_EXCEPT("#>")
 
@@ -549,6 +553,49 @@ class GenericTokenWithSubexprStart(Grammar):
 
 class GenericToken(Grammar):
     grammar = GenericTokenParts
+
+
+class ParameterCharacter(Grammar):
+    grammar = EXCEPT(ANY, OR(Colon, WHITESPACE, NewLineCharacter,
+                             "{", "}", "(", ")", ";", ",", "|",
+                             "&", ".", "["))
+
+
+class ParameterCharacters(Grammar):
+    grammar = REPEAT(ParameterCharacter)
+
+
+class FirstParameterCharacter(Grammar):
+    grammar = OR(
+        WORD("A-Z", max=1),  # Letter, Uppercase
+        WORD("a-z", max=1),  # Letter, Lowercase
+
+        # Letter, Titlecase
+        WORD("\u01C5"), WORD("\u01C8"), WORD("\u01CB"), WORD("\u01F2"),
+        WORD("\u1F88"), WORD("\u1F89"), WORD("\u1F8A"), WORD("\u1F8B"),
+        WORD("\u1F8C"), WORD("\u1F8D"), WORD("\u1F8E"), WORD("\u1F8F"),
+        WORD("\u1F98"), WORD("\u1F99"), WORD("\u1F9A"), WORD("\u1F9B"),
+        WORD("\u1F9C"), WORD("\u1F9D"), WORD("\u1F9E"), WORD("\u1F9F"),
+        WORD("\u1FA8"), WORD("\u1FA9"), WORD("\u1FAA"), WORD("\u1FAB"),
+        WORD("\u1FAC"), WORD("\u1FAD"), WORD("\u1FAE"), WORD("\u1FAF"),
+        WORD("\u1FBC"), WORD("\u1FCC"), WORD("\u1FFC"),
+
+        # Letter, Modifier
+        WORD("\u02B0-\u02EE", max=1),
+        WORD("\u0374"), WORD("\u037A"), WORD("\u0559"), WORD("\u0640"),
+        WORD("\u06E5"), WORD("\u06E6"), WORD("\u07F4"), WORD("\u07F5"),
+        WORD("\u07FA"), WORD("\u081A"), WORD("\u0824"), WORD("\u0828"),
+        # TODO: Add more characters from the 'Letter, Modifier` Category
+        # TODO: Add characters from the 'Letter, Other' Category
+
+        WORD("\u005F"),                # The underscore character
+        WORD("?")
+    )
+
+
+class CommandParameter(Grammar):
+    grammar = (Dash, FirstParameterCharacter,
+               ParameterCharacters, OPTIONAL(Colon))
 
 
 class SimpleNameFirstCharacter(Grammar):
