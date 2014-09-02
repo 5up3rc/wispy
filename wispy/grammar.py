@@ -1416,9 +1416,9 @@ class ElementAccess(Grammar):
 
 
 class InvocationExpression(Grammar):
-    grammar = OR(
-        (PrimaryExpression, ".", REF("MemberName"), REF("ArgumentList")),
-        (PrimaryExpression, "::", REF("MemberName"), REF("ArgumentList")),
+    grammar = (
+        PrimaryExpression, OR(".", "::"), REF("MemberName"),
+        REF("ArgumentList")
     )
 
 
