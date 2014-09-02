@@ -1155,11 +1155,11 @@ class AdditiveArgumentExpression(Grammar):
     grammar = OR(
         MultiplicativeArgumentExpression,
         (
-            AdditiveArgumentExpression, "+", OPTIONAL(NewLines),
+            REF('AdditiveArgumentExpression'), "+", OPTIONAL(NewLines),
             MultiplicativeArgumentExpression
         ),
         (
-            AdditiveArgumentExpression, Dash, OPTIONAL(NewLines),
+            REF('AdditiveArgumentExpression'), Dash, OPTIONAL(NewLines),
             MultiplicativeArgumentExpression
         )
     )
@@ -1169,7 +1169,7 @@ class ComparisonArgumentExpression(Grammar):
     grammar = OR(
         AdditiveArgumentExpression,
         (
-            ComparisonArgumentExpression, ComparisonOperator,
+            REF('ComparisonArgumentExpression'), ComparisonOperator,
             OPTIONAL(NewLines), AdditiveArgumentExpression
         )
     )
