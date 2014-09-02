@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 """
     wispy.grammar
     ~~~~~~~~~~~~~
@@ -621,9 +622,11 @@ class SimpleName(Grammar):
 
 # Attributes
 class AttributeArgument(Grammar):
+    # FIXME: Remove REF after the Expression grammar is added.
     grammar = OR(
-        (OPTIONAL(NewLines), Expression),
-        (OPTIONAL(NewLines), SimpleName, "=", OPTIONAL(NewLines), Expression)
+        (OPTIONAL(NewLines), REF('Expression')),
+        (OPTIONAL(NewLines), SimpleName, "=", OPTIONAL(NewLines),
+         REF('Expression'))
     )
 
 
@@ -648,7 +651,7 @@ class Attribute(Grammar):
     list of positional and named arguments.
 
     The positional arguments (if any) precede the named arguments.
-    A positional argument consists of a :class `SimpleName`:, followed by an 
+    A positional argument consists of a :class `SimpleName`:, followed by an
     equal sign, followed by an :class `Expression`:."""
 
     grammar = OR(
@@ -671,7 +674,8 @@ class CommandName(Grammar):
 
 
 class CommandNameExpr(Grammar):
-    grammar = OR(CommandName, PrimaryExpression)
+    # FIXME: Remove REF after the PrimaryExpression grammar is added.
+    grammar = OR(CommandName, REF('PrimaryExpression'))
 
 
 class CommandArgument(Grammar):
@@ -687,7 +691,8 @@ class CommandElements(Grammar):
 
 
 class RedirectedFileName(Grammar):
-    grammar = OR(CommandArgument, PrimaryExpression)
+    # FIXME: Remove REF after the PrimaryExpression grammar is added.
+    grammar = OR(CommandArgument, REF('PrimaryExpression'))
 
 
 class Redirection(Grammar):
@@ -702,7 +707,8 @@ class Redirections(Grammar):
 
 
 class CommandModule(Grammar):
-    grammar = PrimaryExpression
+    # FIXME: Remove REF after the PrimaryExpression grammar is added.
+    grammar = REF('PrimaryExpression')
 
 
 class CommandInvocationOperator(Grammar):
@@ -715,6 +721,57 @@ class Command(Grammar):
         (CommandInvocationOperator, OPTIONAL(CommandModule), CommandNameExpr,
          OPTIONAL(CommandElements))
     )
+
+
+class PipelineTail(Grammar):
+    grammar = OR(
+        ("|", OPTIONAL(NewLines), Command),
+        ("|", OPTIONAL(NewLines), Command, REF('PipelineTail'))
+    )
+
+
+class Pipeline(Grammar):
+    # FIXME: Remove REF after the Expression grammar is added.
+    grammar = OR(
+        REF('AssignmentExpression'),
+        (REF('Expression'), OPTIONAL(Redirections), OPTIONAL(PipelineTail)),
+        (Command, OPTIONAL(PipelineTail))
+    )
+
+
+class StatementTerminator(Grammar):
+    grammar = OR(";", NewLineCharacter)
+
+
+class StatementTerminators(Grammar):
+    grammar = REPEAT(StatementTerminator)
+
+
+class StatementList(Grammar):
+    grammar = REPEAT(REF('Statement'))
+
+
+class StatementBlock(Grammar):
+
+    """A statement-block allows a set of statements to be grouped
+    into a single syntactic unit."""
+
+    grammar = (
+        OPTIONAL(NewLines), "{", OPTIONAL(StatementList),
+        OPTIONAL(NewLines), "}"
+    )
+
+
+class BlockName(Grammar):
+    grammar = OR("dynamicparam", "begin", "process", "end")
+
+
+class NamedBlock(Grammar):
+    grammar = (BlockName, StatementBlock, OPTIONAL(StatementTerminators))
+
+
+class NamedBlockList(Grammar):
+    grammar = REPEAT(NamedBlock)
 
 
 class ForInitializer(Grammar):
@@ -749,17 +806,10 @@ class ElseClause(Grammar):
     grammar = (OPTIONAL(NewLines), "else", StatementBlock)
 
 
-class StatementTerminator(Grammar):
-    grammar = OR(";", NewLineCharacter)
-
-
-class StatementTerminators(Grammar):
-    grammar = REPEAT(StatementTerminator)
-
-
 class ScriptParameterDefault(Grammar):
+    # FIXME: Remove REF after the Expression grammar is added.
     grammar = (
-        OPTIONAL(NewLines), "=", OPTIONAL(NewLines), Expression
+        OPTIONAL(NewLines), "=", OPTIONAL(NewLines), REF('Expression')
     )
 
 
@@ -771,7 +821,8 @@ class ScriptParameter(Grammar):
 
 
 class LabelExpression(Grammar):
-    grammar = OR(SimpleName, UnaryExpression)
+    # FIXME: Remove REF after the UnaryExpression grammar is added.
+    grammar = OR(SimpleName, REF('UnaryExpression'))
 
 
 class FinallyClause(Grammar):
@@ -868,7 +919,7 @@ class FunctionParameterDeclaration(Grammar):
 class ParamBlock(Grammar):
     grammar = (
         OPTIONAL(NewLines), OPTIONAL(AttributeList), OPTIONAL(NewLines),
-        Param, OPTIONAL(NewLines), "(", OPTIONAL(ParameterList),
+        "param", OPTIONAL(NewLines), "(", OPTIONAL(ParameterList),
         OPTIONAL(NewLines), ")"
     )
 
@@ -878,9 +929,10 @@ class FunctionName(Grammar):
 
 
 class FunctionStatement(Grammar):
+    # FIXME: Remove REF after the ScriptBlock grammar is added.
     grammar = (
         OR("function", "filter"), OPTIONAL(NewLines), FunctionName,
-        OPTIONAL(FunctionParameterDeclaration), "{", ScriptBlock, "}"
+        OPTIONAL(FunctionParameterDeclaration), "{", REF('ScriptBlock'), "}"
     )
 
 
@@ -897,7 +949,8 @@ class SwitchParameters(Grammar):
 
 
 class SwitchFilename(Grammar):
-    grammar = OR(CommandArgument, PrimaryExpression)
+    # FIXME: Remove REF after the PrimaryExpression grammar is added.
+    grammar = OR(CommandArgument, REF('PrimaryExpression'))
 
 
 class SwitchCondition(Grammar):
@@ -908,7 +961,8 @@ class SwitchCondition(Grammar):
 
 
 class SwitchClauseCondition(Grammar):
-    grammar = (CommandArgument, PrimaryExpression)
+    # FIXME: Remove REF after the PrimaryExpression grammar is added.
+    grammar = (CommandArgument, REF('PrimaryExpression'))
 
 
 class SwitchClause(Grammar):
@@ -1000,7 +1054,7 @@ class Statement(Grammar):
 
     grammar = OR(
         IfStatement,
-        (OPTIONAL(Label), LabeledStatement),
+        (OPTIONAL("label"), LabeledStatement),
         FunctionStatement,
         (FlowControlStatement, StatementTerminator),
         TrapStatement,
@@ -1010,47 +1064,6 @@ class Statement(Grammar):
     )
 
 
-class StatementList(Grammar):
-    grammar = REPEAT(Statement)
-
-
-class StatementBlock(Grammar):
-
-    """A statement-block allows a set of statements to be grouped
-    into a single syntactic unit."""
-
-    grammar = (
-        OPTIONAL(NewLines), "{", OPTIONAL(StatementList),
-        OPTIONAL(NewLines), "}"
-    )
-
-
 class AssignmentExpression(Grammar):
-    grammar = (Expression, AssignmentOperator, Statement)
-
-
-class PipelineTail(Grammar):
-    grammar = OR(
-        ("|", OPTIONAL(NewLines), Command),
-        ("|", OPTIONAL(NewLines), Command, REF('PipelineTail'))
-    )
-
-
-class Pipeline(Grammar):
-    grammar = OR(
-        AssignmentExpression,
-        (Expression, OPTIONAL(Redirections), OPTIONAL(PipelineTail)),
-        (Command, OPTIONAL(PipelineTail))
-    )
-
-
-class BlockName(Grammar):
-    grammar = OR("dynamicparam", "begin", "process", "end")
-
-
-class NamedBlock(Grammar):
-    grammar = (BlockName, StatementBlock, OPTIONAL(StatementTerminators))
-
-
-class NamedBlockList(Grammar):
-    grammar = REPEAT(NamedBlock)
+    # FIXME: Remove REF after the Expression grammar is added.
+    grammar = (REF('Expression'), AssignmentOperator, Statement)
