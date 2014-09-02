@@ -1206,14 +1206,10 @@ class Expression(Grammar):
 class LogicalExpression(Grammar):
     grammar = OR(
         REF('BitwiseExpression'),
-        (REF('LogicalExpression'), "-and",
-         OPTIONAL(NewLines), REF("BitwiseExpression")),
-
-        (REF('LogicalExpression'), "-or",
-         OPTIONAL(NewLines), REF("BitwiseExpression")),
-
-        (REF('LogicalExpression'), "-xor",
-         OPTIONAL(NewLines), REF("BitwiseExpression")),
+        (
+            REF('LogicalExpression'), OR("-and", "-or", "-xor"),
+            OPTIONAL(NewLines), REF("BitwiseExpression")
+        )
     )
 
 
