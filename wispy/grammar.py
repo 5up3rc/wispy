@@ -278,7 +278,7 @@ class Variable(Grammar):
         BracedVariable
     )
 
-# StringLiteral Literals
+# String Literals
 
 
 class DoubleQuoteCharacter(Grammar):
@@ -1197,3 +1197,239 @@ class LogicalArgumentExpression(Grammar):
 
 class ArgumentExpression(Grammar):
     grammar = (OPTIONAL(NewLines), LogicalArgumentExpression)
+
+
+class Expression(Grammar):
+    grammar = REF('LogicalExpression')
+
+
+class LogicalExpression(Grammar):
+    grammar = OR(
+        REF('BitwiseExpression'),
+        (REF('LogicalExpression'), "-and",
+         OPTIONAL(NewLines), REF("BitwiseExpression")),
+
+        (REF('LogicalExpression'), "-or",
+         OPTIONAL(NewLines), REF("BitwiseExpression")),
+
+        (REF('LogicalExpression'), "-xor",
+         OPTIONAL(NewLines), REF("BitwiseExpression")),
+    )
+
+
+class BitwiseExpression(Grammar):
+    grammar = OR(
+        REF('ComparisonExpression'),
+        (REF('BitwiseExpression'), "-band",
+         OPTIONAL(NewLines), REF("ComparisonExpression")),
+
+        (REF('BitwiseExpression'), "-bor",
+         OPTIONAL(NewLines), REF("ComparisonExpression")),
+
+        (REF('BitwiseExpression'), "-bxor",
+         OPTIONAL(NewLines), REF("ComparisonExpression")),
+    )
+
+
+class ComparisonExpression(Grammar):
+    grammar = OR(
+        REF("AdditiveExpression"),
+
+        (REF("ComparisonExpression"), REF("ComparisonOperator"),
+         OPTIONAL(NewLines), REF("AdditiveExpression"))
+    )
+
+
+class AdditiveExpression(Grammar):
+    grammar = OR(
+        REF("MultiplicativeExpression"),
+
+        (REF("AdditiveExpression"), "+", OPTIONAL(NewLines),
+         REF("MultiplicativeExpression")),
+
+        (REF("AdditiveExpression"), Dash,
+         OPTIONAL(NewLines), REF("MultiplicativeExpression")),
+    )
+
+
+class MultiplicativeExpression(Grammar):
+    grammar = OR(
+        REF("FormatExpression"),
+
+        (REF("MultiplicativeExpression"), "*",
+         OPTIONAL(NewLines), REF("FormatExpression")),
+
+        (REF("MultiplicativeExpression"), "/",
+         OPTIONAL(NewLines), REF("FormatExpression")),
+
+        (REF("MultiplicativeExpression"), "%",
+         OPTIONAL(NewLines), REF("FormatExpression")),
+    )
+
+
+class FormatExpression(Grammar):
+    grammar = OR(
+        REF("RangeExpression"),
+
+        (REF("FormatExpression"), REF("FormatOperator"),
+         OPTIONAL(NewLines), REF("RangeExpression"))
+    )
+
+
+class RangeExpression(Grammar):
+    grammar = OR(
+        REF("ArrayLiteralExpression"),
+
+        (REF("RangeExpression"), "..", OPTIONAL(NewLines),
+         REF("ArrayLiteralExpression"))
+    )
+
+
+class ArrayLiteralExpression(Grammar):
+    grammar = OR(
+        REF("UnaryExpression"),
+
+        (REF("UnaryExpression"), ",", OPTIONAL(NewLines),
+         REF("ArrayLiteralExpression"))
+    )
+
+
+class UnaryExpression(Grammar):
+    grammar = OR(
+        REF("PrimaryExpression"),
+        REF("ExpressionWithUnaryOperator")
+    )
+
+
+class ExpressionWithUnaryOperator(Grammar):
+    grammar = OR(
+        (",", OPTIONAL(NewLines), REF("UnaryExpression")),
+        ("-bnot", OPTIONAL(NewLines), REF("UnaryExpression")),
+        ("-not", OPTIONAL(NewLines), REF("UnaryExpression")),
+        ("-split", OPTIONAL(NewLines), REF("UnaryExpression")),
+        ("-join", OPTIONAL(NewLines), REF("UnaryExpression")),
+        ("!", OPTIONAL(NewLines), REF("UnaryExpression")),
+        ("+", OPTIONAL(NewLines), REF("UnaryExpression")),
+        (Dash, OPTIONAL(NewLines), REF("UnaryExpression")),
+        REF("PreIncrementExpression"),
+        REF("PreDecrementExpression"),
+        REF("CastExpression"),
+    )
+
+
+class PreIncrementExpression(Grammar):
+    grammar = ("++", OPTIONAL(NewLines), REF("UnaryExpression"))
+
+
+class PreDecrementExpression(Grammar):
+    grammar = (Dash, Dash, OPTIONAL(NewLines), REF("UnaryExpression"))
+
+
+class CastExpression(Grammar):
+    grammar = (TypeLiteral, REF("UnaryExpression"))
+
+
+class PrimaryExpression(Grammar):
+    grammar = OR(
+        REF("Value"),
+        REF("MemberAccess"),
+        REF("ElementAccess"),
+        REF("InvocationExpression"),
+        REF("PostIncrementExpression"),
+        REF("PostDecrementExpression"),
+    )
+
+
+class Value(Grammar):
+    grammar = OR(
+        REF("ParenthesizedExpression"),
+        REF("SubExpression"),
+        REF("ArrayExpression"),
+        REF("ScriptBlockExpression"),
+        REF("HashLiteralExpression"),
+        REF("Literal"),
+        TypeLiteral,
+        Variable
+    )
+
+
+class ParenthesizedExpression(Grammar):
+    grammar = (OPTIONAL(NewLines), Pipeline, OPTIONAL(NewLines))
+
+
+class SubExpression(Grammar):
+    grammar = ("$(", OPTIONAL(NewLines),
+               OPTIONAL(StatementList), OPTIONAL(NewLines), ")")
+
+
+class ArrayExpression(Grammar):
+    grammar = ("@(", OPTIONAL(NewLines), OPTIONAL(StatementList),
+               OPTIONAL(NewLines), ")")
+
+
+class ScriptBlockExpression(Grammar):
+    grammar = ("{", OPTIONAL(NewLines), REF("ScriptBlock"),
+               OPTIONAL(NewLines), "}")
+
+
+class HashLiteralExpression(Grammar):
+    grammar = ("@{", OPTIONAL(NewLines), OPTIONAL(REF("HashLiteralBody")),
+               OPTIONAL(NewLines), "}")
+
+
+class HashLiteralBody(Grammar):
+    grammar = OR(
+        REF("HashEntry"),
+        (REF("HashLiteralBody"), StatementTerminators, REF("HashEntry"))
+    )
+
+
+class HashEntry(Grammar):
+    grammar = (REF("KeyExpression"), "=", OPTIONAL(NewLines), Statement)
+
+
+class KeyExpression(Grammar):
+    grammar = OR(
+        SimpleName,
+        UnaryExpression
+    )
+
+
+class PostIncrementExpression(Grammar):
+    grammar = (PrimaryExpression, "++")
+
+
+class PostDecrement(Grammar):
+    grammar = (PrimaryExpression, Dash, Dash)
+
+
+class MemberAccess(Grammar):
+    grammar = OR(
+        (PrimaryExpression, ".", REF("MemberName")),
+        (PrimaryExpression, "::", REF("MemberName")),
+    )
+
+
+class ElementAccess(Grammar):
+    grammar = (PrimaryExpression, "[",
+               OPTIONAL(NewLines), Expression, OPTIONAL(NewLines), "]")
+
+
+class InvocationExpression(Grammar):
+    grammar = OR(
+        (PrimaryExpression, ".", REF("MemberName"), REF("ArgumentList")),
+        (PrimaryExpression, "::", REF("MemberName"), REF("ArgumentList")),
+    )
+
+
+class ArgumentList(Grammar):
+    grammar = ("(", OPTIONAL(REF("ArgumentExpressionList")),
+               OPTIONAL(NewLines), ")")
+
+
+class ArgumentExpressionList(Grammar):
+    grammar = OR(
+        REF("ArgumentExpression"),
+        (REF("ArgumentExpression"), OPTIONAL(NewLines),
+         ",", REF("ArgumentExpressionList"))
+    )
