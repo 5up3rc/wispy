@@ -1255,15 +1255,10 @@ class AdditiveExpression(Grammar):
 class MultiplicativeExpression(Grammar):
     grammar = OR(
         REF("FormatExpression"),
-
-        (REF("MultiplicativeExpression"), "*",
-         OPTIONAL(NewLines), REF("FormatExpression")),
-
-        (REF("MultiplicativeExpression"), "/",
-         OPTIONAL(NewLines), REF("FormatExpression")),
-
-        (REF("MultiplicativeExpression"), "%",
-         OPTIONAL(NewLines), REF("FormatExpression")),
+        (
+            REF("MultiplicativeExpression"), OR("*", "/", "%"),
+            OPTIONAL(NewLines), REF("FormatExpression")
+        )
     )
 
 
