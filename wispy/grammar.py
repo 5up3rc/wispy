@@ -12,16 +12,25 @@
 from modgrammar import (
     Grammar, OR, WORD, REPEAT, ANY_EXCEPT,
     OPTIONAL, WHITESPACE, ANY, EXCEPT,
-    LIST_OF,
+    LIST_OF, REF
 )
 
 
+# Line terminators
 class NewLineCharacter(Grammar):
     grammar = OR("\r\n", "\n", "\r")
 
 
+class NewLines(Grammar):
+    grammar = REPEAT(NewLineCharacter)
+
+
 class Hashes(Grammar):
     grammar = REPEAT("#")
+
+
+class Colon(Grammar):
+    grammar = WORD(":")
 
 
 class NotGreaterThanOrHash(Grammar):
@@ -495,6 +504,26 @@ class GenericTypeName(Grammar):
     grammar = ArrayTypeName
 
 
+class Dimension(Grammar):
+    grammar = REPEAT(",")
+
+
+class TypeSpec(Grammar):
+    grammar = OR(
+        (GenericTypeName, REF("GenericTypeArguments"), "]"),
+        (ArrayTypeName, OPTIONAL(Dimension), "]"),
+        TypeName
+    )
+
+
+class TypeLiteral(Grammar):
+    grammar = ("[", TypeSpec, "]")
+
+
+class GenericTypeArguments(Grammar):
+    grammar = LIST_OF(TypeSpec, sep=",")
+
+
 # Commands
 class GenericTokenChar(Grammar):
     grammar = OR(
@@ -531,6 +560,49 @@ class GenericToken(Grammar):
     grammar = GenericTokenParts
 
 
+class ParameterCharacter(Grammar):
+    grammar = EXCEPT(ANY, OR(Colon, WHITESPACE, NewLineCharacter,
+                             "{", "}", "(", ")", ";", ",", "|",
+                             "&", ".", "["))
+
+
+class ParameterCharacters(Grammar):
+    grammar = REPEAT(ParameterCharacter)
+
+
+class FirstParameterCharacter(Grammar):
+    grammar = OR(
+        WORD("A-Z", max=1),  # Letter, Uppercase
+        WORD("a-z", max=1),  # Letter, Lowercase
+
+        # Letter, Titlecase
+        WORD("\u01C5"), WORD("\u01C8"), WORD("\u01CB"), WORD("\u01F2"),
+        WORD("\u1F88"), WORD("\u1F89"), WORD("\u1F8A"), WORD("\u1F8B"),
+        WORD("\u1F8C"), WORD("\u1F8D"), WORD("\u1F8E"), WORD("\u1F8F"),
+        WORD("\u1F98"), WORD("\u1F99"), WORD("\u1F9A"), WORD("\u1F9B"),
+        WORD("\u1F9C"), WORD("\u1F9D"), WORD("\u1F9E"), WORD("\u1F9F"),
+        WORD("\u1FA8"), WORD("\u1FA9"), WORD("\u1FAA"), WORD("\u1FAB"),
+        WORD("\u1FAC"), WORD("\u1FAD"), WORD("\u1FAE"), WORD("\u1FAF"),
+        WORD("\u1FBC"), WORD("\u1FCC"), WORD("\u1FFC"),
+
+        # Letter, Modifier
+        WORD("\u02B0-\u02EE", max=1),
+        WORD("\u0374"), WORD("\u037A"), WORD("\u0559"), WORD("\u0640"),
+        WORD("\u06E5"), WORD("\u06E6"), WORD("\u07F4"), WORD("\u07F5"),
+        WORD("\u07FA"), WORD("\u081A"), WORD("\u0824"), WORD("\u0828"),
+        # TODO: Add more characters from the 'Letter, Modifier` Category
+        # TODO: Add characters from the 'Letter, Other' Category
+
+        WORD("\u005F"),                # The underscore character
+        WORD("?")
+    )
+
+
+class CommandParameter(Grammar):
+    grammar = (Dash, FirstParameterCharacter,
+               ParameterCharacters, OPTIONAL(Colon))
+
+
 class SimpleNameFirstCharacter(Grammar):
     grammar = TypeCharacter
 
@@ -545,3 +617,440 @@ class SimpleNameCharacters(Grammar):
 
 class SimpleName(Grammar):
     grammar = (SimpleNameFirstCharacter, SimpleNameCharacters)
+
+
+# Attributes
+class AttributeArgument(Grammar):
+    grammar = OR(
+        (OPTIONAL(NewLines), Expression),
+        (OPTIONAL(NewLines), SimpleName, "=", OPTIONAL(NewLines), Expression)
+    )
+
+
+class AttributeArguments(Grammar):
+    grammar = OR(
+        AttributeArgument,
+        (AttributeArgument, OPTIONAL(NewLines), ",",
+         REF('AttributeArguments'))
+    )
+
+
+class AttributeName(Grammar):
+
+    """The :class `AttributeName`: is a reserved attribute type or some
+    implementation-defined attribute type."""
+    grammar = TypeSpec
+
+
+class Attribute(Grammar):
+
+    """An attribute consists of an :class `AttributeName`: and an optional
+    list of positional and named arguments.
+
+    The positional arguments (if any) precede the named arguments.
+    A positional argument consists of a :class `SimpleName`:, followed by an 
+    equal sign, followed by an :class `Expression`:."""
+
+    grammar = OR(
+        ("[", AttributeName, "(", AttributeArguments, OPTIONAL(NewLines),
+         ")", OPTIONAL(NewLines), "]"),
+        TypeLiteral
+    )
+
+
+class AttributeList(Grammar):
+    grammar = OR(
+        Attribute,
+        (REF('AttributeList'), OPTIONAL(NewLines), Attribute)
+    )
+
+
+# Statements
+class CommandName(Grammar):
+    grammar = OR(GenericToken, GenericTokenWithSubexprStart)
+
+
+class CommandNameExpr(Grammar):
+    grammar = OR(CommandName, PrimaryExpression)
+
+
+class CommandArgument(Grammar):
+    grammar = CommandNameExpr
+
+
+class CommandElement(Grammar):
+    grammar = OR(CommandParameter, CommandArgument, REF('Redirections'))
+
+
+class CommandElements(Grammar):
+    grammar = REPEAT(CommandElement)
+
+
+class RedirectedFileName(Grammar):
+    grammar = OR(CommandArgument, PrimaryExpression)
+
+
+class Redirection(Grammar):
+    grammar = OR(
+        "2>&1", "1>&2",
+        (FileRedirectionOperator, RedirectedFileName)
+    )
+
+
+class Redirections(Grammar):
+    grammar = REPEAT(Redirection)
+
+
+class CommandModule(Grammar):
+    grammar = PrimaryExpression
+
+
+class CommandInvocationOperator(Grammar):
+    grammar = OR("&", ".")
+
+
+class Command(Grammar):
+    grammar = OR(
+        (CommandName, OPTIONAL(CommandElements)),
+        (CommandInvocationOperator, OPTIONAL(CommandModule), CommandNameExpr,
+         OPTIONAL(CommandElements))
+    )
+
+
+class ForInitializer(Grammar):
+    grammar = Pipeline
+
+
+class ForCondition(Grammar):
+    grammar = Pipeline
+
+
+class ForIterator(Grammar):
+    grammar = Pipeline
+
+
+class WhileCondition(Grammar):
+    grammar = (OPTIONAL(NewLines), Pipeline)
+
+
+class ElseIfClause(Grammar):
+    grammar = (
+        OPTIONAL(NewLines), "elseif", OPTIONAL(NewLines), "(",
+        OPTIONAL(NewLines), Pipeline, OPTIONAL(NewLines), ")",
+        StatementBlock
+    )
+
+
+class ElseIfClauses(Grammar):
+    grammar = REPEAT(ElseIfClause)
+
+
+class ElseClause(Grammar):
+    grammar = (OPTIONAL(NewLines), "else", StatementBlock)
+
+
+class StatementTerminator(Grammar):
+    grammar = OR(";", NewLineCharacter)
+
+
+class StatementTerminators(Grammar):
+    grammar = REPEAT(StatementTerminator)
+
+
+class ScriptParameterDefault(Grammar):
+    grammar = (
+        OPTIONAL(NewLines), "=", OPTIONAL(NewLines), Expression
+    )
+
+
+class ScriptParameter(Grammar):
+    grammar = (
+        OPTIONAL(NewLines), OPTIONAL(AttributeList), OPTIONAL(NewLines),
+        Variable, OPTIONAL(ScriptParameterDefault)
+    )
+
+
+class LabelExpression(Grammar):
+    grammar = OR(SimpleName, UnaryExpression)
+
+
+class FinallyClause(Grammar):
+    grammar = (OPTIONAL(NewLines), "finally", StatementBlock)
+
+
+class CatchTypeList(Grammar):
+    grammar = OPTIONAL(
+        (OPTIONAL(NewLines), TypeLiteral),
+        (REF('CatchTypeList'), OPTIONAL(NewLines), ",", OPTIONAL(NewLines),
+         TypeLiteral)
+    )
+
+
+class CatchClause(Grammar):
+    grammar = (OPTIONAL(NewLines), "catch", OPTIONAL(CatchTypeList),
+               StatementBlock)
+
+
+class CatchClauses(Grammar):
+    grammar = REPEAT(CatchClause)
+
+
+class DataName(Grammar):
+    grammar = SimpleName
+
+
+class DataCommand(Grammar):
+    grammar = CommandNameExpr
+
+
+class DataCommandsList(Grammar):
+    grammar = OR(
+        (OPTIONAL(NewLines), DataCommand),
+        (REF('DataCommandsList'), OPTIONAL(NewLines), DataCommand)
+    )
+
+
+class DataCommandsAllowed(Grammar):
+    grammar = (OPTIONAL(NewLines), "-supportedcommand", DataCommandsList)
+
+
+class IfStatement(Grammar):
+    grammar = (
+        "if", OPTIONAL(NewLines), "(", OPTIONAL(NewLines), Pipeline,
+        OPTIONAL(NewLines), ")", StatementBlock, OPTIONAL(ElseIfClauses),
+        OPTIONAL(ElseClause)
+    )
+
+
+class TrapStatement(Grammar):
+    grammar = (
+        "trap", OPTIONAL(NewLines), OPTIONAL(TypeLiteral),
+        OPTIONAL(NewLines), StatementBlock
+    )
+
+
+class TryStatement(Grammar):
+    grammar = OR(
+        ("try", StatementBlock, CatchClauses),
+        ("try", StatementBlock, FinallyClause),
+        ("try", StatementBlock, CatchClauses, FinallyClause)
+    )
+
+
+class DataStatement(Grammar):
+    grammar = (
+        "data", OPTIONAL(NewLines), DataName, OPTIONAL(DataCommandsAllowed),
+        StatementBlock
+    )
+
+
+class FlowControlStatement(Grammar):
+    grammar = OR(
+        ("break", OPTIONAL(LabelExpression)),
+        ("continue", OPTIONAL(LabelExpression)),
+        ("throw", OPTIONAL(Pipeline)),
+        ("return", OPTIONAL(Pipeline)),
+        ("exit", OPTIONAL(Pipeline))
+    )
+
+
+class ParameterList(Grammar):
+    grammar = OR(
+        ScriptParameter,
+        (REF('ParameterList'), OPTIONAL(NewLines), ScriptParameter)
+    )
+
+
+class FunctionParameterDeclaration(Grammar):
+    grammar = (OPTIONAL(NewLines), "(", ParameterList, OPTIONAL(NewLines), ")")
+
+
+class ParamBlock(Grammar):
+    grammar = (
+        OPTIONAL(NewLines), OPTIONAL(AttributeList), OPTIONAL(NewLines),
+        Param, OPTIONAL(NewLines), "(", OPTIONAL(ParameterList),
+        OPTIONAL(NewLines), ")"
+    )
+
+
+class FunctionName(Grammar):
+    grammar = CommandArgument
+
+
+class FunctionStatement(Grammar):
+    grammar = (
+        OR("function", "filter"), OPTIONAL(NewLines), FunctionName,
+        OPTIONAL(FunctionParameterDeclaration), "{", ScriptBlock, "}"
+    )
+
+
+class ScriptBlockBody(Grammar):
+    grammar = OR(NamedBlockList, StatementList)
+
+
+class SwitchParameter(Grammar):
+    grammar = OR("-regex", "-wildcard", "-exact", "-casesensitive")
+
+
+class SwitchParameters(Grammar):
+    grammar = REPEAT(SwitchParameter)
+
+
+class SwitchFilename(Grammar):
+    grammar = OR(CommandArgument, PrimaryExpression)
+
+
+class SwitchCondition(Grammar):
+    grammar = OR(
+        ("(", OPTIONAL(NewLines), Pipeline, OPTIONAL(NewLines), ")"),
+        ("-file", OPTIONAL(NewLines), SwitchFilename)
+    )
+
+
+class SwitchClauseCondition(Grammar):
+    grammar = (CommandArgument, PrimaryExpression)
+
+
+class SwitchClause(Grammar):
+    grammar = (SwitchClauseCondition, StatementBlock,
+               OPTIONAL(StatementTerminators))
+
+
+class SwitchClauses(Grammar):
+    grammar = REPEAT(SwitchClause)
+
+
+class SwitchBody(Grammar):
+    grammar = (
+        OPTIONAL(NewLines), "{", OPTIONAL(NewLines), SwitchClauses, "}"
+    )
+
+
+class SwitchStatement(Grammar):
+    grammar = (
+        "switch", OPTIONAL(NewLines), OPTIONAL(SwitchParameters),
+        SwitchCondition, SwitchBody
+    )
+
+
+class ForeachStatement(Grammar):
+    grammar = (
+        "foreach", OPTIONAL(NewLines), "(", OPTIONAL(NewLines), Variable,
+        OPTIONAL(NewLines), "in", OPTIONAL(NewLines), Pipeline,
+        OPTIONAL(NewLines), ")", StatementBlock
+    )
+
+
+class ForStatement(Grammar):
+    grammar = OR(
+        (
+            "for", OPTIONAL(NewLines), "(", OPTIONAL(ForInitializer),
+            StatementTerminator, OPTIONAL(NewLines), OPTIONAL(ForCondition),
+            StatementTerminator, OPTIONAL(NewLines), OPTIONAL(ForIterator),
+            OPTIONAL(NewLines), ")", StatementBlock
+        ),
+        (
+            "for", OPTIONAL(NewLines), "(", OPTIONAL(ForInitializer),
+            StatementTerminator, OPTIONAL(NewLines), OPTIONAL(ForCondition),
+            OPTIONAL(NewLines), ")", StatementBlock
+        ),
+        (
+            "for", OPTIONAL(NewLines), "(", OPTIONAL(ForInitializer),
+            OPTIONAL(NewLines), ")", StatementBlock
+        ),
+    )
+
+
+class WhileStatement(Grammar):
+    grammar = (
+        "while", OPTIONAL(NewLines), "(", OPTIONAL(NewLines), WhileCondition,
+        OPTIONAL(NewLines), ")", StatementBlock
+    )
+
+
+class DoStatement(Grammar):
+    grammar = OR(
+        (
+            "do", StatementBlock, OPTIONAL(NewLines), "while",
+            OPTIONAL(NewLines), "(", WhileCondition, OPTIONAL(NewLines), ")"
+        ),
+        (
+            "do", StatementBlock, OPTIONAL(NewLines), "until",
+            OPTIONAL(NewLines), "(", WhileCondition, OPTIONAL(NewLines), ")"
+        )
+    )
+
+
+class LabeledStatement(Grammar):
+    grammar = OR(
+        SwitchStatement,
+        ForeachStatement,
+        ForStatement,
+        WhileStatement,
+        DoStatement
+    )
+
+
+class Statement(Grammar):
+
+    """A statement specifies some sort of action that is to be performed.
+
+    Unless indicated otherwise within this clause,statements are executed
+    in lexical order."""
+
+    grammar = OR(
+        IfStatement,
+        (OPTIONAL(Label), LabeledStatement),
+        FunctionStatement,
+        (FlowControlStatement, StatementTerminator),
+        TrapStatement,
+        TryStatement,
+        DataStatement,
+        (Pipeline, StatementTerminator)
+    )
+
+
+class StatementList(Grammar):
+    grammar = REPEAT(Statement)
+
+
+class StatementBlock(Grammar):
+
+    """A statement-block allows a set of statements to be grouped
+    into a single syntactic unit."""
+
+    grammar = (
+        OPTIONAL(NewLines), "{", OPTIONAL(StatementList),
+        OPTIONAL(NewLines), "}"
+    )
+
+
+class AssignmentExpression(Grammar):
+    grammar = (Expression, AssignmentOperator, Statement)
+
+
+class PipelineTail(Grammar):
+    grammar = OR(
+        ("|", OPTIONAL(NewLines), Command),
+        ("|", OPTIONAL(NewLines), Command, REF('PipelineTail'))
+    )
+
+
+class Pipeline(Grammar):
+    grammar = OR(
+        AssignmentExpression,
+        (Expression, OPTIONAL(Redirections), OPTIONAL(PipelineTail)),
+        (Command, OPTIONAL(PipelineTail))
+    )
+
+
+class BlockName(Grammar):
+    grammar = OR("dynamicparam", "begin", "process", "end")
+
+
+class NamedBlock(Grammar):
+    grammar = (BlockName, StatementBlock, OPTIONAL(StatementTerminators))
+
+
+class NamedBlockList(Grammar):
+    grammar = REPEAT(NamedBlock)

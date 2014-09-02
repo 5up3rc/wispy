@@ -22,6 +22,11 @@ from wispy.grammar import (
     ExpandableStringPart, ExpandableStringLiteral, ExpandableHereStringLiteral,
     GenericTokenChar, GenericTokenPart, GenericTokenParts,
     GenericToken, GenericTokenWithSubexprStart,
+    Dimension,
+    TypeSpec, GenericTypeArguments, TypeLiteral,
+    Colon,
+    ParameterCharacter, ParameterCharacters,
+    FirstParameterCharacter, CommandParameter,
     InputCharacter, InputCharacters,
     NewLineCharacter,
     Hashes, NotGreaterThanOrHash,
@@ -220,6 +225,53 @@ class GrammarTest(unittest.TestCase):
             '${Maximum_Count_26}$('
         ]
         self._test_expected(GenericTokenWithSubexprStart, elements)
+
+    def test_dimension(self):
+        self._test_expected(Dimension, [",", ",,"])
+
+    def test_type_spec(self):
+        self._test_expected(TypeSpec, ["int[,]", "int[]"])
+        self._test_expected(TypeSpec, ["int", "float", "double"])
+        self._test_expected(TypeSpec, ["Dictionary[float,double]"])
+
+    def test_type_literal(self):
+        self._test_expected(TypeLiteral, ["[object[]]", "[int]", "[int[,,]]"])
+
+    def test_colon(self):
+        self._test_expected(Colon, [":"])
+
+    def test_parameter_character(self):
+        literals = [":", "\r", "\n", "{", "}", "(", ")", ";", ",", "|",
+                    "&", ".", "["]
+        for literal in literals:
+            with self.assertRaises(ParseError):
+                self._parse(ParameterCharacter, literal)
+
+        self._test_expected(ParameterCharacter, string.ascii_letters)
+
+    def test_parameter_characters(self):
+        self._test_expected(ParameterCharacters, string.ascii_letters)
+        self._test_expected(ParameterCharacters, ["char", "float", "double"])
+
+    def test_first_parameter_character(self):
+        literals = list(chain(string.ascii_letters, ["\u005F", "?"]))
+        self._test_expected(FirstParameterCharacter, literals)
+
+        for digit in string.digits:
+            with self.assertRaises(ParseError):
+                self._parse(FirstParameterCharacter, digit)
+
+    def test_command_parameter(self):
+        dashes = "-", "\u2013", "\u2014", "\u2015"
+        parts = [dash + letter + "wispy"
+                 for dash in dashes
+                 for letter in string.ascii_letters]
+        self._test_expected(CommandParameter, parts)
+        self._test_expected(CommandParameter, [part + ":" for part in parts])
+
+    def test_generic_type_arguments(self):
+        self._test_expected(GenericTypeArguments,
+                            ["int,float", "int[,],float[,]"])
 
     def test_newline(self):
         self._test_expected(NewLineCharacter, ["\r", "\n", "\r\n"])
