@@ -1404,10 +1404,7 @@ class PostDecrement(Grammar):
 
 
 class MemberAccess(Grammar):
-    grammar = OR(
-        (PrimaryExpression, ".", REF("MemberName")),
-        (PrimaryExpression, "::", REF("MemberName")),
-    )
+    grammar = (PrimaryExpression, OR(".", "::"), REF("MemberName"))
 
 
 class ElementAccess(Grammar):
