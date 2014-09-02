@@ -1121,80 +1121,6 @@ class MemberName(Grammar):
     )
 
 
-class RangeArgumentExpression(Grammar):
-    # FIXME: Remove REF after the Expression grammar is added.
-    grammar = OR(
-        REF('UnaryExpression'),
-        (REF('RangeExpression'), "..", OPTIONAL(NewLines),
-         REF('UnaryExpression'))
-    )
-
-
-class FormatArgumentExpression(Grammar):
-    grammar = OR(
-        RangeArgumentExpression,
-        (
-            REF('FormatArgumentExpression'), FormatOperator,
-            OPTIONAL(NewLines), RangeArgumentExpression
-        )
-    )
-
-
-class MultiplicativeArgumentExpression(Grammar):
-    grammar = OR(
-        FormatArgumentExpression,
-        (
-            REF('MultiplicativeArgumentExpression'), OR("*", "/", "%"),
-            OPTIONAL(NewLines), FormatArgumentExpression
-        ),
-
-    )
-
-
-class AdditiveArgumentExpression(Grammar):
-    grammar = OR(
-        MultiplicativeArgumentExpression,
-        (
-            REF('AdditiveArgumentExpression'), OR("+", Dash),
-            OPTIONAL(NewLines), MultiplicativeArgumentExpression
-        )
-    )
-
-
-class ComparisonArgumentExpression(Grammar):
-    grammar = OR(
-        AdditiveArgumentExpression,
-        (
-            REF('ComparisonArgumentExpression'), ComparisonOperator,
-            OPTIONAL(NewLines), AdditiveArgumentExpression
-        )
-    )
-
-
-class BitwiseArgumentExpression(Grammar):
-    grammar = OR(
-        ComparisonArgumentExpression,
-        (
-            REF('BitwiseArgumentExpression'), OR("-band", "-bor", "-bxor"),
-            OPTIONAL(NewLines), ComparisonArgumentExpression
-        )
-    )
-
-
-class LogicalArgumentExpression(Grammar):
-    grammar = OR(
-        BitwiseArgumentExpression,
-        (
-            REF('LogicalArgumentExpression'), OR("-and", "-or", "-xor"),
-            OPTIONAL(NewLines), BitwiseArgumentExpression
-        ),
-    )
-
-
-class ArgumentExpression(Grammar):
-    grammar = (OPTIONAL(NewLines), LogicalArgumentExpression)
-
-
 class Expression(Grammar):
     grammar = REF('LogicalExpression')
 
@@ -1354,27 +1280,27 @@ class ScriptBlockExpression(Grammar):
                OPTIONAL(NewLines), "}")
 
 
-class HashLiteralExpression(Grammar):
-    grammar = ("@{", OPTIONAL(NewLines), OPTIONAL(REF("HashLiteralBody")),
-               OPTIONAL(NewLines), "}")
-
-
-class HashLiteralBody(Grammar):
-    grammar = OR(
-        REF("HashEntry"),
-        (REF("HashLiteralBody"), StatementTerminators, REF("HashEntry"))
-    )
-
-
-class HashEntry(Grammar):
-    grammar = (REF("KeyExpression"), "=", OPTIONAL(NewLines), Statement)
-
-
 class KeyExpression(Grammar):
     grammar = OR(
         SimpleName,
         UnaryExpression
     )
+
+
+class HashEntry(Grammar):
+    grammar = (KeyExpression, "=", OPTIONAL(NewLines), Statement)
+
+
+class HashLiteralBody(Grammar):
+    grammar = OR(
+        HashEntry,
+        (REF("HashLiteralBody"), StatementTerminators, HashEntry)
+    )
+
+
+class HashLiteralExpression(Grammar):
+    grammar = ("@{", OPTIONAL(NewLines), OPTIONAL(HashLiteralBody),
+               OPTIONAL(NewLines), "}")
 
 
 class PostIncrementExpression(Grammar):
@@ -1386,7 +1312,7 @@ class PostDecrement(Grammar):
 
 
 class MemberAccess(Grammar):
-    grammar = (PrimaryExpression, OR(".", "::"), REF("MemberName"))
+    grammar = (PrimaryExpression, OR(".", "::"), MemberName)
 
 
 class ElementAccess(Grammar):
@@ -1394,21 +1320,93 @@ class ElementAccess(Grammar):
                OPTIONAL(NewLines), Expression, OPTIONAL(NewLines), "]")
 
 
-class InvocationExpression(Grammar):
-    grammar = (
-        PrimaryExpression, OR(".", "::"), REF("MemberName"),
-        REF("ArgumentList")
+class RangeArgumentExpression(Grammar):
+    grammar = OR(
+        UnaryExpression,
+        (RangeExpression, "..", OPTIONAL(NewLines), UnaryExpression)
     )
 
 
-class ArgumentList(Grammar):
-    grammar = ("(", OPTIONAL(REF("ArgumentExpressionList")),
-               OPTIONAL(NewLines), ")")
+class FormatArgumentExpression(Grammar):
+    grammar = OR(
+        RangeArgumentExpression,
+        (
+            FormatArgumentExpression, FormatOperator,
+            OPTIONAL(NewLines), RangeArgumentExpression
+        )
+    )
+
+
+class MultiplicativeArgumentExpression(Grammar):
+    grammar = OR(
+        FormatArgumentExpression,
+        (
+            MultiplicativeArgumentExpression, OR("*", "/", "%"),
+            OPTIONAL(NewLines), FormatArgumentExpression
+        ),
+
+    )
+
+
+class AdditiveArgumentExpression(Grammar):
+    grammar = OR(
+        MultiplicativeArgumentExpression,
+        (
+            AdditiveArgumentExpression, OR("+", Dash),
+            OPTIONAL(NewLines), MultiplicativeArgumentExpression
+        )
+    )
+
+
+class ComparisonArgumentExpression(Grammar):
+    grammar = OR(
+        AdditiveArgumentExpression,
+        (
+            ComparisonArgumentExpression, ComparisonOperator,
+            OPTIONAL(NewLines), AdditiveArgumentExpression
+        )
+    )
+
+
+class BitwiseArgumentExpression(Grammar):
+    grammar = OR(
+        ComparisonArgumentExpression,
+        (
+            BitwiseArgumentExpression, OR("-band", "-bor", "-bxor"),
+            OPTIONAL(NewLines), ComparisonArgumentExpression
+        )
+    )
+
+
+class LogicalArgumentExpression(Grammar):
+    grammar = OR(
+        BitwiseArgumentExpression,
+        (
+            LogicalArgumentExpression, OR("-and", "-or", "-xor"),
+            OPTIONAL(NewLines), BitwiseArgumentExpression
+        ),
+    )
+
+
+class ArgumentExpression(Grammar):
+    grammar = (OPTIONAL(NewLines), LogicalArgumentExpression)
 
 
 class ArgumentExpressionList(Grammar):
     grammar = OR(
-        REF("ArgumentExpression"),
-        (REF("ArgumentExpression"), OPTIONAL(NewLines),
+        ArgumentExpression,
+        (ArgumentExpression, OPTIONAL(NewLines),
          ",", REF("ArgumentExpressionList"))
+    )
+
+
+class ArgumentList(Grammar):
+    grammar = ("(", OPTIONAL(ArgumentExpressionList),
+               OPTIONAL(NewLines), ")")
+
+
+class InvocationExpression(Grammar):
+    grammar = (
+        PrimaryExpression, OR(".", "::"), MemberName,
+        ArgumentList
     )
