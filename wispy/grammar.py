@@ -74,10 +74,10 @@ class DelimitedComment(Grammar):
 class Comment(Grammar):
 
     """A comment is treated as white space.
-    
+
     The productions above imply that
         * Comments do not nest.
-        * The character sequences <# and #> have no special meaning in a 
+        * The character sequences <# and #> have no special meaning in a
         :class SingleLineComment:.
         * The character # has no special meaning in a delimited comment.
     """
