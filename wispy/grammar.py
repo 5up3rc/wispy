@@ -47,6 +47,10 @@ class InputCharacters(Grammar):
 
 
 class SingleLineComment(Grammar):
+
+    """A :class SingleLineComment: begins with the character `#` and ends with
+    a :class NewLineCharacter:."""
+
     grammar = ("#", OPTIONAL(WHITESPACE), OPTIONAL(InputCharacters))
 
 
@@ -59,10 +63,25 @@ class DelimitedCommentText(Grammar):
 
 
 class DelimitedComment(Grammar):
+
+    """A :class DelimitedComment: begins with the character pair <# and ends
+    with the character pair #>. It can occur as part of a source line,
+    as a whole source line, or it can span any number of source lines."""
+
     grammar = ("<#", OPTIONAL(DelimitedCommentText), Hashes, ">")
 
 
 class Comment(Grammar):
+
+    """A comment is treated as white space.
+    
+    The productions above imply that
+        * Comments do not nest.
+        * The character sequences <# and #> have no special meaning in a 
+        :class SingleLineComment:.
+        * The character # has no special meaning in a delimited comment.
+    """
+
     grammar = OR(SingleLineComment, DelimitedComment)
 
 
@@ -254,6 +273,10 @@ class VariableScope(Grammar):
 
 
 class EscapedCharacter(Grammar):
+
+    """An escaped character is a way to assign a special interpretation
+    to a character by giving it a prefix Backtick character."""
+
     grammar = ("\u0060", ANY)
 
 
