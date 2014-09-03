@@ -720,7 +720,7 @@ class FormatExpression(Grammar):
     grammar = OR(
         RangeExpression,
 
-        (REF("FormatExpression"), REF("FormatOperator"),
+        (REF("FormatExpression"), FormatOperator,
          OPTIONAL(NewLines), RangeExpression)
     )
 
@@ -756,10 +756,10 @@ class ComparisonExpression(Grammar):
 
 class BitwiseExpression(Grammar):
     grammar = OR(
-        REF('ComparisonExpression'),
+        ComparisonExpression,
         (
             REF('BitwiseExpression'), OR("-band", "-bor", "-bxor"),
-            OPTIONAL(NewLines), REF("ComparisonExpression")
+            OPTIONAL(NewLines), ComparisonExpression
         )
     )
 
