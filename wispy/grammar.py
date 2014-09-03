@@ -479,6 +479,10 @@ class StringLiteral(Grammar):
                  VerbatimHereStringLiteral)
 
 
+class Literal(Grammar):
+    grammar = OR(IntegerLiteral, RealLiteral, StringLiteral)
+
+
 # Type names.
 
 class TypeCharacter(Grammar):
@@ -650,7 +654,7 @@ class Value(Grammar):
         REF("ArrayExpression"),
         REF("ScriptBlockExpression"),
         REF("HashLiteralExpression"),
-        REF("Literal"),
+        Literal,
         TypeLiteral,
         Variable
     )
@@ -697,77 +701,43 @@ class CastExpression(Grammar):
 
 
 class ArrayLiteralExpression(Grammar):
-    grammar = OR(
-        UnaryExpression,
-        (UnaryExpression, ",", OPTIONAL(NewLines),
-         REF("ArrayLiteralExpression"))
-    )
+    grammar = LIST_OF(UnaryExpression,
+                      sep=(",", OPTIONAL(NewLines)))
 
 
 class RangeExpression(Grammar):
-    grammar = OR(
-        ArrayLiteralExpression,
-        (REF("RangeExpression"), "..", OPTIONAL(NewLines),
-         ArrayLiteralExpression)
-    )
+    grammar = LIST_OF(ArrayLiteralExpression,
+                      sep=("..", OPTIONAL(NewLines)))
 
 
 class FormatExpression(Grammar):
-    grammar = OR(
-        RangeExpression,
-
-        (REF("FormatExpression"), REF("FormatOperator"),
-         OPTIONAL(NewLines), RangeExpression)
-    )
+    grammar = LIST_OF(RangeExpression,
+                      sep=(FormatOperator, OPTIONAL(NewLines)))
 
 
 class MultiplicativeExpression(Grammar):
-    grammar = OR(
-        FormatExpression,
-        (
-            REF("MultiplicativeExpression"), OR("*", "/", "%"),
-            OPTIONAL(NewLines), FormatExpression
-        )
-    )
+    grammar = LIST_OF(FormatExpression,
+                      sep=(OR("*", "/", "%"), OPTIONAL(NewLines)))
 
 
 class AdditiveExpression(Grammar):
-    grammar = OR(
-        MultiplicativeExpression,
-        (
-            REF("AdditiveExpression"), OR("+", Dash), OPTIONAL(NewLines),
-            MultiplicativeExpression
-        )
-
-    )
+    grammar = LIST_OF(MultiplicativeExpression,
+                      sep=(OR("+", Dash), OPTIONAL(NewLines)))
 
 
 class ComparisonExpression(Grammar):
-    grammar = OR(
-        AdditiveExpression,
-        (REF("ComparisonExpression"), ComparisonOperator,
-         OPTIONAL(NewLines), AdditiveExpression)
-    )
+    grammar = LIST_OF(AdditiveExpression,
+                      sep=(ComparisonOperator, OPTIONAL(NewLines)))
 
 
 class BitwiseExpression(Grammar):
-    grammar = OR(
-        REF('ComparisonExpression'),
-        (
-            REF('BitwiseExpression'), OR("-band", "-bor", "-bxor"),
-            OPTIONAL(NewLines), REF("ComparisonExpression")
-        )
-    )
+    grammar = LIST_OF(ComparisonExpression,
+                      sep=(OR("-band", "-bor", "-bxor"), OPTIONAL(NewLines)))
 
 
 class LogicalExpression(Grammar):
-    grammar = OR(
-        BitwiseExpression,
-        (
-            REF('LogicalExpression'), OR("-and", "-or", "-xor"),
-            OPTIONAL(NewLines), BitwiseExpression
-        )
-    )
+    grammar = LIST_OF(BitwiseExpression,
+                      sep=(OR("-and", "-or", "-xor"), OPTIONAL(NewLines)))
 
 
 class Expression(Grammar):
@@ -784,11 +754,8 @@ class AttributeArgument(Grammar):
 
 
 class AttributeArguments(Grammar):
-    grammar = OR(
-        AttributeArgument,
-        (AttributeArgument, OPTIONAL(NewLines), ",",
-         REF('AttributeArguments'))
-    )
+    grammar = LIST_OF(AttributeArgument,
+                      sep=(OPTIONAL(NewLines), ","))
 
 
 class AttributeName(Grammar):
@@ -815,10 +782,8 @@ class Attribute(Grammar):
 
 
 class AttributeList(Grammar):
-    grammar = OR(
-        Attribute,
-        (REF('AttributeList'), OPTIONAL(NewLines), Attribute)
-    )
+    grammar = LIST_OF(Attribute,
+                      sep=OPTIONAL(NewLines))
 
 
 # Statements
