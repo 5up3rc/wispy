@@ -5,14 +5,16 @@ Tests for wispy.grammar.
 # Some pylint scaffolding.
 # pylint: disable=too-many-public-methods, invalid-name, no-self-use
 # pylint: disable=missing-docstring, import-error
-# pylint: disable=bad-builtin
+# pylint: disable=bad-builtin, star-args
 
 
 import unittest
 import string
+import logging
 from itertools import chain
 
 from modgrammar import ParseError
+from modgrammar.debugging import DEBUG_ALL
 from wispy.grammar import (
     SimpleNameFirstCharacter, SimpleNameCharacter,
     SimpleNameCharacters, SimpleName,
@@ -57,21 +59,27 @@ from wispy.grammar import (
     SwitchParameter, SwitchParameters,
 )
 
+logging.basicConfig(level=logging.DEBUG)
+
 
 class GrammarTest(unittest.TestCase):
 
-    def _parse(self, grammar, text):
-        return grammar.parser().parse_text(text,
-                                           eof=True, matchtype='complete')
+    def _parse(self, grammar, text, *, debug=False):
+        if debug:
+            kwargs = {"debug": True, "debug_flags": DEBUG_ALL}
+        else:
+            kwargs = {}
+        parser = grammar.parser(**kwargs)
+        return parser.parse_text(text, eof=True, matchtype='complete')
 
-    def _test_expected_pairs(self, grammar, text_pairs):
+    def _test_expected_pairs(self, grammar, text_pairs, *, debug=False):
         for text, expected in text_pairs:
-            parsed = self._parse(grammar, text)
+            parsed = self._parse(grammar, text, debug=debug)
             self.assertEqual(str(parsed), expected)
 
-    def _test_expected(self, grammar, texts):
+    def _test_expected(self, grammar, texts, *, debug=False):
         text_pairs = zip(texts, texts)
-        self._test_expected_pairs(grammar, text_pairs)
+        self._test_expected_pairs(grammar, text_pairs, debug=debug)
 
     def test_simple_name_first_character(self):
         self._test_expected(SimpleNameFirstCharacter, string.ascii_letters)
