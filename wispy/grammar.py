@@ -1088,6 +1088,13 @@ class ScriptBlockBody(Grammar):
 
 
 class SwitchParameter(Grammar):
+
+    """A :class SwitchParameter: may be abbreviated; any distinct leading
+    part of a parameter may be used.
+
+    For example, -regex, -rege, -reg, -re, and -r are equivalent.
+    """
+
     grammar = OR("-regex", "-wildcard", "-exact", "-casesensitive")
 
 
@@ -1100,6 +1107,17 @@ class SwitchFilename(Grammar):
 
 
 class SwitchCondition(Grammar):
+
+    """A switch must contain one or more :class SwitchClauses:, each starting
+    with a pattern (a non-default switch clause), or the keyword default
+    (a default switch clause).
+
+    A switch must contain zero or one default switch clauses, and zero or
+    more non-default switch clauses. 
+
+    Switch clauses may be written in any order.
+    """
+
     grammar = OR(
         ("(", OPTIONAL(NewLines), Pipeline, OPTIONAL(NewLines), ")"),
         ("-file", OPTIONAL(NewLines), SwitchFilename)
