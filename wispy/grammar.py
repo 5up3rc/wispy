@@ -846,6 +846,12 @@ class PipelineTail(Grammar):
 
 
 class Pipeline(Grammar):
+
+    """A pipeline is a series of one or more commands each separated by
+    the pipe operator | (U+007C).
+    Each command receives input from its predecessor and writes output
+    to its successor."""
+
     grammar = OR(
         REF('AssignmentExpression'),
         (Expression, OPTIONAL(Redirections), OPTIONAL(PipelineTail)),
@@ -993,6 +999,13 @@ class TrapStatement(Grammar):
 
 
 class TryStatement(Grammar):
+
+    """The try statement provides a mechanism for catching exceptions that
+    occur during execution of a block. The try statement also provides
+    the ability to specify a block of code that is always executed when
+    control leaves the try statement.
+    """
+
     grammar = OR(
         ("try", StatementBlock, CatchClauses),
         ("try", StatementBlock, FinallyClause),
@@ -1084,7 +1097,7 @@ class SwitchCondition(Grammar):
     (a default switch clause).
 
     A switch must contain zero or one default switch clauses, and zero or
-    more non-default switch clauses. 
+    more non-default switch clauses.
 
     Switch clauses may be written in any order.
     """
