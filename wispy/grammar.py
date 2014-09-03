@@ -80,7 +80,7 @@ class Keyword(Grammar):
 
 
 class NumericMultiplier(Grammar):
-    grammar = REPEAT(OR("kb", "mb", "tb", "pb", "gb"), max=1)
+    grammar = OR("kb", "mb", "tb", "pb", "gb")
 
 
 class LongTypeSuffix(Grammar):
