@@ -646,14 +646,8 @@ class PrimaryExpression(Grammar):
 
 class ExpressionWithUnaryOperator(Grammar):
     grammar = OR(
-        (",", OPTIONAL(NewLines), REF("UnaryExpression")),
-        ("-bnot", OPTIONAL(NewLines), REF("UnaryExpression")),
-        ("-not", OPTIONAL(NewLines), REF("UnaryExpression")),
-        ("-split", OPTIONAL(NewLines), REF("UnaryExpression")),
-        ("-join", OPTIONAL(NewLines), REF("UnaryExpression")),
-        ("!", OPTIONAL(NewLines), REF("UnaryExpression")),
-        ("+", OPTIONAL(NewLines), REF("UnaryExpression")),
-        (Dash, OPTIONAL(NewLines), REF("UnaryExpression")),
+        (OR(",", "-bnot", "-not", "-split", "-join", "!", "+", Dash),
+         OPTIONAL(NewLines), REF("UnaryExpression")),
         REF("PreIncrementExpression"),
         REF("PreDecrementExpression"),
         REF("CastExpression"),
