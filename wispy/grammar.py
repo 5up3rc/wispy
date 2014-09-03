@@ -479,6 +479,10 @@ class StringLiteral(Grammar):
                  VerbatimHereStringLiteral)
 
 
+class Literal(Grammar):
+    grammar = OR(IntegerLiteral, RealLiteral, StringLiteral)
+
+
 # Type names.
 
 class TypeCharacter(Grammar):
@@ -650,7 +654,7 @@ class Value(Grammar):
         REF("ArrayExpression"),
         REF("ScriptBlockExpression"),
         REF("HashLiteralExpression"),
-        REF("Literal"),
+        Literal,
         TypeLiteral,
         Variable
     )
