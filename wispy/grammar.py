@@ -1,4 +1,4 @@
-# pylint: disable=too-many-lines           6
+# pylint: disable=too-many-lines
 """
     wispy.grammar
     ~~~~~~~~~~~~~
@@ -728,7 +728,7 @@ class AdditiveExpression(Grammar):
 class ComparisonExpression(Grammar):
     grammar = OR(
         AdditiveExpression,
-        (REF("ComparisonExpression"), ComparisonOperator),
+        (REF("ComparisonExpression"), ComparisonOperator,
          OPTIONAL(NewLines), AdditiveExpression)
     )
 
