@@ -1,4 +1,4 @@
-# pylint: disable=too-many-lines
+# pylint: disable=too-many-lines           6
 """
     wispy.grammar
     ~~~~~~~~~~~~~
@@ -663,20 +663,20 @@ class ExpressionWithUnaryOperator(Grammar):
 class UnaryExpression(Grammar):
     grammar = OR(
         PrimaryExpression,
-        REF("ExpressionWithUnaryOperator")
+        ExpressionWithUnaryOperator,
     )
 
 
 class PreIncrementExpression(Grammar):
-    grammar = ("++", OPTIONAL(NewLines), REF("UnaryExpression"))
+    grammar = ("++", OPTIONAL(NewLines), UnaryExpression)
 
 
 class PreDecrementExpression(Grammar):
-    grammar = (Dash, Dash, OPTIONAL(NewLines), REF("UnaryExpression"))
+    grammar = (Dash, Dash, OPTIONAL(NewLines), UnaryExpression)
 
 
 class CastExpression(Grammar):
-    grammar = (TypeLiteral, REF("UnaryExpression"))
+    grammar = (TypeLiteral, UnaryExpression)
 
 
 class ArrayLiteralExpression(Grammar):
@@ -728,7 +728,7 @@ class AdditiveExpression(Grammar):
 class ComparisonExpression(Grammar):
     grammar = OR(
         AdditiveExpression,
-        (REF("ComparisonExpression"), REF("ComparisonOperator"),
+        (REF("ComparisonExpression"), ComparisonOperator),
          OPTIONAL(NewLines), AdditiveExpression)
     )
 
