@@ -1095,7 +1095,13 @@ class SwitchParameter(Grammar):
     For example, -regex, -rege, -reg, -re, and -r are equivalent.
     """
 
-    grammar = OR("-regex", "-wildcard", "-exact", "-casesensitive")
+    grammar = OR(
+        "-regex", "-rege", "-reg", "-re", "-r", "-wildcard", "-wildcar",
+        "-wildca", "-wildc", "-wild", "-wil", "-wi", "-w", "-exact",
+        "-exac", "-exa", "-ex", "-e", "-casesensitive", "-casesensitiv",
+        "-casesensiti", "-casesensit", "-casesensi", "-casesens",
+        "-casesen", "-casese", "-cases", "-case", "-cas", "-ca", "-c"
+    )
 
 
 class SwitchParameters(Grammar):
