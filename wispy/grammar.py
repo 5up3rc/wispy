@@ -1084,7 +1084,7 @@ class SwitchCondition(Grammar):
     (a default switch clause).
 
     A switch must contain zero or one default switch clauses, and zero or
-    more non-default switch clauses. 
+    more non-default switch clauses.
 
     Switch clauses may be written in any order.
     """
