@@ -1206,7 +1206,9 @@ class Statement(Grammar):
 
 
 class ParenthesizedExpression(Grammar):
-    grammar = (OPTIONAL(NewLines), Pipeline, OPTIONAL(NewLines))
+    grammar = (
+        "(", OPTIONAL(NewLines), Pipeline, OPTIONAL(NewLines), ")"
+    )
 
 
 class SubExpression(Grammar):
