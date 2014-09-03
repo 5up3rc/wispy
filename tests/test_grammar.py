@@ -28,7 +28,7 @@ from wispy.grammar import (
     ParameterCharacter, ParameterCharacters,
     FirstParameterCharacter, CommandParameter,
     InputCharacter, InputCharacters,
-    NewLineCharacter,
+    NewLineCharacter, NewLines,
     Hashes, NotGreaterThanOrHash,
     DelimitedCommentSection, DelimitedComment, DelimitedCommentText,
     SingleLineComment, Comment,
@@ -49,7 +49,12 @@ from wispy.grammar import (
     AssignmentOperator, ComparisonOperator, OperatorOrPunctuator,
     TypeCharacter, TypeCharacters, TypeIdentifier, TypeName,
     ArrayTypeName, GenericTypeName,
-    ExpandableStringCharacters
+    ExpandableStringCharacters,
+    CommandInvocationOperator,
+    AttributeName, CommandName,
+    StatementTerminator, StatementTerminators,
+    BlockName, DataName,
+    SwitchParameter, SwitchParameters,
 )
 
 
@@ -637,3 +642,44 @@ class GrammarTest(unittest.TestCase):
         for item in test_fail:
             with self.assertRaises(ParseError):
                 self._parse(ExpandableStringCharacters, item)
+
+    def test_newlines(self):
+        self._test_expected(NewLines, ["\n", "\n\n", "\r", "\r\r"])
+
+    def test_command_invocation_operator(self):
+        self._test_expected(CommandInvocationOperator, [".", "&"])
+
+    def test_attribute_name(self):
+        self._test_expected(AttributeName, ["int[,]", "int[]"])
+        self._test_expected(AttributeName, ["int", "float", "double"])
+        self._test_expected(AttributeName, ["Dictionary[float,double]"])
+
+    def test_command_name(self):
+        elements = [
+            "@script:test_variable$(",
+            "$Maximum_Count_26$(",
+            "${Maximum_Count_26}$(",
+            "@script:test_variable"
+        ]
+        self._test_expected(CommandName, elements)
+
+    def test_statement_terminator(self):
+        self._test_expected(StatementTerminator, [";", "\n", "\r"])
+
+    def test_statement_terminators(self):
+        self._test_expected(StatementTerminators, [";;", "\n\n"])
+
+    def test_block_name(self):
+        names = ["dynamicparam", "begin", "process", "end"]
+        self._test_expected(BlockName, names)
+
+    def test_data_name(self):
+        self._test_expected(DataName, ["tzop", "trop", "pop"])
+
+    def test_switch_parameters(self):
+        params = ["-regex", "-wildcard", "-exact", "-casesensitive"]
+        self._test_expected(SwitchParameter, params)
+
+        params = [param + " " + param
+                  for param in params]
+        self._test_expected(SwitchParameters, params)
