@@ -99,7 +99,7 @@ class Keyword(Grammar):
 
 
 class NumericMultiplier(Grammar):
-    grammar = REPEAT(OR("kb", "mb", "tb", "pb", "gb"), max=1)
+    grammar = OR("kb", "mb", "tb", "pb", "gb")
 
 
 class LongTypeSuffix(Grammar):
@@ -669,14 +669,8 @@ class PrimaryExpression(Grammar):
 
 class ExpressionWithUnaryOperator(Grammar):
     grammar = OR(
-        (",", OPTIONAL(NewLines), REF("UnaryExpression")),
-        ("-bnot", OPTIONAL(NewLines), REF("UnaryExpression")),
-        ("-not", OPTIONAL(NewLines), REF("UnaryExpression")),
-        ("-split", OPTIONAL(NewLines), REF("UnaryExpression")),
-        ("-join", OPTIONAL(NewLines), REF("UnaryExpression")),
-        ("!", OPTIONAL(NewLines), REF("UnaryExpression")),
-        ("+", OPTIONAL(NewLines), REF("UnaryExpression")),
-        (Dash, OPTIONAL(NewLines), REF("UnaryExpression")),
+        (OR(",", "-bnot", "-not", "-split", "-join", "!", "+", Dash),
+         OPTIONAL(NewLines), REF("UnaryExpression")),
         REF("PreIncrementExpression"),
         REF("PreDecrementExpression"),
         REF("CastExpression"),
@@ -686,20 +680,20 @@ class ExpressionWithUnaryOperator(Grammar):
 class UnaryExpression(Grammar):
     grammar = OR(
         PrimaryExpression,
-        REF("ExpressionWithUnaryOperator")
+        ExpressionWithUnaryOperator,
     )
 
 
 class PreIncrementExpression(Grammar):
-    grammar = ("++", OPTIONAL(NewLines), REF("UnaryExpression"))
+    grammar = ("++", OPTIONAL(NewLines), UnaryExpression)
 
 
 class PreDecrementExpression(Grammar):
-    grammar = (Dash, Dash, OPTIONAL(NewLines), REF("UnaryExpression"))
+    grammar = (Dash, Dash, OPTIONAL(NewLines), UnaryExpression)
 
 
 class CastExpression(Grammar):
-    grammar = (TypeLiteral, REF("UnaryExpression"))
+    grammar = (TypeLiteral, UnaryExpression)
 
 
 class ArrayLiteralExpression(Grammar):
@@ -751,7 +745,7 @@ class AdditiveExpression(Grammar):
 class ComparisonExpression(Grammar):
     grammar = OR(
         AdditiveExpression,
-        (REF("ComparisonExpression"), REF("ComparisonOperator"),
+        (REF("ComparisonExpression"), ComparisonOperator,
          OPTIONAL(NewLines), AdditiveExpression)
     )
 
@@ -1098,7 +1092,7 @@ class SwitchParameter(Grammar):
 
 
 class SwitchParameters(Grammar):
-    grammar = REPEAT(SwitchParameter)
+    grammar = LIST_OF(SwitchParameter, sep=WHITESPACE)
 
 
 class SwitchFilename(Grammar):
@@ -1261,7 +1255,7 @@ class PostIncrementExpression(Grammar):
     grammar = (PrimaryExpression, "++")
 
 
-class PostDecrement(Grammar):
+class PostDecrementExpression(Grammar):
     grammar = (PrimaryExpression, Dash, Dash)
 
 
