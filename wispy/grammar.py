@@ -1232,7 +1232,7 @@ class PostIncrementExpression(Grammar):
     grammar = (PrimaryExpression, "++")
 
 
-class PostDecrement(Grammar):
+class PostDecrementExpression(Grammar):
     grammar = (PrimaryExpression, Dash, Dash)
 
 
