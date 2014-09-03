@@ -1075,7 +1075,7 @@ class SwitchParameter(Grammar):
 
 
 class SwitchParameters(Grammar):
-    grammar = REPEAT(SwitchParameter)
+    grammar = LIST_OF(SwitchParameter, sep=WHITESPACE)
 
 
 class SwitchFilename(Grammar):
