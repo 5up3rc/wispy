@@ -1444,7 +1444,8 @@ class StringLiteralWithSubexpression(Grammar):
     # grammar is added.
     grammar = OR(
         ExpandableStringLiteralWithSubexpr,
-        REF('ExpandableHereStringLiteralWithSubexpr')
+        # TODO: please define me!
+        # REF('ExpandableHereStringLiteralWithSubexpr')
     )
 
 
