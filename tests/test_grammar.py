@@ -61,6 +61,7 @@ from wispy.grammar import (
     BlockName, DataName,
     SwitchParameter, SwitchParameters,
     FlowControlStatement,
+    Redirection,
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -789,3 +790,15 @@ class GrammarTest(unittest.TestCase):
             "exit $4",
         ]
         self._test_expected(FlowControlStatement, parts)
+
+    def test_redirection(self):
+        parts = [
+            "2>&1", "1>&2",
+            # with whitespace
+            ">> filename", "> a.txt", "< b.txt", "2>> c.txt", "2> d.txt",
+            # without whitespace
+            ">>filename", ">a.txt", "<b.txt", "2>>c.txt", "2>d.txt",
+            # variables
+            ">$null", "2>>$null",
+        ]
+        self._test_expected(Redirection, parts)

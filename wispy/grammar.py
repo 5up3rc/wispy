@@ -836,7 +836,7 @@ class CommandArgument(Grammar):
 
 
 class CommandElement(Grammar):
-    grammar = OR(CommandParameter, CommandArgument, REF('Redirections'))
+    grammar = OR(CommandParameter, CommandArgument, REF('Redirection'))
 
 
 class CommandElements(Grammar):
@@ -850,12 +850,8 @@ class RedirectedFileName(Grammar):
 class Redirection(Grammar):
     grammar = OR(
         "2>&1", "1>&2",
-        (FileRedirectionOperator, RedirectedFileName)
+        (FileRedirectionOperator, OPTIONAL(WHITESPACE), RedirectedFileName)
     )
-
-
-class Redirections(Grammar):
-    grammar = REPEAT(Redirection)
 
 
 class CommandModule(Grammar):
@@ -890,7 +886,7 @@ class Pipeline(Grammar):
 
     grammar = OR(
         REF('AssignmentExpression'),
-        (Expression, OPTIONAL(Redirections), OPTIONAL(PipelineTail)),
+        (Expression, OPTIONAL(Redirection), OPTIONAL(PipelineTail)),
         (Command, OPTIONAL(PipelineTail))
     )
 
