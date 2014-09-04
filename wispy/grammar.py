@@ -185,23 +185,24 @@ class FileRedirectionOperator(Grammar):
 
 
 class ComparisonOperator(Grammar):
-    grammar = OR(
-        (Dash, "as"), (Dash, "ccontains"), (Dash, "ceq"),
-        (Dash, "cge"), (Dash, "cgt"), (Dash, "cle"),
-        (Dash, "clike"), (Dash, "clt"), (Dash, "cmatch"),
-        (Dash, "cne"), (Dash, "cnotcontains"), (Dash, "cnotlike"),
-        (Dash, "cnotmatch"), (Dash, "contains"), (Dash, "creplace"),
-        (Dash, "csplit"), (Dash, "eq"), (Dash, "ge"),
-        (Dash, "gt"), (Dash, "icontains"), (Dash, "ieq"),
-        (Dash, "ige"), (Dash, "igt"), (Dash, "ile"),
-        (Dash, "ilike"), (Dash, "ilt"), (Dash, "imatch"),
-        (Dash, "ine"), (Dash, "inotcontains"), (Dash, "inotlike"),
-        (Dash, "inotmatch"), (Dash, "ireplace"), (Dash, "split"),
-        (Dash, "isnot"), (Dash, "isplit"), (Dash, "join"),
-        (Dash, "le"), (Dash, "like"), (Dash, "lt"),
-        (Dash, "match"), (Dash, "ne"), (Dash, "notcontains"),
-        (Dash, "notlike"), (Dash, "notmatch"), (Dash, "replace"),
-        (Dash, "is")
+    grammar = (
+        Dash, OR(
+            "as", "ccontains", "ceq",
+            "cge", "cgt", "cle",
+            "clike", "clt", "cmatch",
+            "cne", "cnotcontains", "cnotlike",
+            "cnotmatch", "contains", "creplace",
+            "csplit", "eq", "ge",
+            "gt", "icontains", "ieq",
+            "ige", "igt", "ile",
+            "ilike", "ilt", "imatch",
+            "ine", "inotcontains", "inotlike",
+            "inotmatch", "ireplace", "split",
+            "isnot", "isplit", "join",
+            "le", "like", "lt",
+            "match", "ne", "notcontains",
+            "notlike", "notmatch", "replace",
+            "is")
     )
 
 
