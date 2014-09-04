@@ -1233,7 +1233,7 @@ class Statement(Grammar):
         TrapStatement,
         TryStatement,
         DataStatement,
-        (Pipeline, StatementTerminator)
+        (Pipeline, OPTIONAL(StatementTerminator))
     )
 
 
