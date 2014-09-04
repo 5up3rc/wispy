@@ -49,7 +49,10 @@ from wispy.grammar import (
     AssignmentOperator, ComparisonOperator, OperatorOrPunctuator,
     TypeCharacter, TypeCharacters, TypeIdentifier, TypeName,
     ArrayTypeName, GenericTypeName,
-    ExpandableStringCharacters
+    ExpandableStringCharacters,
+    ExpandableStringWithSubexprStart, ExpandableStringWithSubexprEnd,
+    ExpandableHereStringPart, ExpandableHereStringCharacters,
+    ExpandableHereStringWithSubexprStart, ExpandableHereStringWithSubexprEnd
 )
 
 
@@ -162,6 +165,65 @@ class GrammarTest(unittest.TestCase):
             "@'\ntest1\ntest2\n'@"
         ]
         self._test_expected(StringLiteral, literals)
+
+    def test_expandable_here_string_characters(self):
+        literals = [
+            "xxx",
+            "{{xx",
+            "$\nxx",
+            "\nx\nxxx",
+            "\n\"aa"
+        ]
+        self._test_expected(ExpandableHereStringCharacters, literals)
+
+        with self.assertRaises(ParseError):
+            self._parse(ExpandableHereStringCharacters, "$$\n\n\n")
+
+    def test_expandable_here_string_part(self):
+        literals = [
+            "x",
+            "{",
+            "$x",
+            "$\nx",
+            "$\n\"x",
+            "\nx",
+            "\n\"x"
+        ]
+        self._test_expected(ExpandableHereStringPart, literals)
+
+        with self.assertRaises(ParseError):
+            self._parse(ExpandableHereStringPart, "$${")
+
+    def test_expandable_here_string_with_subexpr_start(self):
+        literals = [
+            "@\"\n$(",
+            "@\"    \n$(",
+            "@\" \t \n$(",
+            "@\" \t \nxxxx$("
+        ]
+        self._test_expected(ExpandableHereStringWithSubexprStart, literals)
+
+        with self.assertRaises(ParseError):
+            self._parse(ExpandableHereStringWithSubexprStart, "@\"   dasd\nx$(")
+
+    def test_expandable_here_string_with_subexpr_end(self):
+        self._test_expected(ExpandableHereStringWithSubexprEnd, ["\n\"@"])
+
+        with self.assertRaises(ParseError):
+            self._parse(ExpandableHereStringWithSubexprEnd, "\n\"\"@")
+
+    def test_expandable_string_with_subexpr_start(self):
+        literals = ["\"$(", "\"test$("]
+        self._test_expected(ExpandableStringWithSubexprStart, literals)
+
+        with self.assertRaises(ParseError):
+            self._parse(ExpandableStringWithSubexprStart, "\"test$(test")
+
+    def test_expandable_string_with_subexpr_end(self):
+        self._test_expected(ExpandableStringWithSubexprEnd, ["\""])
+
+        with self.assertRaises(ParseError):
+            self._parse(ExpandableStringWithSubexprEnd, "\"test")
 
     def test_generic_token_char(self):
         self._test_expected(GenericTokenChar, ["\u0060a"])
