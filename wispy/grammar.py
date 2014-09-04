@@ -769,7 +769,10 @@ class ComparisonExpression(Grammar):
 
 class BitwiseExpression(Grammar):
     grammar = LIST_OF(ComparisonExpression,
-                      sep=(OR("-band", "-bor", "-bxor"), OPTIONAL(NewLines)))
+                      sep=(OPTIONAL(WHITESPACE),
+                           OR("-band", "-bor", "-bxor"),
+                           OPTIONAL(WHITESPACE),
+                           OPTIONAL(NewLines)))
 
 
 class LogicalExpression(Grammar):
