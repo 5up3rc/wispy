@@ -221,7 +221,7 @@ class OperatorOrPunctuator(Grammar):
         FileRedirectionOperator,
         (Dash, OR("and", "band", "bnot", "bor",
                   "bxor", "not", "or", "xor", Dash)),
-        (Dash, Dash), Dash,
+        Dash,
     )
 
 
