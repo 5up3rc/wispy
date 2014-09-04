@@ -1043,11 +1043,11 @@ class TryStatement(Grammar):
     the ability to specify a block of code that is always executed when
     control leaves the try statement.
     """
-
-    grammar = OR(
-        ("try", StatementBlock, CatchClauses),
-        ("try", StatementBlock, FinallyClause),
-        ("try", StatementBlock, CatchClauses, FinallyClause)
+    grammar = (
+        "try", StatementBlock,
+        OR((CatchClauses, FinallyClause),
+            CatchClauses,
+            FinallyClause)
     )
 
 
