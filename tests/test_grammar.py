@@ -54,7 +54,7 @@ from wispy.grammar import (
     ExpandableStringCharacters,
     ExpandableStringWithSubexprStart, ExpandableStringWithSubexprEnd,
     ExpandableHereStringPart, ExpandableHereStringCharacters,
-    ExpandableHereStringWithSubexprStart, ExpandableHereStringWithSubexprEnd
+    ExpandableHereStringWithSubexprStart, ExpandableHereStringWithSubexprEnd,
     CommandInvocationOperator,
     AttributeName, CommandName,
     StatementTerminator, StatementTerminators,
@@ -218,7 +218,7 @@ class GrammarTest(unittest.TestCase):
         self._test_expected(ExpandableHereStringWithSubexprStart, literals)
 
         with self.assertRaises(ParseError):
-            self._parse(ExpandableHereStringWithSubexprStart, "@\"   dasd\nx$(")
+            self._parse(ExpandableHereStringWithSubexprStart, "@\" dasd\nx$(")
 
     def test_expandable_here_string_with_subexpr_end(self):
         self._test_expected(ExpandableHereStringWithSubexprEnd, ["\n\"@"])

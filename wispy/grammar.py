@@ -1044,10 +1044,13 @@ class TryStatement(Grammar):
     control leaves the try statement.
     """
     grammar = (
-        "try", StatementBlock,
-        OR((CatchClauses, FinallyClause),
+        "try",
+        StatementBlock,
+        OR(
+            (CatchClauses, FinallyClause),
             CatchClauses,
-            FinallyClause)
+            FinallyClause
+        )
     )
 
 
