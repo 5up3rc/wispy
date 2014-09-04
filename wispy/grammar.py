@@ -986,6 +986,7 @@ class FinallyClause(Grammar):
 class CatchTypeList(Grammar):
     grammar = OPTIONAL(
         (OPTIONAL(NewLines), TypeLiteral),
+        # TODO: left recursion
         (REF('CatchTypeList'), OPTIONAL(NewLines), ",", OPTIONAL(NewLines),
          TypeLiteral)
     )
@@ -1011,6 +1012,7 @@ class DataCommand(Grammar):
 class DataCommandsList(Grammar):
     grammar = OR(
         (OPTIONAL(NewLines), DataCommand),
+        # TODO: left recursion
         (REF('DataCommandsList'), OPTIONAL(NewLines), DataCommand)
     )
 
@@ -1069,6 +1071,7 @@ class FlowControlStatement(Grammar):
 class ParameterList(Grammar):
     grammar = OR(
         ScriptParameter,
+        # TODO: left recursion
         (REF('ParameterList'), OPTIONAL(NewLines), ScriptParameter)
     )
 
@@ -1314,6 +1317,7 @@ class FormatArgumentExpression(Grammar):
     grammar = OR(
         RangeArgumentExpression,
         (
+            # TODO: left recursion
             REF('FormatArgumentExpression'), FormatOperator,
             OPTIONAL(NewLines), RangeArgumentExpression
         )
@@ -1324,6 +1328,7 @@ class MultiplicativeArgumentExpression(Grammar):
     grammar = OR(
         FormatArgumentExpression,
         (
+            # TODO: left recursion
             REF('MultiplicativeArgumentExpression'), OR("*", "/", "%"),
             OPTIONAL(NewLines), FormatArgumentExpression
         ),
@@ -1335,6 +1340,7 @@ class AdditiveArgumentExpression(Grammar):
     grammar = OR(
         MultiplicativeArgumentExpression,
         (
+            # TODO: left recursion
             REF('AdditiveArgumentExpression'), OR("+", Dash),
             OPTIONAL(NewLines), MultiplicativeArgumentExpression
         )
@@ -1345,6 +1351,7 @@ class ComparisonArgumentExpression(Grammar):
     grammar = OR(
         AdditiveArgumentExpression,
         (
+            # TODO: left recursion
             REF('ComparisonArgumentExpression'), ComparisonOperator,
             OPTIONAL(NewLines), AdditiveArgumentExpression
         )
@@ -1355,6 +1362,7 @@ class BitwiseArgumentExpression(Grammar):
     grammar = OR(
         ComparisonArgumentExpression,
         (
+            # TODO: left recursion
             REF('BitwiseArgumentExpression'), OR("-band", "-bor", "-bxor"),
             OPTIONAL(NewLines), ComparisonArgumentExpression
         )
@@ -1365,6 +1373,7 @@ class LogicalArgumentExpression(Grammar):
     grammar = OR(
         BitwiseArgumentExpression,
         (
+            # TODO: left recursion
             REF('LogicalArgumentExpression'), OR("-and", "-or", "-xor"),
             OPTIONAL(NewLines), BitwiseArgumentExpression
         ),
