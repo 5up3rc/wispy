@@ -1254,6 +1254,7 @@ class Statement(Grammar):
         ParallelStatement,
         SequenceStatement,
         (Pipeline, StatementTerminator)
+        (Pipeline, OPTIONAL(StatementTerminator))
     )
 
 
@@ -1290,8 +1291,13 @@ class HashEntry(Grammar):
     grammar = (KeyExpression, "=", OPTIONAL(NewLines), Statement)
 
 
+class HashLiteralBodyPrime(Grammar):
+    grammar = (StatementTerminators, HashEntry,
+               OPTIONAL(REF("HashLiteralBodyPrime")))
+
+
 class HashLiteralBody(Grammar):
-    grammar = LIST_OF(HashEntry, sep=StatementTerminators)
+    grammar = (HashEntry, OPTIONAL(HashLiteralBodyPrime))
 
 
 class HashLiteralExpression(Grammar):
