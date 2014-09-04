@@ -13,7 +13,7 @@
 from modgrammar import (
     Grammar, OR, WORD, REPEAT, ANY_EXCEPT,
     OPTIONAL, WHITESPACE, ANY, EXCEPT,
-    LIST_OF, REF
+    LIST_OF, REF,
 )
 
 
@@ -658,14 +658,48 @@ class Value(Grammar):
     )
 
 
+class MemberName(Grammar):
+    grammar = OR(
+        SimpleName, StringLiteral, REF('StringLiteralWithSubexpression'),
+        REF('ExpressionWithUnaryOperator'), Value
+    )
+
+
+class MemberAccessPrime(Grammar):
+    # Use this idiom to get rid of left recursion.
+    grammar = (OR(".", "::"), MemberName, OPTIONAL(REF('MemberAccessPrime')))
+
+
+class ElementAccessPrime(Grammar):
+    # Use this idiom to get rid of left recursion.
+    grammar = ("[", OPTIONAL(NewLines), REF("Expression"),
+               OPTIONAL(NewLines), "]",
+               OPTIONAL(REF("ElementAccessPrime")))
+
+
+class PostIncrementExpressionPrime(Grammar):
+    # Use this idiom to get rid of left recursion.
+    grammar = ("++", OPTIONAL(REF("PostIncrementExpressionPrime")))
+
+
+class PostDecrementExpressionPrime(Grammar):
+    # Use this idiom to get rid of left recursion.
+    grammar = (Dash, Dash, OPTIONAL(REF("PostDecrementExpressionPrime")))
+
+
 class PrimaryExpression(Grammar):
     grammar = OR(
+        # This production rule might be wrong..
+        (
+            Value,
+            OR(MemberAccessPrime,
+               ElementAccessPrime,
+               REF('InvocationExpressionPrime'),
+               PostIncrementExpressionPrime,
+               PostIncrementExpressionPrime),
+            OPTIONAL(REF('PrimaryExpression')),
+        ),
         Value,
-        REF("MemberAccess"),
-        REF("ElementAccess"),
-        REF("InvocationExpression"),
-        REF("PostIncrementExpression"),
-        REF("PostDecrementExpression"),
     )
 
 
@@ -1215,6 +1249,7 @@ class SubExpression(Grammar):
 
 
 class ArrayExpression(Grammar):
+    grammar_whitespace_mode = "optional"
     grammar = ("@(", OPTIONAL(NewLines), OPTIONAL(StatementList),
                OPTIONAL(NewLines), ")")
 
@@ -1236,52 +1271,12 @@ class HashEntry(Grammar):
 
 
 class HashLiteralBody(Grammar):
-    grammar = OR(
-        HashEntry,
-        (REF("HashLiteralBody"), StatementTerminators, HashEntry)
-    )
+    grammar = LIST_OF(HashEntry, sep=StatementTerminators)
 
 
 class HashLiteralExpression(Grammar):
     grammar = ("@{", OPTIONAL(NewLines), OPTIONAL(HashLiteralBody),
                OPTIONAL(NewLines), "}")
-
-
-class PostIncrementExpression(Grammar):
-    grammar = (PrimaryExpression, "++")
-
-
-class PostDecrementExpression(Grammar):
-    grammar = (PrimaryExpression, Dash, Dash)
-
-
-class ElementAccess(Grammar):
-
-    """This operator is left associative.
-
-    Examples:
-
-    ::
-
-    $a = [int[]](10,20,30)          # [int[]], Length 3
-    $a[1]                           # returns int 20
-    $a[20]                          # no such position, returns $null
-    $a[-1]                          # returns int 30, i.e., $a[$a.Length-1]
-    $a[2] = 5                       # changes int 30 to int 5
-    $a[20] = 5                      # implementation-defined behavior
-    $a = New-Object 'double[,]' 3,2
-    $a[0,0] = 10.5                  # changes 0.0 to 10.5
-    $a[0,0]++                       # changes 10.5 to 10.6
-    $list = ("red",$true,10),20,(1.2, "yes")
-    $list[2][1]                     # returns string "yes"
-    $a = @{ A = 10 },@{ B = $true },@{ C = 123.45 }
-    $a[1]["B"]                      # $a[1] is a Hashtable, where B is a key
-    $a = "red","green"
-    $a[1][4]                        # returns string "n" from string in $a[1]
-    """
-
-    grammar = (PrimaryExpression, "[",
-               OPTIONAL(NewLines), Expression, OPTIONAL(NewLines), "]")
 
 
 class RangeArgumentExpression(Grammar):
@@ -1413,42 +1408,9 @@ class StringLiteralWithSubexpression(Grammar):
     )
 
 
-class MemberName(Grammar):
-    grammar = OR(
-        SimpleName, StringLiteral, StringLiteralWithSubexpression,
-        ExpressionWithUnaryOperator, Value
-    )
-
-
-class MemberAccess(Grammar):
-    """
-    The left operand must designate an object, and the right operand must
-    designate an accessible instance member.
-
-    Examples:
-
-    ::
-    $a = 10,20,30
-    $a.Length                           # get instance property
-    (10,20,30).Length
-    $property = "Length"
-    $a.$property                        # property name is a variable
-    $h1 = @{ FirstName = "James"; LastName = "Anderson"; IDNum = 123 }
-    $h1.FirstName                       # designates the key FirstName
-    $h1.Keys                            # gets the collection of keys
-    [int]::MinValue                     # get static property
-    [double]::PositiveInfinity          # get static property
-    $property = "MinValue"
-    [long]::$property                   # property name is a variable
-    foreach ($t in [byte],[int],[long])
-    {
-        $t::MaxValue                   # get static property
-    }
-    $a = @{ID=1},@{ID=2},@{ID=3}
-    $a.ID                              # get ID from each element in the array
-    """
-
-    grammar = (PrimaryExpression, OR(".", "::"), MemberName)
+class InvocationExpressionPrime(Grammar):
+    grammar = (OR(".", "::"), MemberName,
+               ArgumentList, OPTIONAL(REF("InvocationExpressionPrime")))
 
 
 class InvocationExpression(Grammar):
