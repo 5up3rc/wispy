@@ -219,9 +219,8 @@ class OperatorOrPunctuator(Grammar):
         "&&", "||", "&", "|", ",", "++", "..", "::", ".",
         "!", "*", "/", "%", "+", "2>&1", "1>&2",
         FileRedirectionOperator,
-        (Dash, "and"), (Dash, "band"), (Dash, "bnot"),
-        (Dash, "bor"), (Dash, "bxor"), (Dash, "not"),
-        (Dash, "or"), (Dash, "xor"),
+        (Dash, OR("and", "band", "bnot", "bor",
+                  "bxor", "not", "or", "xor", Dash)),
         (Dash, Dash), Dash,
     )
 
