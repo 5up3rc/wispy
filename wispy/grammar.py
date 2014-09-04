@@ -13,7 +13,7 @@
 from modgrammar import (
     Grammar, OR, WORD, REPEAT, ANY_EXCEPT,
     OPTIONAL, WHITESPACE, ANY, EXCEPT,
-    LIST_OF, REF
+    LIST_OF, REF,
 )
 
 
@@ -47,6 +47,10 @@ class InputCharacters(Grammar):
 
 
 class SingleLineComment(Grammar):
+
+    """A :class:`SingleLineComment` begins with the character `#` and ends
+    with a :class:`NewLineCharacter`.
+    """
     grammar = ("#", OPTIONAL(WHITESPACE), OPTIONAL(InputCharacters))
 
 
@@ -59,10 +63,26 @@ class DelimitedCommentText(Grammar):
 
 
 class DelimitedComment(Grammar):
+
+    """ A :class:`DelimitedComment` begins with the character pair <# and ends
+    with the character pair #>. It can occur as part of a source line,
+    as a whole source line, or it can span any number of source lines.
+    """
+
     grammar = ("<#", OPTIONAL(DelimitedCommentText), Hashes, ">")
 
 
 class Comment(Grammar):
+
+    """A comment is treated as white space.
+
+    The productions above imply that
+        * Comments do not nest.
+        * The character sequences <# and #> have no special meaning in a
+        :class:`SingleLineComment`.
+        * The character # has no special meaning in a delimited comment.
+    """
+
     grammar = OR(SingleLineComment, DelimitedComment)
 
 
@@ -80,7 +100,7 @@ class Keyword(Grammar):
 
 
 class NumericMultiplier(Grammar):
-    grammar = REPEAT(OR("kb", "mb", "tb", "pb", "gb"), max=1)
+    grammar = OR("kb", "mb", "tb", "pb", "gb")
 
 
 class LongTypeSuffix(Grammar):
@@ -165,23 +185,24 @@ class FileRedirectionOperator(Grammar):
 
 
 class ComparisonOperator(Grammar):
-    grammar = OR(
-        (Dash, "as"), (Dash, "ccontains"), (Dash, "ceq"),
-        (Dash, "cge"), (Dash, "cgt"), (Dash, "cle"),
-        (Dash, "clike"), (Dash, "clt"), (Dash, "cmatch"),
-        (Dash, "cne"), (Dash, "cnotcontains"), (Dash, "cnotlike"),
-        (Dash, "cnotmatch"), (Dash, "contains"), (Dash, "creplace"),
-        (Dash, "csplit"), (Dash, "eq"), (Dash, "ge"),
-        (Dash, "gt"), (Dash, "icontains"), (Dash, "ieq"),
-        (Dash, "ige"), (Dash, "igt"), (Dash, "ile"),
-        (Dash, "ilike"), (Dash, "ilt"), (Dash, "imatch"),
-        (Dash, "ine"), (Dash, "inotcontains"), (Dash, "inotlike"),
-        (Dash, "inotmatch"), (Dash, "ireplace"), (Dash, "split"),
-        (Dash, "isnot"), (Dash, "isplit"), (Dash, "join"),
-        (Dash, "le"), (Dash, "like"), (Dash, "lt"),
-        (Dash, "match"), (Dash, "ne"), (Dash, "notcontains"),
-        (Dash, "notlike"), (Dash, "notmatch"), (Dash, "replace"),
-        (Dash, "is")
+    grammar = (
+        Dash, OR(
+            "as", "ccontains", "ceq",
+            "cge", "cgt", "cle",
+            "clike", "clt", "cmatch",
+            "cne", "cnotcontains", "cnotlike",
+            "cnotmatch", "contains", "creplace",
+            "csplit", "eq", "ge",
+            "gt", "icontains", "ieq",
+            "ige", "igt", "ile",
+            "ilike", "ilt", "imatch",
+            "ine", "inotcontains", "inotlike",
+            "inotmatch", "ireplace", "split",
+            "isnot", "isplit", "join",
+            "le", "like", "lt",
+            "match", "ne", "notcontains",
+            "notlike", "notmatch", "replace",
+            "is")
     )
 
 
@@ -198,10 +219,9 @@ class OperatorOrPunctuator(Grammar):
         "&&", "||", "&", "|", ",", "++", "..", "::", ".",
         "!", "*", "/", "%", "+", "2>&1", "1>&2",
         FileRedirectionOperator,
-        (Dash, "and"), (Dash, "band"), (Dash, "bnot"),
-        (Dash, "bor"), (Dash, "bxor"), (Dash, "not"),
-        (Dash, "or"), (Dash, "xor"),
-        (Dash, Dash), Dash,
+        (Dash, OR("and", "band", "bnot", "bor",
+                  "bxor", "not", "or", "xor", Dash)),
+        Dash,
     )
 
 
@@ -254,6 +274,10 @@ class VariableScope(Grammar):
 
 
 class EscapedCharacter(Grammar):
+
+    """An escaped character is a way to assign a special interpretation
+    to a character by giving it a prefix Backtick character."""
+
     grammar = ("\u0060", ANY)
 
 
@@ -273,8 +297,7 @@ class BracedVariable(Grammar):
 class Variable(Grammar):
     grammar = OR(
         "$$", "$?", "$^",
-        ("$", OPTIONAL(VariableScope), VariableCharacters),
-        ("@", OPTIONAL(VariableScope), VariableCharacters),
+        (OR("$", "@"), OPTIONAL(VariableScope), VariableCharacters),
         BracedVariable
     )
 
@@ -456,6 +479,10 @@ class StringLiteral(Grammar):
                  VerbatimHereStringLiteral)
 
 
+class Literal(Grammar):
+    grammar = OR(IntegerLiteral, RealLiteral, StringLiteral)
+
+
 # Type names.
 
 class TypeCharacter(Grammar):
@@ -620,39 +647,168 @@ class SimpleName(Grammar):
     grammar = (SimpleNameFirstCharacter, SimpleNameCharacters)
 
 
+class Value(Grammar):
+    grammar = OR(
+        REF("ParenthesizedExpression"),
+        REF("SubExpression"),
+        REF("ArrayExpression"),
+        REF("ScriptBlockExpression"),
+        REF("HashLiteralExpression"),
+        Literal,
+        TypeLiteral,
+        Variable
+    )
+
+
+class MemberName(Grammar):
+    grammar = OR(
+        SimpleName, StringLiteral, REF('StringLiteralWithSubexpression'),
+        REF('ExpressionWithUnaryOperator'), Value
+    )
+
+
+class MemberAccessPrime(Grammar):
+    # Use this idiom to get rid of left recursion.
+    grammar = (OR(".", "::"), MemberName, OPTIONAL(REF('MemberAccessPrime')))
+
+
+class ElementAccessPrime(Grammar):
+    # Use this idiom to get rid of left recursion.
+    grammar = ("[", OPTIONAL(NewLines), REF("Expression"),
+               OPTIONAL(NewLines), "]",
+               OPTIONAL(REF("ElementAccessPrime")))
+
+
+class PostIncrementExpressionPrime(Grammar):
+    # Use this idiom to get rid of left recursion.
+    grammar = ("++", OPTIONAL(REF("PostIncrementExpressionPrime")))
+
+
+class PostDecrementExpressionPrime(Grammar):
+    # Use this idiom to get rid of left recursion.
+    grammar = (Dash, Dash, OPTIONAL(REF("PostDecrementExpressionPrime")))
+
+
+class PrimaryExpression(Grammar):
+    grammar = OR(
+        # This production rule might be wrong..
+        (
+            Value,
+            OR(MemberAccessPrime,
+               ElementAccessPrime,
+               REF('InvocationExpressionPrime'),
+               PostIncrementExpressionPrime,
+               PostIncrementExpressionPrime),
+            OPTIONAL(REF('PrimaryExpression')),
+        ),
+        Value,
+    )
+
+
+class ExpressionWithUnaryOperator(Grammar):
+    grammar = OR(
+        (OR(",", "-bnot", "-not", "-split", "-join", "!", "+", Dash),
+         OPTIONAL(NewLines), REF("UnaryExpression")),
+        REF("PreIncrementExpression"),
+        REF("PreDecrementExpression"),
+        REF("CastExpression"),
+    )
+
+
+class UnaryExpression(Grammar):
+    grammar = OR(
+        PrimaryExpression,
+        ExpressionWithUnaryOperator,
+    )
+
+
+class PreIncrementExpression(Grammar):
+    grammar = ("++", OPTIONAL(NewLines), UnaryExpression)
+
+
+class PreDecrementExpression(Grammar):
+    grammar = (Dash, Dash, OPTIONAL(NewLines), UnaryExpression)
+
+
+class CastExpression(Grammar):
+    grammar = (TypeLiteral, UnaryExpression)
+
+
+class ArrayLiteralExpression(Grammar):
+    grammar = LIST_OF(UnaryExpression,
+                      sep=(",", OPTIONAL(NewLines)))
+
+
+class RangeExpression(Grammar):
+    grammar = LIST_OF(ArrayLiteralExpression,
+                      sep=("..", OPTIONAL(NewLines)))
+
+
+class FormatExpression(Grammar):
+    grammar = LIST_OF(RangeExpression,
+                      sep=(FormatOperator, OPTIONAL(NewLines)))
+
+
+class MultiplicativeExpression(Grammar):
+    grammar = LIST_OF(FormatExpression,
+                      sep=(OR("*", "/", "%"), OPTIONAL(NewLines)))
+
+
+class AdditiveExpression(Grammar):
+    grammar = LIST_OF(MultiplicativeExpression,
+                      sep=(OR("+", Dash), OPTIONAL(NewLines)))
+
+
+class ComparisonExpression(Grammar):
+    grammar = LIST_OF(AdditiveExpression,
+                      sep=(ComparisonOperator, OPTIONAL(NewLines)))
+
+
+class BitwiseExpression(Grammar):
+    grammar = LIST_OF(ComparisonExpression,
+                      sep=(OR("-band", "-bor", "-bxor"), OPTIONAL(NewLines)))
+
+
+class LogicalExpression(Grammar):
+    grammar = LIST_OF(BitwiseExpression,
+                      sep=(OR("-and", "-or", "-xor"), OPTIONAL(NewLines)))
+
+
+class Expression(Grammar):
+    grammar = LogicalExpression
+
+
 # Attributes
 class AttributeArgument(Grammar):
-    # FIXME: Remove REF after the Expression grammar is added.
     grammar = OR(
-        (OPTIONAL(NewLines), REF('Expression')),
+        (OPTIONAL(NewLines), Expression),
         (OPTIONAL(NewLines), SimpleName, "=", OPTIONAL(NewLines),
-         REF('Expression'))
+         Expression)
     )
 
 
 class AttributeArguments(Grammar):
-    grammar = OR(
-        AttributeArgument,
-        (AttributeArgument, OPTIONAL(NewLines), ",",
-         REF('AttributeArguments'))
-    )
+    grammar = LIST_OF(AttributeArgument,
+                      sep=(OPTIONAL(NewLines), ","))
 
 
 class AttributeName(Grammar):
 
-    """The :class `AttributeName`: is a reserved attribute type or some
-    implementation-defined attribute type."""
+    """ The :class:`AttributeName` is a reserved attribute type or some
+    implementation-defined attribute type.
+    """
     grammar = TypeSpec
 
 
 class Attribute(Grammar):
 
-    """An attribute consists of an :class `AttributeName`: and an optional
+    """ An attribute consists of an :class:`AttributeName` and an optional
     list of positional and named arguments.
 
     The positional arguments (if any) precede the named arguments.
-    A positional argument consists of a :class `SimpleName`:, followed by an
-    equal sign, followed by an :class `Expression`:."""
+    A positional argument consists of a :class:`SimpleName`, followed by an
+    equal sign, followed by an :class:`Expression`.
+    """
 
     grammar = OR(
         ("[", AttributeName, "(", AttributeArguments, OPTIONAL(NewLines),
@@ -662,10 +818,8 @@ class Attribute(Grammar):
 
 
 class AttributeList(Grammar):
-    grammar = OR(
-        Attribute,
-        (REF('AttributeList'), OPTIONAL(NewLines), Attribute)
-    )
+    grammar = LIST_OF(Attribute,
+                      sep=OPTIONAL(NewLines))
 
 
 # Statements
@@ -674,8 +828,7 @@ class CommandName(Grammar):
 
 
 class CommandNameExpr(Grammar):
-    # FIXME: Remove REF after the PrimaryExpression grammar is added.
-    grammar = OR(CommandName, REF('PrimaryExpression'))
+    grammar = OR(CommandName, PrimaryExpression)
 
 
 class CommandArgument(Grammar):
@@ -691,8 +844,7 @@ class CommandElements(Grammar):
 
 
 class RedirectedFileName(Grammar):
-    # FIXME: Remove REF after the PrimaryExpression grammar is added.
-    grammar = OR(CommandArgument, REF('PrimaryExpression'))
+    grammar = OR(CommandArgument, PrimaryExpression)
 
 
 class Redirection(Grammar):
@@ -707,8 +859,7 @@ class Redirections(Grammar):
 
 
 class CommandModule(Grammar):
-    # FIXME: Remove REF after the PrimaryExpression grammar is added.
-    grammar = REF('PrimaryExpression')
+    grammar = PrimaryExpression
 
 
 class CommandInvocationOperator(Grammar):
@@ -724,17 +875,22 @@ class Command(Grammar):
 
 
 class PipelineTail(Grammar):
-    grammar = OR(
-        ("|", OPTIONAL(NewLines), Command),
-        ("|", OPTIONAL(NewLines), Command, REF('PipelineTail'))
+    grammar = (
+        "|", OPTIONAL(NewLines),
+        Command, OPTIONAL(REF('PipelineTail'))
     )
 
 
 class Pipeline(Grammar):
-    # FIXME: Remove REF after the Expression grammar is added.
+
+    """A pipeline is a series of one or more commands each separated by
+    the pipe operator | (U+007C).
+    Each command receives input from its predecessor and writes output
+    to its successor."""
+
     grammar = OR(
         REF('AssignmentExpression'),
-        (REF('Expression'), OPTIONAL(Redirections), OPTIONAL(PipelineTail)),
+        (Expression, OPTIONAL(Redirections), OPTIONAL(PipelineTail)),
         (Command, OPTIONAL(PipelineTail))
     )
 
@@ -807,9 +963,8 @@ class ElseClause(Grammar):
 
 
 class ScriptParameterDefault(Grammar):
-    # FIXME: Remove REF after the Expression grammar is added.
     grammar = (
-        OPTIONAL(NewLines), "=", OPTIONAL(NewLines), REF('Expression')
+        OPTIONAL(NewLines), "=", OPTIONAL(NewLines), Expression
     )
 
 
@@ -821,8 +976,7 @@ class ScriptParameter(Grammar):
 
 
 class LabelExpression(Grammar):
-    # FIXME: Remove REF after the UnaryExpression grammar is added.
-    grammar = OR(SimpleName, REF('UnaryExpression'))
+    grammar = OR(SimpleName, UnaryExpression)
 
 
 class FinallyClause(Grammar):
@@ -832,6 +986,7 @@ class FinallyClause(Grammar):
 class CatchTypeList(Grammar):
     grammar = OPTIONAL(
         (OPTIONAL(NewLines), TypeLiteral),
+        # TODO: left recursion
         (REF('CatchTypeList'), OPTIONAL(NewLines), ",", OPTIONAL(NewLines),
          TypeLiteral)
     )
@@ -857,6 +1012,7 @@ class DataCommand(Grammar):
 class DataCommandsList(Grammar):
     grammar = OR(
         (OPTIONAL(NewLines), DataCommand),
+        # TODO: left recursion
         (REF('DataCommandsList'), OPTIONAL(NewLines), DataCommand)
     )
 
@@ -881,10 +1037,17 @@ class TrapStatement(Grammar):
 
 
 class TryStatement(Grammar):
-    grammar = OR(
-        ("try", StatementBlock, CatchClauses),
-        ("try", StatementBlock, FinallyClause),
-        ("try", StatementBlock, CatchClauses, FinallyClause)
+
+    """The try statement provides a mechanism for catching exceptions that
+    occur during execution of a block. The try statement also provides
+    the ability to specify a block of code that is always executed when
+    control leaves the try statement.
+    """
+    grammar = (
+        "try", StatementBlock,
+        OR((CatchClauses, FinallyClause),
+            CatchClauses,
+            FinallyClause)
     )
 
 
@@ -897,17 +1060,23 @@ class DataStatement(Grammar):
 
 class FlowControlStatement(Grammar):
     grammar = OR(
-        ("break", OPTIONAL(LabelExpression)),
-        ("continue", OPTIONAL(LabelExpression)),
-        ("throw", OPTIONAL(Pipeline)),
-        ("return", OPTIONAL(Pipeline)),
-        ("exit", OPTIONAL(Pipeline))
+        (
+            OR("break", "continue"),
+            OPTIONAL(WHITESPACE),
+            OPTIONAL(LabelExpression)
+        ),
+        (
+            OR("throw", "return", "exit"),
+            OPTIONAL(WHITESPACE),
+            OPTIONAL(Pipeline)
+        ),
     )
 
 
 class ParameterList(Grammar):
     grammar = OR(
         ScriptParameter,
+        # TODO: left recursion
         (REF('ParameterList'), OPTIONAL(NewLines), ScriptParameter)
     )
 
@@ -941,19 +1110,42 @@ class ScriptBlockBody(Grammar):
 
 
 class SwitchParameter(Grammar):
-    grammar = OR("-regex", "-wildcard", "-exact", "-casesensitive")
+
+    """A :class:`SwitchParameter` may be abbreviated; any distinct leading
+    part of a parameter may be used.
+
+    For example, -regex, -rege, -reg, -re, and -r are equivalent.
+    """
+
+    grammar = OR(
+        "-regex", "-rege", "-reg", "-re", "-r", "-wildcard", "-wildcar",
+        "-wildca", "-wildc", "-wild", "-wil", "-wi", "-w", "-exact",
+        "-exac", "-exa", "-ex", "-e", "-casesensitive", "-casesensitiv",
+        "-casesensiti", "-casesensit", "-casesensi", "-casesens",
+        "-casesen", "-casese", "-cases", "-case", "-cas", "-ca", "-c"
+    )
 
 
 class SwitchParameters(Grammar):
-    grammar = REPEAT(SwitchParameter)
+    grammar = LIST_OF(SwitchParameter, sep=WHITESPACE)
 
 
 class SwitchFilename(Grammar):
-    # FIXME: Remove REF after the PrimaryExpression grammar is added.
-    grammar = OR(CommandArgument, REF('PrimaryExpression'))
+    grammar = OR(CommandArgument, PrimaryExpression)
 
 
 class SwitchCondition(Grammar):
+
+    """A switch must contain one or more :class:`SwitchClauses`, each starting
+    with a pattern (a non-default switch clause), or the keyword default
+    (a default switch clause).
+
+    A switch must contain zero or one default switch clauses, and zero or
+    more non-default switch clauses.
+
+    Switch clauses may be written in any order.
+    """
+
     grammar = OR(
         ("(", OPTIONAL(NewLines), Pipeline, OPTIONAL(NewLines), ")"),
         ("-file", OPTIONAL(NewLines), SwitchFilename)
@@ -961,8 +1153,7 @@ class SwitchCondition(Grammar):
 
 
 class SwitchClauseCondition(Grammar):
-    # FIXME: Remove REF after the PrimaryExpression grammar is added.
-    grammar = (CommandArgument, REF('PrimaryExpression'))
+    grammar = (CommandArgument, PrimaryExpression)
 
 
 class SwitchClause(Grammar):
@@ -1023,15 +1214,9 @@ class WhileStatement(Grammar):
 
 
 class DoStatement(Grammar):
-    grammar = OR(
-        (
-            "do", StatementBlock, OPTIONAL(NewLines), "while",
-            OPTIONAL(NewLines), "(", WhileCondition, OPTIONAL(NewLines), ")"
-        ),
-        (
-            "do", StatementBlock, OPTIONAL(NewLines), "until",
-            OPTIONAL(NewLines), "(", WhileCondition, OPTIONAL(NewLines), ")"
-        )
+    grammar = (
+        "do", StatementBlock, OPTIONAL(NewLines), OR("while", "until"),
+        OPTIONAL(NewLines), "(", WhileCondition, OPTIONAL(NewLines), ")"
     )
 
 
@@ -1043,6 +1228,18 @@ class LabeledStatement(Grammar):
         WhileStatement,
         DoStatement
     )
+
+
+class InlinescriptStatement(Grammar):
+    grammar = ("inlinescript", StatementBlock)
+
+
+class ParallelStatement(Grammar):
+    grammar = ("parallel", StatementBlock)
+
+
+class SequenceStatement(Grammar):
+    grammar = ("sequence", StatementBlock)
 
 
 class Statement(Grammar):
@@ -1060,10 +1257,195 @@ class Statement(Grammar):
         TrapStatement,
         TryStatement,
         DataStatement,
-        (Pipeline, StatementTerminator)
+        InlinescriptStatement,
+        ParallelStatement,
+        SequenceStatement,
+        (Pipeline, OPTIONAL(StatementTerminator))
     )
 
 
+class ParenthesizedExpression(Grammar):
+    grammar = (
+        "(", OPTIONAL(NewLines), Pipeline, OPTIONAL(NewLines), ")"
+    )
+
+
+class SubExpression(Grammar):
+    grammar = ("$(", OPTIONAL(NewLines),
+               OPTIONAL(StatementList), OPTIONAL(NewLines), ")")
+
+
+class ArrayExpression(Grammar):
+    grammar_whitespace_mode = "optional"
+    grammar = ("@(", OPTIONAL(NewLines), OPTIONAL(StatementList),
+               OPTIONAL(NewLines), ")")
+
+
+class ScriptBlockExpression(Grammar):
+    grammar = ("{", OPTIONAL(NewLines), REF("ScriptBlock"),
+               OPTIONAL(NewLines), "}")
+
+
+class KeyExpression(Grammar):
+    grammar = OR(
+        SimpleName,
+        UnaryExpression
+    )
+
+
+class HashEntry(Grammar):
+    grammar = (KeyExpression, "=", OPTIONAL(NewLines), Statement)
+
+
+class HashLiteralBodyPrime(Grammar):
+    grammar = (StatementTerminators, HashEntry,
+               OPTIONAL(REF("HashLiteralBodyPrime")))
+
+
+class HashLiteralBody(Grammar):
+    grammar = (HashEntry, OPTIONAL(HashLiteralBodyPrime))
+
+
+class HashLiteralExpression(Grammar):
+    grammar = ("@{", OPTIONAL(NewLines), OPTIONAL(HashLiteralBody),
+               OPTIONAL(NewLines), "}")
+
+
+class RangeArgumentExpression(Grammar):
+    grammar = OR(
+        UnaryExpression,
+        (RangeExpression, "..", OPTIONAL(NewLines), UnaryExpression)
+    )
+
+
+class FormatArgumentExpression(Grammar):
+    grammar = OR(
+        RangeArgumentExpression,
+        (
+            # TODO: left recursion
+            REF('FormatArgumentExpression'), FormatOperator,
+            OPTIONAL(NewLines), RangeArgumentExpression
+        )
+    )
+
+
+class MultiplicativeArgumentExpression(Grammar):
+    grammar = OR(
+        FormatArgumentExpression,
+        (
+            # TODO: left recursion
+            REF('MultiplicativeArgumentExpression'), OR("*", "/", "%"),
+            OPTIONAL(NewLines), FormatArgumentExpression
+        ),
+
+    )
+
+
+class AdditiveArgumentExpression(Grammar):
+    grammar = OR(
+        MultiplicativeArgumentExpression,
+        (
+            # TODO: left recursion
+            REF('AdditiveArgumentExpression'), OR("+", Dash),
+            OPTIONAL(NewLines), MultiplicativeArgumentExpression
+        )
+    )
+
+
+class ComparisonArgumentExpression(Grammar):
+    grammar = OR(
+        AdditiveArgumentExpression,
+        (
+            # TODO: left recursion
+            REF('ComparisonArgumentExpression'), ComparisonOperator,
+            OPTIONAL(NewLines), AdditiveArgumentExpression
+        )
+    )
+
+
+class BitwiseArgumentExpression(Grammar):
+    grammar = OR(
+        ComparisonArgumentExpression,
+        (
+            # TODO: left recursion
+            REF('BitwiseArgumentExpression'), OR("-band", "-bor", "-bxor"),
+            OPTIONAL(NewLines), ComparisonArgumentExpression
+        )
+    )
+
+
+class LogicalArgumentExpression(Grammar):
+    grammar = OR(
+        BitwiseArgumentExpression,
+        (
+            # TODO: left recursion
+            REF('LogicalArgumentExpression'), OR("-and", "-or", "-xor"),
+            OPTIONAL(NewLines), BitwiseArgumentExpression
+        ),
+    )
+
+
+class ArgumentExpression(Grammar):
+    grammar = (OPTIONAL(NewLines), LogicalArgumentExpression)
+
+
+class ArgumentExpressionList(Grammar):
+    grammar = OR(
+        ArgumentExpression,
+        (ArgumentExpression, OPTIONAL(NewLines),
+         ",", REF("ArgumentExpressionList"))
+    )
+
+
+class ArgumentList(Grammar):
+    grammar = ("(", OPTIONAL(ArgumentExpressionList),
+               OPTIONAL(NewLines), ")")
+
+
 class AssignmentExpression(Grammar):
-    # FIXME: Remove REF after the Expression grammar is added.
-    grammar = (REF('Expression'), AssignmentOperator, Statement)
+    grammar = (Expression, AssignmentOperator, Statement)
+
+
+class ExpandableHereStringWithSubexprPart(Grammar):
+    grammar = OR(SubExpression, ExpandableHereStringPart)
+
+
+class ExpandableHereStringWithSubexprCharacters(Grammar):
+    grammar = REPEAT(ExpandableHereStringWithSubexprPart)
+
+
+class ExpandableStringWithSubexprPart(Grammar):
+    grammar = OR(SubExpression, ExpandableStringPart)
+
+
+class ExpandableStringWithSubexprCharacters(Grammar):
+    grammar = REPEAT(ExpandableStringWithSubexprPart)
+
+
+class ExpandableStringLiteralWithSubexpr(Grammar):
+    grammar = OR(
+        (
+            ExpandableStringWithSubexprStart, OPTIONAL(StatementList),
+            ")", ExpandableStringWithSubexprCharacters,
+            ExpandableStringWithSubexprEnd
+        ),
+        (
+            ExpandableHereStringWithSubexprStart, OPTIONAL(StatementList),
+            ExpandableHereStringWithSubexprCharacters,
+            ExpandableHereStringWithSubexprEnd
+        )
+    )
+
+
+class StringLiteralWithSubexpression(Grammar):
+    # FIXME: Remove REF after the ExpandableHereStringLiteralWithSubexpr
+    # grammar is added.
+    grammar = OR(
+        ExpandableStringLiteralWithSubexpr,
+        REF('ExpandableHereStringLiteralWithSubexpr')
+    )
+
+
+class InvocationExpressionPrime(Grammar):
+    grammar = (OR(".", "::"), MemberName,
+               ArgumentList, OPTIONAL(REF("InvocationExpressionPrime")))

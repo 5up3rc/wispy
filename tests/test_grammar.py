@@ -5,14 +5,16 @@ Tests for wispy.grammar.
 # Some pylint scaffolding.
 # pylint: disable=too-many-public-methods, invalid-name, no-self-use
 # pylint: disable=missing-docstring, import-error
-# pylint: disable=bad-builtin
+# pylint: disable=bad-builtin, star-args
 
 
 import unittest
 import string
+import logging
 from itertools import chain
 
 from modgrammar import ParseError
+from modgrammar.debugging import DEBUG_ALL
 from wispy.grammar import (
     SimpleNameFirstCharacter, SimpleNameCharacter,
     SimpleNameCharacters, SimpleName,
@@ -28,7 +30,7 @@ from wispy.grammar import (
     ParameterCharacter, ParameterCharacters,
     FirstParameterCharacter, CommandParameter,
     InputCharacter, InputCharacters,
-    NewLineCharacter,
+    NewLineCharacter, NewLines,
     Hashes, NotGreaterThanOrHash,
     DelimitedCommentSection, DelimitedComment, DelimitedCommentText,
     SingleLineComment, Comment,
@@ -36,7 +38,7 @@ from wispy.grammar import (
     LongTypeSuffix, DecimalTypeSuffix, NumericTypeSuffix,
     DecimalDigit, DecimalDigits, DecimalIntegerLiteral,
     HexadecimalDigit, HexadecimalDigits, HexadecimalIntegerLiteral,
-    IntegerLiteral,
+    IntegerLiteral, Literal,
     Dash, Sign,
     ExponentPart, RealLiteral,
     EscapedCharacter,
@@ -53,23 +55,35 @@ from wispy.grammar import (
     ExpandableStringWithSubexprStart, ExpandableStringWithSubexprEnd,
     ExpandableHereStringPart, ExpandableHereStringCharacters,
     ExpandableHereStringWithSubexprStart, ExpandableHereStringWithSubexprEnd
+    CommandInvocationOperator,
+    AttributeName, CommandName,
+    StatementTerminator, StatementTerminators,
+    BlockName, DataName,
+    SwitchParameter, SwitchParameters,
+    FlowControlStatement,
 )
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 class GrammarTest(unittest.TestCase):
 
-    def _parse(self, grammar, text):
-        return grammar.parser().parse_text(text,
-                                           eof=True, matchtype='complete')
+    def _parse(self, grammar, text, *, debug=False):
+        if debug:
+            kwargs = {"debug": True, "debug_flags": DEBUG_ALL}
+        else:
+            kwargs = {}
+        parser = grammar.parser(**kwargs)
+        return parser.parse_text(text, eof=True, matchtype='complete')
 
-    def _test_expected_pairs(self, grammar, text_pairs):
+    def _test_expected_pairs(self, grammar, text_pairs, *, debug=False):
         for text, expected in text_pairs:
-            parsed = self._parse(grammar, text)
+            parsed = self._parse(grammar, text, debug=debug)
             self.assertEqual(str(parsed), expected)
 
-    def _test_expected(self, grammar, texts):
+    def _test_expected(self, grammar, texts, *, debug=False):
         text_pairs = zip(texts, texts)
-        self._test_expected_pairs(grammar, text_pairs)
+        self._test_expected_pairs(grammar, text_pairs, debug=debug)
 
     def test_simple_name_first_character(self):
         self._test_expected(SimpleNameFirstCharacter, string.ascii_letters)
@@ -699,3 +713,79 @@ class GrammarTest(unittest.TestCase):
         for item in test_fail:
             with self.assertRaises(ParseError):
                 self._parse(ExpandableStringCharacters, item)
+
+    def test_newlines(self):
+        self._test_expected(NewLines, ["\n", "\n\n", "\r", "\r\r"])
+
+    def test_command_invocation_operator(self):
+        self._test_expected(CommandInvocationOperator, [".", "&"])
+
+    def test_attribute_name(self):
+        self._test_expected(AttributeName, ["int[,]", "int[]"])
+        self._test_expected(AttributeName, ["int", "float", "double"])
+        self._test_expected(AttributeName, ["Dictionary[float,double]"])
+
+    def test_command_name(self):
+        elements = [
+            "@script:test_variable$(",
+            "$Maximum_Count_26$(",
+            "${Maximum_Count_26}$(",
+            "@script:test_variable"
+        ]
+        self._test_expected(CommandName, elements)
+
+    def test_statement_terminator(self):
+        self._test_expected(StatementTerminator, [";", "\n", "\r"])
+
+    def test_statement_terminators(self):
+        self._test_expected(StatementTerminators, [";;", "\n\n"])
+
+    def test_block_name(self):
+        names = ["dynamicparam", "begin", "process", "end"]
+        self._test_expected(BlockName, names)
+
+    def test_data_name(self):
+        self._test_expected(DataName, ["tzop", "trop", "pop"])
+
+    def test_switch_parameters(self):
+        params = ["-regex", "-wildcard", "-exact", "-casesensitive"]
+        self._test_expected(SwitchParameter, params)
+
+        params = [param + " " + param
+                  for param in params]
+        self._test_expected(SwitchParameters, params)
+
+    def test_literal(self):
+        literals = [
+            "1.4", "1.4e44", "1.4e44kb",
+            ".4", ".4e44", ".4e4d", ".4e4dkb", ".4Dkb",
+            "4e4", "4e4D", "4e4d", "4e4dkb",
+            "0d", "0xa1",
+            "\"tralalala\"",
+            "'tralalala'",
+            "@\"\ntest1\ntest2\n\"@",
+            "@'\ntest1\ntest2\n'@"
+        ]
+        self._test_expected(Literal, literals)
+
+    def test_flow_control_statement(self):
+        parts = [
+            "break",
+            "break $lab",
+            "break labelA",
+
+            "continue",
+            "continue $lab",
+            "continue labelA",
+
+            "throw",
+            "throw 100",
+            # Pathological case: 'throw "No such record in file"',
+
+            "return 1",
+            "return $4",
+
+            "exit",
+            "exit $4",
+        ]
+        self._test_expected(FlowControlStatement, parts)
