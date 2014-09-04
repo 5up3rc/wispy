@@ -62,6 +62,9 @@ from wispy.grammar import (
     SwitchParameter, SwitchParameters,
     FlowControlStatement,
     Redirection,
+    PreDecrementExpression, PreIncrementExpression,
+    RedirectedFileName,
+    MultiplicativeExpression, RangeExpression,
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -417,7 +420,7 @@ class GrammarTest(unittest.TestCase):
         self._test_expected(DecimalDigits, numbers)
 
     def test_decimal_integer_literal(self):
-        numbers = ["10", "10d", "10D"]
+        numbers = ["10", "10d", "10D", "10l", "10L"]
         self._test_expected(DecimalIntegerLiteral, numbers)
 
         multipliers = [("10" + mul) for mul in
@@ -802,3 +805,55 @@ class GrammarTest(unittest.TestCase):
             ">$null", "2>>$null",
         ]
         self._test_expected(Redirection, parts)
+
+    def test_pre_decrement_expression(self):
+        self._test_expected(PreDecrementExpression, ["--$k", "--${k}"])
+
+        for literal in ("$--i", "--i"):
+            # Although valid according to grammar spec.
+            with self.assertRaises(ParseError):
+                self._parse(PreDecrementExpression, literal)
+
+    def test_pre_increment_expression(self):
+        self._test_expected(PreIncrementExpression, ["++$k", "++${k}"])
+
+        for literal in ("$++i", "++i"):
+            # Although valid according to grammar spec.
+            with self.assertRaises(ParseError):
+                self._parse(PreIncrementExpression, literal)
+
+    def test_redirected_file_name(self):
+        parts = ["output.txt", '"$abc"', "$null"]
+        self._test_expected(RedirectedFileName, parts)
+
+    def test_multiplicative_expression(self):
+        parts = [
+            "12 * -10",
+            "-10.300D * 12",
+            "10.6 * 12",
+            '12 * "0xabc"',
+            "12 / -10",
+            "-10.300D / 12",
+            "10.6 / 12",
+            '12 / "0xabc"',
+            "12 % -10l",
+            "-10.300D % 12",
+            "10.6 % 12",
+            '12 % "0xabc"',
+
+            "(10 * 4) % 5",
+            "(10* (5 % 4)) /4",
+        ]
+        self._test_expected(MultiplicativeExpression, parts)
+
+    def test_range_expression(self):
+        parts = [
+            "1..10",
+            "-500..-495",
+            "16..16",
+            "$x..5.40D",
+            "$true..3",
+            "-2..$null",
+            '"0xf".."0xa"',
+        ]
+        self._test_expected(RangeExpression, parts)
