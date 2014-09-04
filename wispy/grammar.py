@@ -1416,37 +1416,3 @@ class StringLiteralWithSubexpression(Grammar):
 class InvocationExpressionPrime(Grammar):
     grammar = (OR(".", "::"), MemberName,
                ArgumentList, OPTIONAL(REF("InvocationExpressionPrime")))
-
-
-class InvocationExpression(Grammar):
-    """
-    Formed by the rules:
-
-        * PrimaryExpression (.|::) MemberName
-    The parentheses in argument-list contain a possibly empty, comma-separated
-    list of expressions, which designate the arguments whose values are passed
-    to the method.
-
-    Examples:
-
-    ::
-        [math]::Sqrt(2.0)               # call method with argument 2.0
-        [char]::IsUpper("a")            # call method
-        $b = "abc#$%XYZabc"
-        $b.ToUpper()                    # call instance method
-        [math]::Sqrt(2)                 # convert 2 to 2.0 and call method
-        [math]::Sqrt(2D)                # convert 2D to 2.0 and call method
-        [math]::Sqrt($true)             # convert $true to 1.0 and call method
-        [math]::Sqrt("20")              # convert "20" to 20 and call method
-        $a = [math]::Sqrt               # get method descriptor for Sqrt
-        $a.Invoke(2.0)                  # call Sqrt via the descriptor
-        $a = [math]::("Sq"+"rt")        # get method descriptor for Sqrt
-        $a.Invoke(2.0)                  # call Sqrt via the descriptor
-        $a = [char]::ToLower            # get method descriptor for ToLower
-        $a.Invoke("X")                  # call ToLower via the descriptor
-    """
-
-    grammar = (
-        PrimaryExpression, OR(".", "::"), MemberName,
-        ArgumentList
-    )
