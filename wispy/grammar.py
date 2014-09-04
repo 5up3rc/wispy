@@ -1060,11 +1060,16 @@ class DataStatement(Grammar):
 
 class FlowControlStatement(Grammar):
     grammar = OR(
-        ("break", OPTIONAL(LabelExpression)),
-        ("continue", OPTIONAL(LabelExpression)),
-        ("throw", OPTIONAL(Pipeline)),
-        ("return", OPTIONAL(Pipeline)),
-        ("exit", OPTIONAL(Pipeline))
+        (
+            OR("break", "continue"),
+            OPTIONAL(WHITESPACE),
+            OPTIONAL(LabelExpression)
+        ),
+        (
+            OR("throw", "return", "exit"),
+            OPTIONAL(WHITESPACE),
+            OPTIONAL(Pipeline)
+        ),
     )
 
 

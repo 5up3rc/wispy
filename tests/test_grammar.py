@@ -57,6 +57,7 @@ from wispy.grammar import (
     StatementTerminator, StatementTerminators,
     BlockName, DataName,
     SwitchParameter, SwitchParameters,
+    FlowControlStatement,
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -704,3 +705,25 @@ class GrammarTest(unittest.TestCase):
             "@'\ntest1\ntest2\n'@"
         ]
         self._test_expected(Literal, literals)
+
+    def test_flow_control_statement(self):
+        parts = [
+            "break",
+            "break $lab",
+            "break labelA",
+
+            "continue",
+            "continue $lab",
+            "continue labelA",
+
+            "throw",
+            "throw 100",
+            # Pathological case: 'throw "No such record in file"',
+
+            "return 1",
+            "return $4",
+
+            "exit",
+            "exit $4",
+        ]
+        self._test_expected(FlowControlStatement, parts)
