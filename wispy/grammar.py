@@ -297,8 +297,7 @@ class BracedVariable(Grammar):
 class Variable(Grammar):
     grammar = OR(
         "$$", "$?", "$^",
-        ("$", OPTIONAL(VariableScope), VariableCharacters),
-        ("@", OPTIONAL(VariableScope), VariableCharacters),
+        (OR("$", "@"), OPTIONAL(VariableScope), VariableCharacters),
         BracedVariable
     )
 
