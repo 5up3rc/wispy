@@ -876,9 +876,9 @@ class Command(Grammar):
 
 
 class PipelineTail(Grammar):
-    grammar = OR(
-        ("|", OPTIONAL(NewLines), Command),
-        ("|", OPTIONAL(NewLines), Command, REF('PipelineTail'))
+    grammar = (
+        "|", OPTIONAL(NewLines),
+        Command, OPTIONAL(REF('PipelineTail'))
     )
 
 
