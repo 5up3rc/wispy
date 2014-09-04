@@ -1421,9 +1421,7 @@ class MemberName(Grammar):
 
 
 class MemberAccess(Grammar):
-
-    """The operator . is used to select an instance member from an object,
-    or a key from a Hashtable.
+    """
     The left operand must designate an object, and the right operand must
     designate an accessible instance member.
 
@@ -1454,11 +1452,10 @@ class MemberAccess(Grammar):
 
 
 class InvocationExpression(Grammar):
+    """
+    Formed by the rules:
 
-    """An :class InvocationExpression: calls the method designated by
-        * :class PrimaryExpression: . :class MemberName:
-        * :class PrimaryExpression: :: :class MemberName:
-
+        * PrimaryExpression (.|::) MemberName
     The parentheses in argument-list contain a possibly empty, comma-separated
     list of expressions, which designate the arguments whose values are passed
     to the method.
