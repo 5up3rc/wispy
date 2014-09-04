@@ -47,6 +47,7 @@ class InputCharacters(Grammar):
 
 
 class SingleLineComment(Grammar):
+
     """A :class:`SingleLineComment` begins with the character `#` and ends
     with a :class:`NewLineCharacter`.
     """
@@ -62,6 +63,7 @@ class DelimitedCommentText(Grammar):
 
 
 class DelimitedComment(Grammar):
+
     """ A :class:`DelimitedComment` begins with the character pair <# and ends
     with the character pair #>. It can occur as part of a source line,
     as a whole source line, or it can span any number of source lines.
@@ -71,6 +73,7 @@ class DelimitedComment(Grammar):
 
 
 class Comment(Grammar):
+
     """A comment is treated as white space.
 
     The productions above imply that
@@ -791,6 +794,7 @@ class AttributeArguments(Grammar):
 
 
 class AttributeName(Grammar):
+
     """ The :class:`AttributeName` is a reserved attribute type or some
     implementation-defined attribute type.
     """
@@ -798,6 +802,7 @@ class AttributeName(Grammar):
 
 
 class Attribute(Grammar):
+
     """ An attribute consists of an :class:`AttributeName` and an optional
     list of positional and named arguments.
 
@@ -1218,6 +1223,18 @@ class LabeledStatement(Grammar):
     )
 
 
+class InlinescriptStatement(Grammar):
+    grammar = ("inlinescript", StatementBlock)
+
+
+class ParallelStatement(Grammar):
+    grammar = ("parallel", StatementBlock)
+
+
+class SequenceStatement(Grammar):
+    grammar = ("sequence", StatementBlock)
+
+
 class Statement(Grammar):
 
     """A statement specifies some sort of action that is to be performed.
@@ -1233,6 +1250,9 @@ class Statement(Grammar):
         TrapStatement,
         TryStatement,
         DataStatement,
+        InlinescriptStatement,
+        ParallelStatement,
+        SequenceStatement,
         (Pipeline, StatementTerminator)
     )
 
@@ -1414,6 +1434,7 @@ class InvocationExpressionPrime(Grammar):
 
 
 class InvocationExpression(Grammar):
+
     """
     Formed by the rules:
 
