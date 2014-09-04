@@ -125,7 +125,7 @@ class DecimalDigits(Grammar):
 
 class DecimalIntegerLiteral(Grammar):
     grammar = (DecimalDigits,
-               OPTIONAL(DecimalTypeSuffix),
+               OPTIONAL(NumericTypeSuffix),
                OPTIONAL(NumericMultiplier))
 
 
@@ -751,7 +751,10 @@ class FormatExpression(Grammar):
 
 class MultiplicativeExpression(Grammar):
     grammar = LIST_OF(FormatExpression,
-                      sep=(OR("*", "/", "%"), OPTIONAL(NewLines)))
+                      sep=((OPTIONAL(WHITESPACE),
+                            OR("*", "/", "%"),
+                            OPTIONAL(WHITESPACE)),
+                           OPTIONAL(NewLines)))
 
 
 class AdditiveExpression(Grammar):
