@@ -47,10 +47,9 @@ class InputCharacters(Grammar):
 
 
 class SingleLineComment(Grammar):
-
-    """A :class SingleLineComment: begins with the character `#` and ends with
-    a :class NewLineCharacter:."""
-
+    """A :class:`SingleLineComment` begins with the character `#` and ends
+    with a :class:`NewLineCharacter`.
+    """
     grammar = ("#", OPTIONAL(WHITESPACE), OPTIONAL(InputCharacters))
 
 
@@ -63,22 +62,21 @@ class DelimitedCommentText(Grammar):
 
 
 class DelimitedComment(Grammar):
-
-    """A :class DelimitedComment: begins with the character pair <# and ends
+    """ A :class:`DelimitedComment` begins with the character pair <# and ends
     with the character pair #>. It can occur as part of a source line,
-    as a whole source line, or it can span any number of source lines."""
+    as a whole source line, or it can span any number of source lines.
+    """
 
     grammar = ("<#", OPTIONAL(DelimitedCommentText), Hashes, ">")
 
 
 class Comment(Grammar):
-
     """A comment is treated as white space.
 
     The productions above imply that
         * Comments do not nest.
         * The character sequences <# and #> have no special meaning in a
-        :class SingleLineComment:.
+        :class:`SingleLineComment`.
         * The character # has no special meaning in a delimited comment.
     """
 
@@ -759,20 +757,20 @@ class AttributeArguments(Grammar):
 
 
 class AttributeName(Grammar):
-
-    """The :class `AttributeName`: is a reserved attribute type or some
-    implementation-defined attribute type."""
+    """ The :class:`AttributeName` is a reserved attribute type or some
+    implementation-defined attribute type.
+    """
     grammar = TypeSpec
 
 
 class Attribute(Grammar):
-
-    """An attribute consists of an :class `AttributeName`: and an optional
+    """ An attribute consists of an :class:`AttributeName` and an optional
     list of positional and named arguments.
 
     The positional arguments (if any) precede the named arguments.
-    A positional argument consists of a :class `SimpleName`:, followed by an
-    equal sign, followed by an :class `Expression`:."""
+    A positional argument consists of a :class:`SimpleName`, followed by an
+    equal sign, followed by an :class:`Expression`.
+    """
 
     grammar = OR(
         ("[", AttributeName, "(", AttributeArguments, OPTIONAL(NewLines),
@@ -1067,7 +1065,7 @@ class ScriptBlockBody(Grammar):
 
 class SwitchParameter(Grammar):
 
-    """A :class SwitchParameter: may be abbreviated; any distinct leading
+    """A :class:`SwitchParameter` may be abbreviated; any distinct leading
     part of a parameter may be used.
 
     For example, -regex, -rege, -reg, -re, and -r are equivalent.
@@ -1092,7 +1090,7 @@ class SwitchFilename(Grammar):
 
 class SwitchCondition(Grammar):
 
-    """A switch must contain one or more :class SwitchClauses:, each starting
+    """A switch must contain one or more :class:`SwitchClauses`, each starting
     with a pattern (a non-default switch clause), or the keyword default
     (a default switch clause).
 
