@@ -64,7 +64,8 @@ from wispy.grammar import (
     Redirection,
     PreDecrementExpression, PreIncrementExpression,
     RedirectedFileName,
-    MultiplicativeExpression, RangeExpression,
+    MultiplicativeExpression, RangeExpression, CastExpression,
+    BitwiseExpression,
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -857,3 +858,28 @@ class GrammarTest(unittest.TestCase):
             '"0xf".."0xa"',
         ]
         self._test_expected(RangeExpression, parts)
+
+    def test_cast_expression(self):
+        parts = [
+            "[bool]-10",
+            "[int]-10.70D",
+            "[int]10.7",
+            '[long]"+2.3e+3"',
+            '[char[]]"Hello"',
+        ]
+        self._test_expected(CastExpression, parts)
+
+    def test_bitwise_expression(self):
+        parts = [
+            "0x0F0F -band 0xFE",
+            "0x0F0F -band 0xFEL",
+            "0x0F0F -band 14.6",
+            "0x0F0F -bor 0xFE",
+            "0x0F0F -bor 0xFEL",
+            "0x0F0F -bor 14.40D",
+            "0x0F0F -bxor 0xFE",
+            "0x0F0F -bxor 0xFEL",
+            "0x0F0F -bxor 14.40D",
+            "0x0F0F -bxor 14.6",
+        ]
+        self._test_expected(BitwiseExpression, parts)
