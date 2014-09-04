@@ -38,7 +38,7 @@ from wispy.grammar import (
     LongTypeSuffix, DecimalTypeSuffix, NumericTypeSuffix,
     DecimalDigit, DecimalDigits, DecimalIntegerLiteral,
     HexadecimalDigit, HexadecimalDigits, HexadecimalIntegerLiteral,
-    IntegerLiteral,
+    IntegerLiteral, Literal,
     Dash, Sign,
     ExponentPart, RealLiteral,
     EscapedCharacter,
@@ -691,3 +691,16 @@ class GrammarTest(unittest.TestCase):
         params = [param + " " + param
                   for param in params]
         self._test_expected(SwitchParameters, params)
+
+    def test_literal(self):
+        literals = [
+            "1.4", "1.4e44", "1.4e44kb",
+            ".4", ".4e44", ".4e4d", ".4e4dkb", ".4Dkb",
+            "4e4", "4e4D", "4e4d", "4e4dkb",
+            "0d", "0xa1",
+            "\"tralalala\"",
+            "'tralalala'",
+            "@\"\ntest1\ntest2\n\"@",
+            "@'\ntest1\ntest2\n'@"
+        ]
+        self._test_expected(Literal, literals)
