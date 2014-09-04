@@ -1253,7 +1253,6 @@ class Statement(Grammar):
         InlinescriptStatement,
         ParallelStatement,
         SequenceStatement,
-        (Pipeline, StatementTerminator)
         (Pipeline, OPTIONAL(StatementTerminator))
     )
 
