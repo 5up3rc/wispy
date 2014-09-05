@@ -68,6 +68,7 @@ from wispy.grammar import (
     BitwiseExpression, ComparisonExpression,
     WhileCondition, LogicalExpression, AdditiveExpression, FormatExpression,
     AssignmentExpression,
+    HashLiteralExpression, HashLiteralBody, HashEntry,
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -963,3 +964,38 @@ class GrammarTest(unittest.TestCase):
             "$a = [float]",
         ]
         self._test_expected(AssignmentExpression, parts)
+
+    def test_hash_literal_expression(self):
+        parts = [
+            '@{ FirstName = "James"; LastName = "Anderson"; IDNum = 123 }',
+            '@{ FirstName = "James"; LastName = $last; IDNum = $IDNum + 3 }',
+            '@{ }',
+            '@{ 10 = "James"; 20.5 = "Anderson"; $true = 123 }',
+            '@{FirstName="James"}',
+            '@{FirstName= "James"; }',
+            '@{}',
+        ]
+        self._test_expected(HashLiteralExpression, parts)
+
+    def test_hash_literal_body(self):
+        parts = [
+            'FirstName = "James"; LastName = "Anderson"; IDNum = 123',
+            'FirstName = "James"; LastName = $last; IDNum = $IDNum + 3',
+            '10 = "James"; 20.5 = "Anderson"; $true = 123',
+            'FirstName="James"',
+            'FirstName= "James";',
+        ]
+        self._test_expected(HashLiteralBody, parts)
+
+    def test_hash_entry(self):
+        parts = [
+            'FirstName = "James"',
+            'IDNum = 123',
+            'LastName = $last',
+            'IDNum = $IDNum + 3',
+            '10 = "James"',
+            '$true = 123',
+            'FirstName="James"',
+            'FirstName= "James"',
+        ]
+        self._test_expected(HashEntry, parts)

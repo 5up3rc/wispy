@@ -1318,7 +1318,11 @@ class KeyExpression(Grammar):
 
 
 class HashEntry(Grammar):
-    grammar = (KeyExpression, "=", OPTIONAL(NewLines), Statement)
+    grammar = (KeyExpression,
+               OPTIONAL(WHITESPACE), "=",
+               OPTIONAL(WHITESPACE),
+               OPTIONAL(NewLines),
+               Statement)
 
 
 class HashLiteralBodyPrime(Grammar):
@@ -1327,11 +1331,17 @@ class HashLiteralBodyPrime(Grammar):
 
 
 class HashLiteralBody(Grammar):
-    grammar = (HashEntry, OPTIONAL(HashLiteralBodyPrime))
+    grammar = LIST_OF(HashEntry,
+                      sep=(OPTIONAL(WHITESPACE),
+                           OPTIONAL(HashLiteralBodyPrime),
+                           OPTIONAL(WHITESPACE)))
 
 
 class HashLiteralExpression(Grammar):
-    grammar = ("@{", OPTIONAL(NewLines), OPTIONAL(HashLiteralBody),
+    grammar = ("@{", OPTIONAL(NewLines),
+               OPTIONAL(WHITESPACE),
+               OPTIONAL(HashLiteralBody),
+               OPTIONAL(WHITESPACE),
                OPTIONAL(NewLines), "}")
 
 
