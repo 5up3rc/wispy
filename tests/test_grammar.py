@@ -72,7 +72,7 @@ from wispy.grammar import (
     AssignmentExpression,
     HashLiteralExpression, HashLiteralBody, HashEntry,
     IfStatement, ElseClause, ElseIfClause, ElseIfClauses,
-    ForStatement, WhileStatement
+    ForStatement, WhileStatement, DoStatement
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -1064,3 +1064,12 @@ class GrammarTest(unittest.TestCase):
             'while (1) { $i }'
         ]
         self._test_expected(WhileStatement, parts)
+
+    def test_do_statement(self):
+        parts = [
+            'do\n{\n$i;\n}\nwhile (++$i -le 5)',
+            'do\n{\n$i;}\nuntil (++$i -gt 5)',
+            'do { $i } while ($i)',
+            'do { $i } until ($i -le 85)'
+        ]
+        self._test_expected(DoStatement, parts)

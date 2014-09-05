@@ -1254,8 +1254,8 @@ class WhileStatement(Grammar):
 
 class DoStatement(Grammar):
     grammar = (
-        "do", StatementBlock, OPTIONAL(NewLines), OR("while", "until"),
-        OPTIONAL(NewLines), "(", WhileCondition, OPTIONAL(NewLines), ")"
+        "do", Spaces, StatementBlock, Spaces, OR("while", "until"),
+        Spaces, "(", WhileCondition, Spaces, ")"
     )
 
 
