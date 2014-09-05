@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 """
 Tests for wispy.grammar.
 """
@@ -71,6 +72,7 @@ from wispy.grammar import (
     AssignmentExpression,
     HashLiteralExpression, HashLiteralBody, HashEntry,
     IfStatement, ElseClause, ElseIfClause, ElseIfClauses,
+    ForStatement
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -1040,3 +1042,15 @@ class GrammarTest(unittest.TestCase):
             'elseif($grade -ge 70){ "Grade C" }',
         ]
         self._test_expected(ElseIfClauses, parts)
+
+    def test_for_statement(self):
+        parts = [
+            'for ($i = 1; $i -le 10; ++$i) { "$i $($i*$i)" }',
+            'for ($i = 1; $i -le 10; ++$i)\n{ "$i $($i*$i)" }',
+            'for\n($i = 1; $i -le 10; ++$i)\n{ "$i $($i*$i)" }',
+            'for ($i = 1; $i -le 10;)\n{ "$i $($i*$i)" }',
+            'for ($i = 1;)\n{ "$i $($i*$i)" }',
+            'for ()\n{ "$i $($i*$i)" }',
+            'for (){ "$i $($i*$i)" }',
+        ]
+        self._test_expected(ForStatement, parts)
