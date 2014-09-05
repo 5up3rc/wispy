@@ -65,7 +65,8 @@ from wispy.grammar import (
     PreDecrementExpression, PreIncrementExpression,
     RedirectedFileName,
     MultiplicativeExpression, RangeExpression, CastExpression,
-    BitwiseExpression,
+    BitwiseExpression, ComparisonExpression,
+    WhileCondition,
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -883,3 +884,30 @@ class GrammarTest(unittest.TestCase):
             "0x0F0F -bxor 14.6",
         ]
         self._test_expected(BitwiseExpression, parts)
+
+    def test_while_condition(self):
+        self._test_expected(WhileCondition, ["$i -le 5", "\n\n$i -gt 4"])
+
+    def test_comparison_expression(self):
+        ops = [
+            "as", "ccontains", "ceq",
+            "cge", "cgt", "cle",
+            "clike", "clt", "cmatch",
+            "cne", "cnotcontains", "cnotlike",
+            "cnotmatch", "contains", "creplace",
+            "csplit", "eq", "ge",
+            "gt", "icontains", "ieq",
+            "ige", "igt", "ile",
+            "ilike", "ilt", "imatch",
+            "ine", "inotcontains", "inotlike",
+            "inotmatch", "ireplace", "is",
+            "isnot", "isplit", "join",
+            "le", "like", "lt",
+            "match", "ne", "notcontains",
+            "notlike", "notmatch", "replace",
+            "split"
+        ]
+        parts = ["$i {}{} 5".format(dash, op)
+                 for op in ops
+                 for dash in ("-", "\u2013", "\u2014", "\u2015")]
+        self._test_expected(ComparisonExpression, parts)

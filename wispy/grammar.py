@@ -764,7 +764,10 @@ class AdditiveExpression(Grammar):
 
 class ComparisonExpression(Grammar):
     grammar = LIST_OF(AdditiveExpression,
-                      sep=(ComparisonOperator, OPTIONAL(NewLines)))
+                      sep=(OPTIONAL(WHITESPACE),
+                           ComparisonOperator,
+                           OPTIONAL(WHITESPACE),
+                           OPTIONAL(NewLines)))
 
 
 class BitwiseExpression(Grammar):
