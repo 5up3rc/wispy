@@ -1225,19 +1225,22 @@ class ForeachStatement(Grammar):
 class ForStatement(Grammar):
     grammar = OR(
         (
-            "for", OPTIONAL(NewLines), "(", OPTIONAL(ForInitializer),
-            StatementTerminator, OPTIONAL(NewLines), OPTIONAL(ForCondition),
-            StatementTerminator, OPTIONAL(NewLines), OPTIONAL(ForIterator),
-            OPTIONAL(NewLines), ")", StatementBlock
+            "for", Spaces, "(",
+            Spaces, OPTIONAL(ForInitializer), StatementTerminator,
+            Spaces, OPTIONAL(ForCondition), StatementTerminator,
+            Spaces, OPTIONAL(ForIterator), Spaces, ")",
+            Spaces, StatementBlock
         ),
         (
-            "for", OPTIONAL(NewLines), "(", OPTIONAL(ForInitializer),
-            StatementTerminator, OPTIONAL(NewLines), OPTIONAL(ForCondition),
-            OPTIONAL(NewLines), ")", StatementBlock
+            "for", Spaces, "(",
+            Spaces, OPTIONAL(ForInitializer), StatementTerminator,
+            Spaces, OPTIONAL(ForCondition), Spaces, ")",
+            Spaces, StatementBlock
         ),
         (
-            "for", OPTIONAL(NewLines), "(", OPTIONAL(ForInitializer),
-            OPTIONAL(NewLines), ")", StatementBlock
+            "for", Spaces, "(", Spaces,
+            OPTIONAL(ForInitializer), Spaces, ")",
+            Spaces, StatementBlock
         ),
     )
 
