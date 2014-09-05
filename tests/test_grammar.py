@@ -65,9 +65,10 @@ from wispy.grammar import (
     FlowControlStatement,
     Redirection,
     PreDecrementExpression, PreIncrementExpression,
-    RedirectedFileName,
+    RedirectedFileName, ArgumentList,
     MultiplicativeExpression, RangeExpression, CastExpression,
     BitwiseExpression, ComparisonExpression,
+    ArrayExpression, ArrayLiteralExpression,
     WhileCondition, LogicalExpression, AdditiveExpression, FormatExpression,
     AssignmentExpression,
     HashLiteralExpression, HashLiteralBody, HashEntry,
@@ -938,6 +939,40 @@ class GrammarTest(unittest.TestCase):
             "12 + $A + (14 + -10d)",
         ]
         self._test_expected(AdditiveExpression, parts)
+
+    def test_argument_list(self):
+        parts = [
+            "(2.0)", '("a")', "()",
+            "($true)", '("Sq"+"rt")',
+            "(\n$true\n)",
+        ]
+        self._test_expected(ArgumentList, parts)
+
+    def test_array_expression(self):
+        parts = [
+            "@($i = 10)",
+            "@(($i = 10))",
+            "@($i = 10; $j)",
+            "@(($i = 10); $j)",
+            "@(($i = 10); ++$j)",
+            "@(($i = 10); (++$j))",
+            "@($i = 10; ++$j)",
+            "@(2,4,6)",
+            "@($a)",
+            "@(@($a))",
+            "@(2, 4,    6)",
+        ]
+        self._test_expected(ArrayExpression, parts)
+
+    def test_array_literal_expression(self):
+        parts = [
+            "2,4,6",
+            "(2,4),6",
+            "(2,4,6),12,(2..4)",
+            '2,4,6,"red",$null,$true',
+            "2,    4,      6",
+        ]
+        self._test_expected(ArrayLiteralExpression, parts)
 
     def test_format_expression(self):
         parts = [

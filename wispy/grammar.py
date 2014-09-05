@@ -742,7 +742,7 @@ class CastExpression(Grammar):
 
 class ArrayLiteralExpression(Grammar):
     grammar = LIST_OF(UnaryExpression,
-                      sep=(",", OPTIONAL(NewLines)))
+                      sep=(OPTIONAL(WHITESPACE), ",", Spaces))
 
 
 class RangeExpression(Grammar):
@@ -924,7 +924,7 @@ class StatementTerminators(Grammar):
 
 
 class StatementList(Grammar):
-    grammar = REPEAT(REF('Statement'))
+    grammar = LIST_OF(REF('Statement'), sep=Spaces)
 
 
 class StatementBlock(Grammar):
@@ -1316,8 +1316,8 @@ class SubExpression(Grammar):
 
 class ArrayExpression(Grammar):
     grammar_whitespace_mode = "optional"
-    grammar = ("@(", OPTIONAL(NewLines), OPTIONAL(StatementList),
-               OPTIONAL(NewLines), ")")
+    grammar = ("@(", Spaces, OPTIONAL(StatementList),
+               Spaces, ")")
 
 
 class KeyExpression(Grammar):
