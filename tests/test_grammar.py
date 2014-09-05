@@ -66,7 +66,7 @@ from wispy.grammar import (
     RedirectedFileName,
     MultiplicativeExpression, RangeExpression, CastExpression,
     BitwiseExpression, ComparisonExpression,
-    WhileCondition, LogicalExpression,
+    WhileCondition, LogicalExpression, AdditiveExpression, FormatExpression,
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -922,3 +922,29 @@ class GrammarTest(unittest.TestCase):
             "($j -eq 10) -or ($k -gt 15)",
         ]
         self._test_expected(LogicalExpression, parts)
+
+    def test_additive_expression(self):
+        parts = [
+            "12 + -10L",
+            "-10.300D + 12",
+            "10.6 + 12",
+            '12 + "0xabc"',
+            "12 + $A + (14 + -10d)",
+        ]
+        self._test_expected(AdditiveExpression, parts)
+
+    def test_format_expression(self):
+        parts = [
+            # TODO: Another pathological case which needs investigating.
+            # '"{2} <= {0} + {1}`n" -f $i,$j,($i+$j)',
+            '">{0,3}<" -f 5',
+            '">{0,-3}<" -f 5',
+            '">{0,3:000}<" -f 5',
+            '">{0,5:0.00}<" -f 5.0',
+            '">{0:C}<" -f     1234567.888',
+            '">{0:C}<" -f     -1234.56',
+            '">{0,12:e2}<" -f 123.456e2',
+            '">{0,-12:p}<" -f -0.252',
+            '$format -f    123455',
+        ]
+        self._test_expected(FormatExpression, parts)

@@ -746,7 +746,10 @@ class RangeExpression(Grammar):
 
 class FormatExpression(Grammar):
     grammar = LIST_OF(RangeExpression,
-                      sep=(FormatOperator, OPTIONAL(NewLines)))
+                      sep=(OPTIONAL(WHITESPACE),
+                           FormatOperator,
+                           OPTIONAL(WHITESPACE),
+                           OPTIONAL(NewLines)))
 
 
 class MultiplicativeExpression(Grammar):
@@ -759,7 +762,10 @@ class MultiplicativeExpression(Grammar):
 
 class AdditiveExpression(Grammar):
     grammar = LIST_OF(MultiplicativeExpression,
-                      sep=(OR("+", Dash), OPTIONAL(NewLines)))
+                      sep=(OPTIONAL(WHITESPACE),
+                           OR("+", Dash),
+                           OPTIONAL(WHITESPACE),
+                           OPTIONAL(NewLines)))
 
 
 class ComparisonExpression(Grammar):
