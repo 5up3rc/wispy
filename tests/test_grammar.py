@@ -67,6 +67,7 @@ from wispy.grammar import (
     MultiplicativeExpression, RangeExpression, CastExpression,
     BitwiseExpression, ComparisonExpression,
     WhileCondition, LogicalExpression, AdditiveExpression, FormatExpression,
+    AssignmentExpression,
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -950,3 +951,15 @@ class GrammarTest(unittest.TestCase):
             '$format-f5',
         ]
         self._test_expected(FormatExpression, parts)
+
+    def test_assignment_expression(self):
+        parts = [
+            "$a = 20",
+            "$hypot = [Math]::Sqrt(3*3 + 4*4)",
+            "$a = $b = $c = 10.20D",
+            "$a = (10,20,30),(1,2)",
+            "[int]$x = 10.6",
+            '[long]$x = "0xabc"',
+            "$a = [float]",
+        ]
+        self._test_expected(AssignmentExpression, parts)
