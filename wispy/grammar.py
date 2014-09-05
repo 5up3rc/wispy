@@ -1170,7 +1170,7 @@ class SwitchCondition(Grammar):
 
 
 class SwitchClauseCondition(Grammar):
-    grammar = (CommandArgument, PrimaryExpression)
+    grammar = OR(CommandArgument, PrimaryExpression)
 
 
 class SwitchClause(Grammar):
