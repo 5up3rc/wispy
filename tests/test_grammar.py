@@ -72,7 +72,7 @@ from wispy.grammar import (
     AssignmentExpression,
     HashLiteralExpression, HashLiteralBody, HashEntry,
     IfStatement, ElseClause, ElseIfClause, ElseIfClauses,
-    ForStatement
+    ForStatement, WhileStatement
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -1054,3 +1054,13 @@ class GrammarTest(unittest.TestCase):
             'for (){ "$i $($i*$i)" }',
         ]
         self._test_expected(ForStatement, parts)
+
+    def test_while_statement(self):
+        parts = [
+            'while ($j -le 100) { $j }',
+            'while ($i++ -lt 2) { $i }',
+            'while ($i++ -lt 2)\n{ $i }',
+            'while (\n$i++ -lt 2\n) { $i }',
+            'while (1) { $i }'
+        ]
+        self._test_expected(WhileStatement, parts)

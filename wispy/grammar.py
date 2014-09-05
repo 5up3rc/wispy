@@ -1247,8 +1247,8 @@ class ForStatement(Grammar):
 
 class WhileStatement(Grammar):
     grammar = (
-        "while", OPTIONAL(NewLines), "(", OPTIONAL(NewLines), WhileCondition,
-        OPTIONAL(NewLines), ")", StatementBlock
+        "while", Spaces, "(", Spaces, WhileCondition,
+        Spaces, ")", Spaces, StatementBlock
     )
 
 
