@@ -946,5 +946,7 @@ class GrammarTest(unittest.TestCase):
             '">{0,12:e2}<" -f 123.456e2',
             '">{0,-12:p}<" -f -0.252',
             '$format -f    123455',
+            '$format -f5',
+            '$format-f5',
         ]
         self._test_expected(FormatExpression, parts)
