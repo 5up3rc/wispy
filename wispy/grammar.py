@@ -1110,20 +1110,30 @@ class ParamBlock(Grammar):
     )
 
 
+class ScriptBlockBody(Grammar):
+    grammar = OR(NamedBlockList, StatementList)
+
+
+class ScriptBlock(Grammar):
+    grammar = (OPTIONAL(ParamBlock),
+               OPTIONAL(StatementTerminators),
+               OPTIONAL(ScriptBlockBody))
+
+
+class ScriptBlockExpression(Grammar):
+    grammar = ("{", OPTIONAL(NewLines), ScriptBlock,
+               OPTIONAL(NewLines), "}")
+
+
 class FunctionName(Grammar):
     grammar = CommandArgument
 
 
 class FunctionStatement(Grammar):
-    # FIXME: Remove REF after the ScriptBlock grammar is added.
     grammar = (
         OR("function", "filter"), OPTIONAL(NewLines), FunctionName,
-        OPTIONAL(FunctionParameterDeclaration), "{", REF('ScriptBlock'), "}"
+        OPTIONAL(FunctionParameterDeclaration), "{", ScriptBlock, "}"
     )
-
-
-class ScriptBlockBody(Grammar):
-    grammar = OR(NamedBlockList, StatementList)
 
 
 class SwitchParameter(Grammar):
@@ -1184,14 +1194,16 @@ class SwitchClauses(Grammar):
 
 class SwitchBody(Grammar):
     grammar = (
-        OPTIONAL(NewLines), "{", OPTIONAL(NewLines), SwitchClauses, "}"
+        OPTIONAL(NewLines), "{", OPTIONAL(NewLines),
+        OPTIONAL(WHITESPACE), SwitchClauses, OPTIONAL(WHITESPACE), "}"
     )
 
 
 class SwitchStatement(Grammar):
     grammar = (
-        "switch", OPTIONAL(NewLines), OPTIONAL(SwitchParameters),
-        SwitchCondition, SwitchBody
+        "switch", OPTIONAL(NewLines),
+        OPTIONAL(WHITESPACE), OPTIONAL(SwitchParameters),
+        OPTIONAL(WHITESPACE), SwitchCondition, OPTIONAL(WHITESPACE), SwitchBody
     )
 
 
@@ -1296,11 +1308,6 @@ class ArrayExpression(Grammar):
     grammar_whitespace_mode = "optional"
     grammar = ("@(", OPTIONAL(NewLines), OPTIONAL(StatementList),
                OPTIONAL(NewLines), ")")
-
-
-class ScriptBlockExpression(Grammar):
-    grammar = ("{", OPTIONAL(NewLines), REF("ScriptBlock"),
-               OPTIONAL(NewLines), "}")
 
 
 class KeyExpression(Grammar):
