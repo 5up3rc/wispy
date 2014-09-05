@@ -1336,70 +1336,33 @@ class RangeArgumentExpression(Grammar):
 
 
 class FormatArgumentExpression(Grammar):
-    grammar = OR(
-        RangeArgumentExpression,
-        (
-            # TODO: left recursion
-            REF('FormatArgumentExpression'), FormatOperator,
-            OPTIONAL(NewLines), RangeArgumentExpression
-        )
-    )
+    grammar = LIST_OF(RangeArgumentExpression,
+                      sep=(FormatOperator, OPTIONAL(NewLines)))
 
 
 class MultiplicativeArgumentExpression(Grammar):
-    grammar = OR(
-        FormatArgumentExpression,
-        (
-            # TODO: left recursion
-            REF('MultiplicativeArgumentExpression'), OR("*", "/", "%"),
-            OPTIONAL(NewLines), FormatArgumentExpression
-        ),
-
-    )
+    grammar = LIST_OF(FormatArgumentExpression,
+                      sep=(OR("*", "/", "%"), OPTIONAL(NewLines)))
 
 
 class AdditiveArgumentExpression(Grammar):
-    grammar = OR(
-        MultiplicativeArgumentExpression,
-        (
-            # TODO: left recursion
-            REF('AdditiveArgumentExpression'), OR("+", Dash),
-            OPTIONAL(NewLines), MultiplicativeArgumentExpression
-        )
-    )
+    grammar = LIST_OF(MultiplicativeArgumentExpression,
+                      sep=(OR("+", Dash), OPTIONAL(NewLines)))
 
 
 class ComparisonArgumentExpression(Grammar):
-    grammar = OR(
-        AdditiveArgumentExpression,
-        (
-            # TODO: left recursion
-            REF('ComparisonArgumentExpression'), ComparisonOperator,
-            OPTIONAL(NewLines), AdditiveArgumentExpression
-        )
-    )
+    grammar = LIST_OF(AdditiveArgumentExpression,
+                      sep=(ComparisonOperator, OPTIONAL(NewLines)))
 
 
 class BitwiseArgumentExpression(Grammar):
-    grammar = OR(
-        ComparisonArgumentExpression,
-        (
-            # TODO: left recursion
-            REF('BitwiseArgumentExpression'), OR("-band", "-bor", "-bxor"),
-            OPTIONAL(NewLines), ComparisonArgumentExpression
-        )
-    )
+    grammar = LIST_OF(ComparisonArgumentExpression,
+                      sep=(OR("-band", "-bor", "-bxor"), OPTIONAL(NewLines)))
 
 
 class LogicalArgumentExpression(Grammar):
-    grammar = OR(
-        BitwiseArgumentExpression,
-        (
-            # TODO: left recursion
-            REF('LogicalArgumentExpression'), OR("-and", "-or", "-xor"),
-            OPTIONAL(NewLines), BitwiseArgumentExpression
-        ),
-    )
+    grammar = LIST_OF(BitwiseArgumentExpression,
+                      sep=(OR("-and", "-or", "-xor"), OPTIONAL(NewLines)))
 
 
 class ArgumentExpression(Grammar):
@@ -1420,7 +1383,9 @@ class ArgumentList(Grammar):
 
 
 class AssignmentExpression(Grammar):
-    grammar = (Expression, AssignmentOperator, Statement)
+    grammar = (Expression, OPTIONAL(WHITESPACE),
+               AssignmentOperator, OPTIONAL(WHITESPACE),
+               Statement)
 
 
 class ExpandableHereStringWithSubexprPart(Grammar):
