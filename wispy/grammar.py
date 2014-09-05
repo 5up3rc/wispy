@@ -780,7 +780,10 @@ class BitwiseExpression(Grammar):
 
 class LogicalExpression(Grammar):
     grammar = LIST_OF(BitwiseExpression,
-                      sep=(OR("-and", "-or", "-xor"), OPTIONAL(NewLines)))
+                      sep=(OPTIONAL(WHITESPACE),
+                           OR("-and", "-or", "-xor"),
+                           OPTIONAL(WHITESPACE),
+                           OPTIONAL(NewLines)))
 
 
 class Expression(Grammar):

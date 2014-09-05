@@ -66,7 +66,7 @@ from wispy.grammar import (
     RedirectedFileName,
     MultiplicativeExpression, RangeExpression, CastExpression,
     BitwiseExpression, ComparisonExpression,
-    WhileCondition,
+    WhileCondition, LogicalExpression,
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -911,3 +911,14 @@ class GrammarTest(unittest.TestCase):
                  for op in ops
                  for dash in ("-", "\u2013", "\u2014", "\u2015")]
         self._test_expected(ComparisonExpression, parts)
+
+    def test_logical_expression(self):
+        parts = [
+            "($j -gt 5) -and (++$k -lt 15)",
+            "($j -gt 5) -and ($k -le 21)",
+            "($j++ -gt 5) -and ($j -le 10)",
+            "($j -eq 5) -and (++$k -gt 15)",
+            "($j++ -gt 5) -or (++$k -lt 15)",
+            "($j -eq 10) -or ($k -gt 15)",
+        ]
+        self._test_expected(LogicalExpression, parts)
