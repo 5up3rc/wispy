@@ -12,6 +12,7 @@ import unittest
 import string
 import logging
 from itertools import chain
+from textwrap import dedent
 
 from modgrammar import ParseError
 from modgrammar.debugging import DEBUG_ALL
@@ -69,6 +70,7 @@ from wispy.grammar import (
     WhileCondition, LogicalExpression, AdditiveExpression, FormatExpression,
     AssignmentExpression,
     HashLiteralExpression, HashLiteralBody, HashEntry,
+    IfStatement, ElseClause, ElseIfClause, ElseIfClauses,
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -999,3 +1001,42 @@ class GrammarTest(unittest.TestCase):
             'FirstName= "James"',
         ]
         self._test_expected(HashEntry, parts)
+
+    def test_if_statement(self):
+        parts = [
+            dedent('''if ($grade -ge 90) { "Grade A" }
+                   elseif ($grade -ge 80) { "Grade B" }
+                   elseif ($grade -ge 70) { "Grade C" }
+                   elseif ($grade -ge 60) { "Grade D" }
+                   else { "Grade F" }'''),
+            dedent('''if ($grade -ge 90) { "Grade A" }
+                   elseif ($grade -ge 80) { "Grade B" }'''),
+            dedent('''if ($grade -ge 90) { "Grade A" }
+                   else { "Grade F" }'''),
+            dedent('''if ($grade -ge 90) { "Grade A" }'''),
+            dedent('''if($grade -ge 90){"Grade A"}'''),
+        ]
+        self._test_expected(IfStatement, parts)
+
+    def test_else_clause(self):
+        parts = [
+            'else { "grade f" }',
+            '    else{"grafe f"}',
+            'else{"giraffe"}',
+        ]
+        self._test_expected(ElseClause, parts)
+
+    def test_else_if_clause(self):
+        parts = [
+            'elseif ($grade -ge 80) { "Grade B" }',
+            'elseif($grade -ge 70){ "Grade C" }',
+            'elseif($grade -ge 60)\n{"Grade D"}',
+        ]
+        self._test_expected(ElseIfClause, parts)
+
+    def test_else_if_clauses(self):
+        parts = [
+            'elseif ($grade -ge 80) { "Grade B" }\n'
+            'elseif($grade -ge 70){ "Grade C" }',
+        ]
+        self._test_expected(ElseIfClauses, parts)

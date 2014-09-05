@@ -26,6 +26,12 @@ class NewLines(Grammar):
     grammar = REPEAT(NewLineCharacter)
 
 
+class Spaces(Grammar):
+    grammar = (OPTIONAL(WHITESPACE),
+               OPTIONAL(NewLines),
+               OPTIONAL(WHITESPACE))
+
+
 class Hashes(Grammar):
     grammar = REPEAT("#")
 
@@ -927,8 +933,8 @@ class StatementBlock(Grammar):
     into a single syntactic unit."""
 
     grammar = (
-        OPTIONAL(NewLines), "{", OPTIONAL(StatementList),
-        OPTIONAL(NewLines), "}"
+        Spaces, "{", Spaces, OPTIONAL(StatementList),
+        Spaces, "}"
     )
 
 
@@ -962,8 +968,8 @@ class WhileCondition(Grammar):
 
 class ElseIfClause(Grammar):
     grammar = (
-        OPTIONAL(NewLines), "elseif", OPTIONAL(NewLines), "(",
-        OPTIONAL(NewLines), Pipeline, OPTIONAL(NewLines), ")",
+        Spaces, "elseif", Spaces, "(",
+        Spaces, Pipeline, Spaces, ")",
         StatementBlock
     )
 
@@ -973,7 +979,16 @@ class ElseIfClauses(Grammar):
 
 
 class ElseClause(Grammar):
-    grammar = (OPTIONAL(NewLines), "else", StatementBlock)
+    grammar = (Spaces, "else", StatementBlock)
+
+
+class IfStatement(Grammar):
+    grammar = (
+        "if",
+        Spaces, "(", Spaces, Pipeline, Spaces, ")", Spaces,
+        StatementBlock, OPTIONAL(ElseIfClauses),
+        OPTIONAL(ElseClause)
+    )
 
 
 class ScriptParameterDefault(Grammar):
@@ -1033,14 +1048,6 @@ class DataCommandsList(Grammar):
 
 class DataCommandsAllowed(Grammar):
     grammar = (OPTIONAL(NewLines), "-supportedcommand", DataCommandsList)
-
-
-class IfStatement(Grammar):
-    grammar = (
-        "if", OPTIONAL(NewLines), "(", OPTIONAL(NewLines), Pipeline,
-        OPTIONAL(NewLines), ")", StatementBlock, OPTIONAL(ElseIfClauses),
-        OPTIONAL(ElseClause)
-    )
 
 
 class TrapStatement(Grammar):
