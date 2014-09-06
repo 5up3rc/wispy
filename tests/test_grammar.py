@@ -58,7 +58,9 @@ from wispy.grammar import (
     ExpandableHereStringPart, ExpandableHereStringCharacters,
     ExpandableHereStringWithSubexprStart, ExpandableHereStringWithSubexprEnd,
     CommandInvocationOperator,
-    AttributeName, CommandName, Command,
+    AttributeName, Attribute, AttributeArgument, AttributeArguments,
+    AttributeList,
+    CommandName, Command,
     StatementTerminator, StatementTerminators,
     BlockName, DataName,
     SwitchParameter, SwitchParameters,
@@ -746,6 +748,49 @@ class GrammarTest(unittest.TestCase):
         self._test_expected(AttributeName, ["int[,]", "int[]"])
         self._test_expected(AttributeName, ["int", "float", "double"])
         self._test_expected(AttributeName, ["Dictionary[float,double]"])
+
+    def test_attribute(self):
+        elements = [
+            "[A(10,IgnoreCase=$true)]",
+            "[Parameter(Mandatory = $true)]",
+            "[Parameter(Mandatory = $true, TropaTropa=$Penelopa)]",
+            '[Alias("CN")]',
+            '[Alias("name","system")]',
+            '[string[]]',
+            '[Parameter(Mandatory = $true,\n'
+            'ParameterSetName = "Computer")]',
+        ]
+        self._test_expected(Attribute, elements)
+
+    def test_attribute_argument(self):
+        elements = [
+            "IgnoreCase=$true",
+            "Mandatory= $true",
+            "$true",
+        ]
+        self._test_expected(AttributeArgument, elements)
+
+    def test_attribute_arguments(self):
+        elements = [
+            "IgnoreCase=$true, Tobi=$Good_boy",
+            "Juubi=$Kaguya \n , \n Obito=$Tobi",
+        ]
+        self._test_expected(AttributeArguments, elements)
+
+    def test_attribute_list(self):
+        elements = [
+            "[A(10,IgnoreCase=$true)]"
+            "[Parameter(Mandatory = $true)]",
+
+            "[Parameter(Mandatory = $true, TropaTropa=$Penelopa)]\n\n"
+            '[Alias("CN")]',
+
+            '[Alias("name","system")]'
+            '[string[]]'
+            '[Parameter(Mandatory = $true,\n'
+            'ParameterSetName = "Computer")]',
+        ]
+        self._test_expected(AttributeList, elements)
 
     def test_command_name(self):
         elements = [

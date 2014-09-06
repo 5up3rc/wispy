@@ -801,14 +801,18 @@ class Expression(Grammar):
 class AttributeArgument(Grammar):
     grammar = OR(
         (OPTIONAL(NewLines), Expression),
-        (OPTIONAL(NewLines), SimpleName, "=", OPTIONAL(NewLines),
-         Expression)
+        (
+            OPTIONAL(NewLines),
+            SimpleName,
+            OPTIONAL(WHITESPACE), "=", OPTIONAL(Spaces),
+            Expression
+        )
     )
 
 
 class AttributeArguments(Grammar):
     grammar = LIST_OF(AttributeArgument,
-                      sep=(OPTIONAL(NewLines), ","))
+                      sep=(Spaces, ",", OPTIONAL(Spaces)))
 
 
 class AttributeName(Grammar):
@@ -1439,22 +1443,21 @@ class ExpandableStringWithSubexprCharacters(Grammar):
 
 class ExpandableStringLiteralWithSubexpr(Grammar):
     grammar = (
-            ExpandableStringWithSubexprStart, OPTIONAL(StatementList),
-            ")", ExpandableStringWithSubexprCharacters,
-            ExpandableStringWithSubexprEnd
+        ExpandableStringWithSubexprStart, OPTIONAL(StatementList),
+        ")", ExpandableStringWithSubexprCharacters,
+        ExpandableStringWithSubexprEnd
     )
 
 
 class ExpandableHereStringLiteralWithSubexpr(Grammar):
     grammar = (
-            ExpandableHereStringWithSubexprStart, OPTIONAL(StatementList),
-            ExpandableHereStringWithSubexprCharacters,
-            ExpandableHereStringWithSubexprEnd
+        ExpandableHereStringWithSubexprStart, OPTIONAL(StatementList),
+        ExpandableHereStringWithSubexprCharacters,
+        ExpandableHereStringWithSubexprEnd
         )
 
 
 class StringLiteralWithSubexpression(Grammar):
-    # FIXME: Remove REF after the ExpandableHereStringLiteralWithSubexpr
     # grammar is added.
     grammar = OR(
         ExpandableStringLiteralWithSubexpr,
