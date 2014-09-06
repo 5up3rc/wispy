@@ -59,10 +59,10 @@ from wispy.grammar import (
     ExpandableHereStringWithSubexprStart, ExpandableHereStringWithSubexprEnd,
     CommandInvocationOperator,
     AttributeName, Attribute, AttributeArgument, AttributeArguments,
-    AttributeList,
+    AttributeList, MemberName,
     CommandName, Command,
     StatementTerminator, StatementTerminators,
-    BlockName, DataName,
+    BlockName, DataName, UnaryExpression, ExpressionWithUnaryOperator,
     SwitchParameter, SwitchParameters,
     FlowControlStatement,
     Redirection, LabelExpression,
@@ -1229,3 +1229,35 @@ class GrammarTest(unittest.TestCase):
             # 'Where({$_.Value -eq $true}).Key)',
         ]
         self._test_expected(SwitchCondition, parts)
+
+    def test_member_name(self):
+        elements = ["Sqrt", "IsUpper", "ToUpper"]
+        self._test_expected(MemberName, elements)
+
+    def test_unary_expression(self):
+        parts = [
+            ",10",
+            ",(10, 'red')",
+            ",,10",
+            "!'xyz'",
+            "-not $true",
+            "+123L",
+            "+'0xabc'",
+        ]
+        self._test_expected(UnaryExpression, parts)
+
+    def test_expression_with_unary_operator(self):
+        parts = [
+            operator + " " + "$true"
+            for operator in
+            (",", "-bnot", "-not", "-split", "-join", "!", "+")
+        ]
+        parts += [
+            "[bool]-10",
+            "[int]-10.70D",
+            "[int]10.7",
+            '[long]"+2.3e+3"',
+            '[char[]]"Hello"',
+            '++$k', '++${k}',
+        ]
+        self._test_expected(ExpressionWithUnaryOperator, parts)

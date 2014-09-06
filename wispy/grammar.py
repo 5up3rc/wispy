@@ -709,7 +709,7 @@ class PrimaryExpression(Grammar):
 class ExpressionWithUnaryOperator(Grammar):
     grammar = OR(
         (OR(",", "-bnot", "-not", "-split", "-join", "!", "+", Dash),
-         OPTIONAL(NewLines), REF("UnaryExpression")),
+         Spaces, REF("UnaryExpression")),
         REF("PreIncrementExpression"),
         REF("PreDecrementExpression"),
         REF("CastExpression"),
