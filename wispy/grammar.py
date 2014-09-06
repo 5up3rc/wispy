@@ -13,7 +13,7 @@
 from modgrammar import (
     Grammar, OR, WORD, REPEAT, ANY_EXCEPT,
     OPTIONAL, ANY, EXCEPT,
-    LIST_OF, REF,
+    LIST_OF, REF, WHITESPACE,
 )
 
 
@@ -49,25 +49,7 @@ class NonDoubleQuoteChars(Grammar):
 
 # Grammar for line terminators
 class NewLineCharacter(Grammar):
-    grammar = OR("\u000D\u000A", "\u000D", "u000A")
-
-
-class Whitespace(Grammar):
-    grammar = OR(
-        OR(
-            # Unicode Characters in the 'Separator, Space' Category
-            "\u0020", "\u00A0", "\u1680", "\u2000", "\u2001", "\u2002",
-            "\u2003", "\u2004", "\u2005", "\u2006", "\u2007", "\u2008",
-            "\u2009", "\u200A", "\u202F", "\u205F", "\u3000",
-
-            # Unicode Characters in the 'Separator, Line' Category
-            "\u2028",
-
-            # Unicode Characters in the 'Separator, Paragraph' Category
-            "\u2029"
-        ),
-        "\u0009", "\u000B", "\u000C", ("\u0060", NewLineCharacter)
-    )
+    grammar = OR("\u000D\u000A", "\u000D", "\u000A")
 
 
 class NewLines(Grammar):
@@ -75,9 +57,9 @@ class NewLines(Grammar):
 
 
 class Spaces(Grammar):
-    grammar = (OPTIONAL(Whitespace),
+    grammar = (OPTIONAL(WHITESPACE),
                OPTIONAL(NewLines),
-               OPTIONAL(Whitespace))
+               OPTIONAL(WHITESPACE))
 # End of grammar for line terminators
 
 
@@ -123,11 +105,11 @@ class DelimitedComment(Grammar):
     as a whole source line, or it can span any number of source lines.
     """
 
-    grammar = ("<# ", OPTIONAL(DelimitedCommentText), Hashes, ">")
+    grammar = ("<#", OPTIONAL(DelimitedCommentText), Hashes, ">")
 
 
 class RequiresComment(Grammar):
-    grammar = ("#requires", Whitespace, REF('CommandArguments'))
+    grammar = ("#requires", WHITESPACE, REF('CommandArguments'))
 
 
 class SingleLineComment(Grammar):
@@ -135,7 +117,7 @@ class SingleLineComment(Grammar):
     """A :class:`SingleLineComment` begins with the character `#` and ends
     with a :class:`NewLineCharacter`.
     """
-    grammar = ("#", OPTIONAL(Whitespace), OPTIONAL(InputCharacters))
+    grammar = ("#", OPTIONAL(WHITESPACE), OPTIONAL(InputCharacters))
 
 
 class Comment(Grammar):
@@ -189,7 +171,7 @@ class GenericTokenChar(Grammar):
                    DoubleQuoteCharacter,
                    # FIXME: Remove ref
                    REF('SingleQuoteCharacter'),
-                   Whitespace,
+                   WHITESPACE,
                    NewLineCharacter,
                    "{", "}", "(", ")", ";", ",", "|", "&", "$", "\u0060",
                )),
@@ -234,7 +216,7 @@ class FirstParameterCharacter(Grammar):
 
         # Letter, Modifier
         "\u0374", "\u037A", "\u0559", "\u0640", "\u06E5", "\u06E6",
-        "\u07F4", "\u07F5", "\u07FA", "\u081A", "\u0824", "\u0828"
+        "\u07F4", "\u07F5", "\u07FA", "\u081A", "\u0824", "\u0828",
         # TODO: Add more characters from the 'Letter, Modifier` Category
         # TODO: Add characters from the 'Letter, Other' Category
 
@@ -244,7 +226,7 @@ class FirstParameterCharacter(Grammar):
 
 
 class ParameterCharacter(Grammar):
-    grammar = EXCEPT(ANY, OR(Colon, Whitespace, NewLineCharacter,
+    grammar = EXCEPT(ANY, OR(Colon, WHITESPACE, NewLineCharacter,
                              "{", "}", "(", ")", ";", ",", "|",
                              "&", ".", "["))
 
@@ -343,7 +325,7 @@ class VariableCharacter(Grammar):
 
         # Letter, Modifier
         "\u0374", "\u037A", "\u0559", "\u0640", "\u06E5", "\u06E6",
-        "\u07F4", "\u07F5", "\u07FA", "\u081A", "\u0824", "\u0828"
+        "\u07F4", "\u07F5", "\u07FA", "\u081A", "\u0824", "\u0828",
         # TODO: Add more characters from the 'Letter, Modifier` Category
         # TODO: Add characters from the 'Letter, Other' Category
 
@@ -412,7 +394,7 @@ class Token(Grammar):
 
 # Grammar for input
 class InputElement(Grammar):
-    grammar = OPTIONAL(Whitespace, Comment, Token)
+    grammar = OPTIONAL(WHITESPACE, Comment, Token)
 
 
 class InputElements(Grammar):
@@ -581,7 +563,7 @@ class ExpandableHereStringCharacters(Grammar):
 
 class ExpandableHereStringWithSubexprStart(Grammar):
     grammar = (
-        "@", DoubleQuoteCharacter, OPTIONAL(Whitespace),
+        "@", DoubleQuoteCharacter, OPTIONAL(WHITESPACE),
         NewLineCharacter, OPTIONAL(ExpandableHereStringCharacters),
         "$", "("
     )
@@ -651,7 +633,7 @@ class ExpandableHereStringLiteral(Grammar):
     line 2
     "@
     """
-    grammar = ("@", DoubleQuoteCharacter, OPTIONAL(Whitespace),
+    grammar = ("@", DoubleQuoteCharacter, OPTIONAL(WHITESPACE),
                NewLineCharacter, OPTIONAL(ExpandableHereStringCharacters),
                NewLineCharacter, DoubleQuoteCharacter, "@")
 
@@ -687,7 +669,7 @@ class VerbatimHereStringLiteral(Grammar):
     line 2
     '@
     """
-    grammar = ("@", SingleQuoteCharacter, OPTIONAL(Whitespace),
+    grammar = ("@", SingleQuoteCharacter, OPTIONAL(WHITESPACE),
                NewLineCharacter, OPTIONAL(VerbatimHereStringCharacters),
                NewLineCharacter, SingleQuoteCharacter, "@")
 
@@ -885,7 +867,7 @@ class CastExpression(Grammar):
 
 class ArrayLiteralExpression(Grammar):
     grammar = LIST_OF(UnaryExpression,
-                      sep=(OPTIONAL(Whitespace), ",", Spaces))
+                      sep=(OPTIONAL(WHITESPACE), ",", Spaces))
 
 
 class RangeExpression(Grammar):
@@ -895,49 +877,49 @@ class RangeExpression(Grammar):
 
 class FormatExpression(Grammar):
     grammar = LIST_OF(RangeExpression,
-                      sep=(OPTIONAL(Whitespace),
+                      sep=(OPTIONAL(WHITESPACE),
                            FormatOperator,
-                           OPTIONAL(Whitespace),
+                           OPTIONAL(WHITESPACE),
                            OPTIONAL(NewLines)))
 
 
 class MultiplicativeExpression(Grammar):
     grammar = LIST_OF(FormatExpression,
-                      sep=((OPTIONAL(Whitespace),
+                      sep=((OPTIONAL(WHITESPACE),
                             OR("*", "/", "%"),
-                            OPTIONAL(Whitespace)),
+                            OPTIONAL(WHITESPACE)),
                            OPTIONAL(NewLines)))
 
 
 class AdditiveExpression(Grammar):
     grammar = LIST_OF(MultiplicativeExpression,
-                      sep=(OPTIONAL(Whitespace),
+                      sep=(OPTIONAL(WHITESPACE),
                            OR("+", Dash),
-                           OPTIONAL(Whitespace),
+                           OPTIONAL(WHITESPACE),
                            OPTIONAL(NewLines)))
 
 
 class ComparisonExpression(Grammar):
     grammar = LIST_OF(AdditiveExpression,
-                      sep=(OPTIONAL(Whitespace),
+                      sep=(OPTIONAL(WHITESPACE),
                            ComparisonOperator,
-                           OPTIONAL(Whitespace),
+                           OPTIONAL(WHITESPACE),
                            OPTIONAL(NewLines)))
 
 
 class BitwiseExpression(Grammar):
     grammar = LIST_OF(ComparisonExpression,
-                      sep=(OPTIONAL(Whitespace),
+                      sep=(OPTIONAL(WHITESPACE),
                            OR("-band", "-bor", "-bxor"),
-                           OPTIONAL(Whitespace),
+                           OPTIONAL(WHITESPACE),
                            OPTIONAL(NewLines)))
 
 
 class LogicalExpression(Grammar):
     grammar = LIST_OF(BitwiseExpression,
-                      sep=(OPTIONAL(Whitespace),
+                      sep=(OPTIONAL(WHITESPACE),
                            OR("-and", "-or", "-xor"),
-                           OPTIONAL(Whitespace),
+                           OPTIONAL(WHITESPACE),
                            OPTIONAL(NewLines)))
 
 
@@ -952,7 +934,7 @@ class AttributeArgument(Grammar):
         (
             OPTIONAL(NewLines),
             SimpleName,
-            OPTIONAL(Whitespace), "=", OPTIONAL(Spaces),
+            OPTIONAL(WHITESPACE), "=", OPTIONAL(Spaces),
             Expression
         )
     )
@@ -1003,7 +985,7 @@ class RedirectedFileName(Grammar):
 class Redirection(Grammar):
     grammar = OR(
         "2>&1", "1>&2",
-        (FileRedirectionOperator, OPTIONAL(Whitespace), RedirectedFileName)
+        (FileRedirectionOperator, OPTIONAL(WHITESPACE), RedirectedFileName)
     )
 
 
@@ -1012,7 +994,7 @@ class CommandElement(Grammar):
 
 
 class CommandElements(Grammar):
-    grammar = LIST_OF(CommandElement, sep=OPTIONAL(Whitespace))
+    grammar = LIST_OF(CommandElement, sep=OPTIONAL(WHITESPACE))
 
 
 class CommandModule(Grammar):
@@ -1025,12 +1007,12 @@ class CommandInvocationOperator(Grammar):
 
 class Command(Grammar):
     grammar = OR(
-        (CommandName, OPTIONAL(Whitespace), OPTIONAL(CommandElements)),
+        (CommandName, OPTIONAL(WHITESPACE), OPTIONAL(CommandElements)),
         (
             CommandInvocationOperator,
-            OPTIONAL(Whitespace),
+            OPTIONAL(WHITESPACE),
             OPTIONAL(CommandModule),
-            OPTIONAL(Whitespace),
+            OPTIONAL(WHITESPACE),
             CommandNameExpr,
             OPTIONAL(CommandElements)
         )
@@ -1229,12 +1211,12 @@ class FlowControlStatement(Grammar):
     grammar = OR(
         (
             OR("break", "continue"),
-            OPTIONAL(Whitespace),
+            OPTIONAL(WHITESPACE),
             OPTIONAL(LabelExpression)
         ),
         (
             OR("throw", "return", "exit"),
-            OPTIONAL(Whitespace),
+            OPTIONAL(WHITESPACE),
             OPTIONAL(Pipeline)
         ),
     )
@@ -1304,7 +1286,7 @@ class SwitchParameter(Grammar):
 
 
 class SwitchParameters(Grammar):
-    grammar = LIST_OF(SwitchParameter, sep=Whitespace)
+    grammar = LIST_OF(SwitchParameter, sep=WHITESPACE)
 
 
 class SwitchFilename(Grammar):
@@ -1345,15 +1327,15 @@ class SwitchClauses(Grammar):
 class SwitchBody(Grammar):
     grammar = (
         OPTIONAL(NewLines), "{", OPTIONAL(NewLines),
-        OPTIONAL(Whitespace), SwitchClauses, OPTIONAL(Whitespace), "}"
+        OPTIONAL(WHITESPACE), SwitchClauses, OPTIONAL(WHITESPACE), "}"
     )
 
 
 class SwitchStatement(Grammar):
     grammar = (
         "switch", OPTIONAL(NewLines),
-        OPTIONAL(Whitespace), OPTIONAL(SwitchParameters),
-        OPTIONAL(Whitespace), SwitchCondition, OPTIONAL(Whitespace), SwitchBody
+        OPTIONAL(WHITESPACE), OPTIONAL(SwitchParameters),
+        OPTIONAL(WHITESPACE), SwitchCondition, OPTIONAL(WHITESPACE), SwitchBody
     )
 
 
@@ -1472,8 +1454,8 @@ class KeyExpression(Grammar):
 
 class HashEntry(Grammar):
     grammar = (KeyExpression,
-               OPTIONAL(Whitespace), "=",
-               OPTIONAL(Whitespace),
+               OPTIONAL(WHITESPACE), "=",
+               OPTIONAL(WHITESPACE),
                OPTIONAL(NewLines),
                Statement)
 
@@ -1485,16 +1467,16 @@ class HashLiteralBodyPrime(Grammar):
 
 class HashLiteralBody(Grammar):
     grammar = LIST_OF(HashEntry,
-                      sep=(OPTIONAL(Whitespace),
+                      sep=(OPTIONAL(WHITESPACE),
                            OPTIONAL(HashLiteralBodyPrime),
-                           OPTIONAL(Whitespace)))
+                           OPTIONAL(WHITESPACE)))
 
 
 class HashLiteralExpression(Grammar):
     grammar = ("@{", OPTIONAL(NewLines),
-               OPTIONAL(Whitespace),
+               OPTIONAL(WHITESPACE),
                OPTIONAL(HashLiteralBody),
-               OPTIONAL(Whitespace),
+               OPTIONAL(WHITESPACE),
                OPTIONAL(NewLines), "}")
 
 
@@ -1553,8 +1535,8 @@ class ArgumentList(Grammar):
 
 
 class AssignmentExpression(Grammar):
-    grammar = (Expression, OPTIONAL(Whitespace),
-               AssignmentOperator, OPTIONAL(Whitespace),
+    grammar = (Expression, OPTIONAL(WHITESPACE),
+               AssignmentOperator, OPTIONAL(WHITESPACE),
                Statement)
 
 
