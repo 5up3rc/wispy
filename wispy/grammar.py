@@ -167,7 +167,7 @@ class SignatureEnd(Grammar):
 
 
 class Signature(Grammar):
-    REPEAT(SingleLineComment)
+    grammar = REPEAT(SingleLineComment)
 
 
 class SignatureBlock(Grammar):
@@ -1458,7 +1458,7 @@ class SubExpression(Grammar):
 
 
 class ArrayExpression(Grammar):
-    grammar_Whitespace_mode = "optional"
+    grammar_whitespace_mode = "optional"
     grammar = ("@(", Spaces, OPTIONAL(StatementList),
                Spaces, ")")
 
