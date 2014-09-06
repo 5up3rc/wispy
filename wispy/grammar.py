@@ -12,14 +12,62 @@
 
 from modgrammar import (
     Grammar, OR, WORD, REPEAT, ANY_EXCEPT,
-    OPTIONAL, WHITESPACE, ANY, EXCEPT,
+    OPTIONAL, ANY, EXCEPT,
     LIST_OF, REF,
 )
 
 
-# Line terminators
+# Grammars without dependencies
+class EscapedCharacter(Grammar):
+
+    """An escaped character is a way to assign a special interpretation
+    to a character by giving it a prefix Backtick character."""
+
+    grammar = ("\u0060", ANY)
+
+
+class Colon(Grammar):
+    grammar = "\u003A"
+
+
+class NonAmpersandCharacter(Grammar):
+    grammar = ANY_EXCEPT("&")
+
+
+class DoubleQuoteCharacter(Grammar):
+    grammar = OR("\u0022", "\u201C", "\u201D", "\u201E")
+
+
+class NonDoubleQuoteChar(Grammar):
+    grammar = EXCEPT(ANY, DoubleQuoteCharacter)
+
+
+class NonDoubleQuoteChars(Grammar):
+    grammar = REPEAT(NonDoubleQuoteChar)
+# End of Grammars without dependencies
+
+
+# Grammar for line terminators
 class NewLineCharacter(Grammar):
-    grammar = OR("\r\n", "\n", "\r")
+    grammar = OR("\u000D\u000A", "\u000D", "u000A")
+
+
+class Whitespace(Grammar):
+    grammar = OR(
+        OR(
+            # Unicode Characters in the 'Separator, Space' Category
+            "\u0020", "\u00A0", "\u1680", "\u2000", "\u2001", "\u2002",
+            "\u2003", "\u2004", "\u2005", "\u2006", "\u2007", "\u2008",
+            "\u2009", "\u200A", "\u202F", "\u205F", "\u3000",
+
+            # Unicode Characters in the 'Separator, Line' Category
+            "\u2028",
+
+            # Unicode Characters in the 'Separator, Paragraph' Category
+            "\u2029"
+        ),
+        "\u0009", "\u000B", "\u000C", ("\u0060", NewLineCharacter)
+    )
 
 
 class NewLines(Grammar):
@@ -27,37 +75,37 @@ class NewLines(Grammar):
 
 
 class Spaces(Grammar):
-    grammar = (OPTIONAL(WHITESPACE),
+    grammar = (OPTIONAL(Whitespace),
                OPTIONAL(NewLines),
-               OPTIONAL(WHITESPACE))
+               OPTIONAL(Whitespace))
+# End of grammar for line terminators
+
+
+# Grammar for input character
+class InputCharacter(Grammar):
+    grammar = EXCEPT(ANY, NewLineCharacter, max=1)
+
+
+class InputCharacters(Grammar):
+    grammar = REPEAT(InputCharacter)
+# End of grammar for input character
+
+
+# Grammar for comments
+class Dash(Grammar):
+    grammar = OR("\u002D", "\u2013", "\u2014", "\u2015")
+
+
+class DashDash(Grammar):
+    grammar = (Dash, Dash)
 
 
 class Hashes(Grammar):
     grammar = REPEAT("#")
 
 
-class Colon(Grammar):
-    grammar = WORD(":")
-
-
 class NotGreaterThanOrHash(Grammar):
     grammar = ANY_EXCEPT("#>", max=1)
-
-
-class InputCharacter(Grammar):
-    grammar = ANY_EXCEPT("\r\n", max=1)
-
-
-class InputCharacters(Grammar):
-    grammar = REPEAT(InputCharacter)
-
-
-class SingleLineComment(Grammar):
-
-    """A :class:`SingleLineComment` begins with the character `#` and ends
-    with a :class:`NewLineCharacter`.
-    """
-    grammar = ("#", OPTIONAL(WHITESPACE), OPTIONAL(InputCharacters))
 
 
 class DelimitedCommentSection(Grammar):
@@ -75,7 +123,19 @@ class DelimitedComment(Grammar):
     as a whole source line, or it can span any number of source lines.
     """
 
-    grammar = ("<#", OPTIONAL(DelimitedCommentText), Hashes, ">")
+    grammar = ("<# ", OPTIONAL(DelimitedCommentText), Hashes, ">")
+
+
+class RequiresComment(Grammar):
+    grammar = ("#requires", Whitespace, REF('CommandArguments'))
+
+
+class SingleLineComment(Grammar):
+
+    """A :class:`SingleLineComment` begins with the character `#` and ends
+    with a :class:`NewLineCharacter`.
+    """
+    grammar = ("#", OPTIONAL(Whitespace), OPTIONAL(InputCharacters))
 
 
 class Comment(Grammar):
@@ -89,22 +149,282 @@ class Comment(Grammar):
         * The character # has no special meaning in a delimited comment.
     """
 
-    grammar = OR(SingleLineComment, DelimitedComment)
+    grammar = OR(SingleLineComment, RequiresComment, DelimitedComment)
 
 
+# Enf of grammar for comments
+
+
+# Grammar for siganature
+class SignatureBegin(Grammar):
+    grammar = (NewLineCharacter, "# SIG # Begin signature block",
+               NewLineCharacter)
+
+
+class SignatureEnd(Grammar):
+    grammar = (NewLineCharacter, "# SIG # End signature block",
+               NewLineCharacter)
+
+
+class Signature(Grammar):
+    REPEAT(SingleLineComment)
+
+
+class SignatureBlock(Grammar):
+    grammar = (SignatureBegin, Signature, SignatureEnd)
+# Enf of grammar for signature
+
+
+# Grammar for Literals
+
+
+# End of grammar for Literals
+
+
+# Grammar for Commands
+class GenericTokenChar(Grammar):
+    grammar = OR(
+        EXCEPT(ANY,
+               OR(
+                   DoubleQuoteCharacter,
+                   # FIXME: Remove ref
+                   REF('SingleQuoteCharacter'),
+                   Whitespace,
+                   NewLineCharacter,
+                   "{", "}", "(", ")", ";", ",", "|", "&", "$", "\u0060",
+               )),
+        EscapedCharacter
+    )
+
+
+class GenericTokenPart(Grammar):
+    grammar = OR(
+        # FIXME: Remove ref
+        REF('ExpandableStringLiteral'),
+        REF('VerbatimHereStringLiteral'),
+        REF('Variable'),
+        GenericTokenChar
+    )
+
+
+class GenericTokenParts(Grammar):
+    grammar = REPEAT(GenericTokenPart)
+
+
+class GenericTokenWithSubexprStart(Grammar):
+    grammar = (GenericTokenParts, "$(")
+
+
+class GenericToken(Grammar):
+    grammar = GenericTokenParts
+
+
+class FirstParameterCharacter(Grammar):
+    grammar = OR(
+        WORD("A-Z", max=1),           # Letter, Uppercase
+        WORD("a-z", max=1),           # Letter, Lowercase
+
+        # Letter, Titlecase
+        "\u01C5", "\u01C8", "\u01CB", "\u01F2", "\u1F88", "\u1F89",
+        "\u1F8A", "\u1F8B", "\u1F8C", "\u1F8D", "\u1F8E", "\u1F8F",
+        "\u1F98", "\u1F99", "\u1F9A", "\u1F9B", "\u1F9C", "\u1F9D",
+        "\u1F9E", "\u1F9F", "\u1FA8", "\u1FA9", "\u1FAA", "\u1FAB",
+        "\u1FAC", "\u1FAD", "\u1FAE", "\u1FAF", "\u1FBC", "\u1FCC",
+        "\u1FFC",
+
+        # Letter, Modifier
+        "\u0374", "\u037A", "\u0559", "\u0640", "\u06E5", "\u06E6",
+        "\u07F4", "\u07F5", "\u07FA", "\u081A", "\u0824", "\u0828"
+        # TODO: Add more characters from the 'Letter, Modifier` Category
+        # TODO: Add characters from the 'Letter, Other' Category
+
+        # The underscore character and question mark
+        "\u005F", "?"
+    )
+
+
+class ParameterCharacter(Grammar):
+    grammar = EXCEPT(ANY, OR(Colon, Whitespace, NewLineCharacter,
+                             "{", "}", "(", ")", ";", ",", "|",
+                             "&", ".", "["))
+
+
+class ParameterCharacters(Grammar):
+    grammar = REPEAT(ParameterCharacter)
+
+
+class CommandParameter(Grammar):
+    grammar = (Dash, FirstParameterCharacter,
+               ParameterCharacters, OPTIONAL(Colon))
+
+# End of grammar for Commands
+
+
+# FIXME: Find spot for this grammars
+class CommandName(Grammar):
+    grammar = OR(GenericToken, GenericTokenWithSubexprStart)
+
+
+class CommandNameExpr(Grammar):
+    # FIXME: Remove ref
+    grammar = OR(CommandName, REF('PrimaryExpression'))
+
+
+class CommandArgument(Grammar):
+    grammar = CommandNameExpr
+
+
+class VerbatimCommandString(Grammar):
+    grammar = (DoubleQuoteCharacter, NonDoubleQuoteChars,
+               DoubleQuoteCharacter)
+
+
+class VerbatimCommandArgumentPart(Grammar):
+    grammar = OR(
+        VerbatimCommandString,
+        ("&", NonAmpersandCharacter),
+        EXCEPT(ANY, OR("|", NewLineCharacter))
+    )
+
+
+class VerbatimCommandArgumentChars(Grammar):
+    grammar = REPEAT(VerbatimCommandArgumentPart)
+# ---------------------------------------------
+
+# Grammar for Variables
+
+
+class OperatorOrPunctuator(Grammar):
+    grammar = OR(
+        # FIXME: Remove ref
+        REF('AssignmentOperator'),
+        REF('ComparisonOperator'),
+        REF('FormatOperator'),
+        "{", "}", "[", "]", "(", ")", "@(", "@{", "$(", ";",
+        "&&", "||", "&", "|", ",", "++", "..", "::", ".",
+        "!", "*", "/", "%", "+", "2>&1", "1>&2",
+        # FIXME: Remove ref
+        REF('FileRedirectionOperator'),
+        (Dash, OR("and", "band", "bnot", "bor",
+                  "bxor", "not", "or", "xor", Dash)),
+        Dash,
+    )
+
+
+class BracedVariableCharacter(Grammar):
+    grammar = OR(
+        ANY_EXCEPT("\u007D\u0060", max=1),
+        EscapedCharacter
+    )
+
+
+class BracedVariableCharacters(Grammar):
+    grammar = REPEAT(BracedVariableCharacter)
+
+
+class VariableCharacter(Grammar):
+    grammar = OR(
+        WORD("A-Z", max=1),           # Letter, Uppercase
+        WORD("a-z", max=1),           # Letter, Lowercase
+        WORD("\u02B0-\u02EE", max=1),  # Letter, Modifier
+        # Number, Decimal Digit
+        WORD("0-9", max=1),
+        WORD("\u0660-\u0669", max=1),  # ARABIC-INDIC DIGIT
+        WORD("\u06F0-\u06F9", max=1),  # EXTENDED ARABIC-INDIC DIGIT
+        # TODO: Add more character from the 'Number, Decimal Digit' Category
+
+        # Letter, Titlecase
+        "\u01C5", "\u01C8", "\u01CB", "\u01F2", "\u1F88", "\u1F89",
+        "\u1F8A", "\u1F8B", "\u1F8C", "\u1F8D", "\u1F8E", "\u1F8F",
+        "\u1F98", "\u1F99", "\u1F9A", "\u1F9B", "\u1F9C", "\u1F9D",
+        "\u1F9E", "\u1F9F", "\u1FA8", "\u1FA9", "\u1FAA", "\u1FAB",
+        "\u1FAC", "\u1FAD", "\u1FAE", "\u1FAF", "\u1FBC", "\u1FCC",
+        "\u1FFC",
+
+        # Letter, Modifier
+        "\u0374", "\u037A", "\u0559", "\u0640", "\u06E5", "\u06E6",
+        "\u07F4", "\u07F5", "\u07FA", "\u081A", "\u0824", "\u0828"
+        # TODO: Add more characters from the 'Letter, Modifier` Category
+        # TODO: Add characters from the 'Letter, Other' Category
+
+        # The underscore character and question mark
+        "\u005F", "?"
+    )
+
+
+class VariableCharacters(Grammar):
+    grammar = REPEAT(VariableCharacter)
+
+
+class VariableNamespace(Grammar):
+    grammar = (VariableCharacters, ":")
+
+
+class VariableScope(Grammar):
+    grammar = OR("global:", "local:", "private:", "script:",
+                 VariableNamespace)
+
+
+class BracedVariable(Grammar):
+    grammar = ("${", OPTIONAL(VariableScope),
+               BracedVariableCharacters, "}")
+
+
+class Variable(Grammar):
+    grammar = OR(
+        "$$", "$?", "$^",
+        (OR("$", "@"), OPTIONAL(VariableScope), VariableCharacters),
+        BracedVariable
+    )
+# End of grammar for variables
+
+
+# Grammar fo Keywords
 class Keyword(Grammar):
-    grammar = OR("begin", "break", "catch", "class",
-                 "continue", "data", "define", "do",
-                 "dynamicparam", "elseif", "else", "end",
-                 "exit", "filter", "finally", "foreach",
-                 "for", "from", "function", "if",
-                 "in", "param", "process", "return",
-                 "switch", "throw", "trap", "try",
-                 "until", "using", "var", "while")
+
+    grammar = OR(
+        "workflow", "inlinescript", "parallel", "begin", "break", "catch",
+        "class", "continue", "data", "define", "do", "dynamicparam", "elseif",
+        "else", "end", "exit", "filter", "finally", "foreach", "for", "from",
+        "function", "if", "in", "param", "process", "return", "switch", "var",
+        "throw", "trap", "try", "until", "using", "while"
+    )
+# End of grammar for Keywords
+
+
+# Grammar for tokens
+class Token(Grammar):
+    grammar = OR(
+        Keyword,
+        Variable,
+        # FIXME: Remove ref
+        REF('Command'),
+        REF('CommandParameter'),
+        REF('CommandArgumentToken'),
+        REF('IntegerLiteral'),
+        REF('RealLiteral'),
+        REF('StringLiteral'),
+        REF('TypeLiteral'),
+        REF('OperatorOrPunctuator'),
+    )
+# End of grammar for tokens
+
+
+# Grammar for input
+class InputElement(Grammar):
+    grammar = OPTIONAL(Whitespace, Comment, Token)
+
+
+class InputElements(Grammar):
+    grammar = REPEAT(InputElement)
+
+
+class Input(Grammar):
+    grammar = OPTIONAL(InputElements), OPTIONAL(SignatureBlock)
+# End of grammar for Input
+
 
 # Literals
-
-
 class NumericMultiplier(Grammar):
     grammar = OR("kb", "mb", "tb", "pb", "gb")
 
@@ -152,10 +472,6 @@ class HexadecimalIntegerLiteral(Grammar):
 
 class IntegerLiteral(Grammar):
     grammar = OR(HexadecimalIntegerLiteral, DecimalIntegerLiteral)
-
-
-class Dash(Grammar):
-    grammar = OR("-", "\u2013", "\u2014", "\u2015")
 
 
 class Sign(Grammar):
@@ -216,102 +532,7 @@ class FormatOperator(Grammar):
     grammar = (Dash, "f")
 
 
-class OperatorOrPunctuator(Grammar):
-    grammar = OR(
-        AssignmentOperator,
-        ComparisonOperator,
-        FormatOperator,
-        "{", "}", "[", "]", "(", ")", "@(", "@{", "$(", ";",
-        "&&", "||", "&", "|", ",", "++", "..", "::", ".",
-        "!", "*", "/", "%", "+", "2>&1", "1>&2",
-        FileRedirectionOperator,
-        (Dash, OR("and", "band", "bnot", "bor",
-                  "bxor", "not", "or", "xor", Dash)),
-        Dash,
-    )
-
-
-# Variables
-class VariableCharacter(Grammar):
-    grammar = OR(
-        WORD("A-Z", max=1),  # Letter, Uppercase
-        WORD("a-z", max=1),  # Letter, Lowercase
-
-        # Letter, Titlecase
-        WORD("\u01C5"), WORD("\u01C8"), WORD("\u01CB"), WORD("\u01F2"),
-        WORD("\u1F88"), WORD("\u1F89"), WORD("\u1F8A"), WORD("\u1F8B"),
-        WORD("\u1F8C"), WORD("\u1F8D"), WORD("\u1F8E"), WORD("\u1F8F"),
-        WORD("\u1F98"), WORD("\u1F99"), WORD("\u1F9A"), WORD("\u1F9B"),
-        WORD("\u1F9C"), WORD("\u1F9D"), WORD("\u1F9E"), WORD("\u1F9F"),
-        WORD("\u1FA8"), WORD("\u1FA9"), WORD("\u1FAA"), WORD("\u1FAB"),
-        WORD("\u1FAC"), WORD("\u1FAD"), WORD("\u1FAE"), WORD("\u1FAF"),
-        WORD("\u1FBC"), WORD("\u1FCC"), WORD("\u1FFC"),
-
-        # Letter, Modifier
-        WORD("\u02B0-\u02EE", max=1),
-        WORD("\u0374"), WORD("\u037A"), WORD("\u0559"), WORD("\u0640"),
-        WORD("\u06E5"), WORD("\u06E6"), WORD("\u07F4"), WORD("\u07F5"),
-        WORD("\u07FA"), WORD("\u081A"), WORD("\u0824"), WORD("\u0828"),
-        # TODO: Add more characters from the 'Letter, Modifier` Category
-        # TODO: Add characters from the 'Letter, Other' Category
-
-        # Number, Decimal Digit
-        WORD("0-9", max=1),
-        WORD("\u0660-\u0669", max=1),  # ARABIC-INDIC DIGIT
-        WORD("\u06F0-\u06F9", max=1),  # EXTENDED ARABIC-INDIC DIGIT
-        # TODO: Add more character from the 'Number, Decimal Digit' Category
-
-        WORD("\u005F"),                # The underscore character
-        WORD("?")
-    )
-
-
-class VariableCharacters(Grammar):
-    grammar = REPEAT(VariableCharacter)
-
-
-class VariableNamespace(Grammar):
-    grammar = (VariableCharacters, ":")
-
-
-class VariableScope(Grammar):
-    grammar = OR("global:", "local:", "private:", "script:",
-                 VariableNamespace)
-
-
-class EscapedCharacter(Grammar):
-
-    """An escaped character is a way to assign a special interpretation
-    to a character by giving it a prefix Backtick character."""
-
-    grammar = ("\u0060", ANY)
-
-
-class BracedVariableCharacter(Grammar):
-    grammar = OR(ANY_EXCEPT("\u007D\u0060", max=1), EscapedCharacter)
-
-
-class BracedVariableCharacters(Grammar):
-    grammar = REPEAT(BracedVariableCharacter)
-
-
-class BracedVariable(Grammar):
-    grammar = ("$", "{", OPTIONAL(VariableScope),
-               BracedVariableCharacters, "}")
-
-
-class Variable(Grammar):
-    grammar = OR(
-        "$$", "$?", "$^",
-        (OR("$", "@"), OPTIONAL(VariableScope), VariableCharacters),
-        BracedVariable
-    )
-
 # String Literals
-
-
-class DoubleQuoteCharacter(Grammar):
-    grammar = OR("\u0022", "\u201C", "\u201D", "\u201E")
 
 
 class ExpandableStringPart(Grammar):
@@ -360,7 +581,7 @@ class ExpandableHereStringCharacters(Grammar):
 
 class ExpandableHereStringWithSubexprStart(Grammar):
     grammar = (
-        "@", DoubleQuoteCharacter, OPTIONAL(WHITESPACE),
+        "@", DoubleQuoteCharacter, OPTIONAL(Whitespace),
         NewLineCharacter, OPTIONAL(ExpandableHereStringCharacters),
         "$", "("
     )
@@ -430,7 +651,7 @@ class ExpandableHereStringLiteral(Grammar):
     line 2
     "@
     """
-    grammar = ("@", DoubleQuoteCharacter, OPTIONAL(WHITESPACE),
+    grammar = ("@", DoubleQuoteCharacter, OPTIONAL(Whitespace),
                NewLineCharacter, OPTIONAL(ExpandableHereStringCharacters),
                NewLineCharacter, DoubleQuoteCharacter, "@")
 
@@ -466,7 +687,7 @@ class VerbatimHereStringLiteral(Grammar):
     line 2
     '@
     """
-    grammar = ("@", SingleQuoteCharacter, OPTIONAL(WHITESPACE),
+    grammar = ("@", SingleQuoteCharacter, OPTIONAL(Whitespace),
                NewLineCharacter, OPTIONAL(VerbatimHereStringCharacters),
                NewLineCharacter, SingleQuoteCharacter, "@")
 
@@ -556,80 +777,6 @@ class TypeLiteral(Grammar):
 
 class GenericTypeArguments(Grammar):
     grammar = LIST_OF(TypeSpec, sep=",")
-
-
-# Commands
-class GenericTokenChar(Grammar):
-    grammar = OR(
-        EXCEPT(ANY,
-               OR(
-                   DoubleQuoteCharacter,
-                   SingleQuoteCharacter,
-                   WHITESPACE,
-                   NewLineCharacter,
-                   "{", "}", "(", ")", ";", ",", "|", "&", "$", "\u0060",
-               )),
-        EscapedCharacter
-    )
-
-
-class GenericTokenPart(Grammar):
-    grammar = OR(
-        ExpandableStringLiteral,
-        VerbatimHereStringLiteral,
-        Variable,
-        GenericTokenChar
-    )
-
-
-class GenericTokenParts(Grammar):
-    grammar = REPEAT(GenericTokenPart)
-
-
-class GenericTokenWithSubexprStart(Grammar):
-    grammar = (GenericTokenParts, "$", "(")
-
-
-class GenericToken(Grammar):
-    grammar = GenericTokenParts
-
-
-class ParameterCharacter(Grammar):
-    grammar = EXCEPT(ANY, OR(Colon, WHITESPACE, NewLineCharacter,
-                             "{", "}", "(", ")", ";", ",", "|",
-                             "&", ".", "["))
-
-
-class ParameterCharacters(Grammar):
-    grammar = REPEAT(ParameterCharacter)
-
-
-class FirstParameterCharacter(Grammar):
-    grammar = OR(
-        WORD("A-Z", max=1),  # Letter, Uppercase
-        WORD("a-z", max=1),  # Letter, Lowercase
-
-        # Letter, Titlecase
-        WORD("\u01C5"), WORD("\u01C8"), WORD("\u01CB"), WORD("\u01F2"),
-        WORD("\u1F88"), WORD("\u1F89"), WORD("\u1F8A"), WORD("\u1F8B"),
-        WORD("\u1F8C"), WORD("\u1F8D"), WORD("\u1F8E"), WORD("\u1F8F"),
-        WORD("\u1F98"), WORD("\u1F99"), WORD("\u1F9A"), WORD("\u1F9B"),
-        WORD("\u1F9C"), WORD("\u1F9D"), WORD("\u1F9E"), WORD("\u1F9F"),
-        WORD("\u1FA8"), WORD("\u1FA9"), WORD("\u1FAA"), WORD("\u1FAB"),
-        WORD("\u1FAC"), WORD("\u1FAD"), WORD("\u1FAE"), WORD("\u1FAF"),
-        WORD("\u1FBC"), WORD("\u1FCC"), WORD("\u1FFC"),
-
-        # Letter, Modifier
-        WORD("\u02B0-\u02EE", max=1),
-        WORD("\u0374"), WORD("\u037A"), WORD("\u0559"), WORD("\u0640"),
-        WORD("\u06E5"), WORD("\u06E6"), WORD("\u07F4"), WORD("\u07F5"),
-        WORD("\u07FA"), WORD("\u081A"), WORD("\u0824"), WORD("\u0828"),
-        # TODO: Add more characters from the 'Letter, Modifier` Category
-        # TODO: Add characters from the 'Letter, Other' Category
-
-        WORD("\u005F"),                # The underscore character
-        WORD("?")
-    )
 
 
 class SimpleNameFirstCharacter(Grammar):
@@ -738,7 +885,7 @@ class CastExpression(Grammar):
 
 class ArrayLiteralExpression(Grammar):
     grammar = LIST_OF(UnaryExpression,
-                      sep=(OPTIONAL(WHITESPACE), ",", Spaces))
+                      sep=(OPTIONAL(Whitespace), ",", Spaces))
 
 
 class RangeExpression(Grammar):
@@ -748,49 +895,49 @@ class RangeExpression(Grammar):
 
 class FormatExpression(Grammar):
     grammar = LIST_OF(RangeExpression,
-                      sep=(OPTIONAL(WHITESPACE),
+                      sep=(OPTIONAL(Whitespace),
                            FormatOperator,
-                           OPTIONAL(WHITESPACE),
+                           OPTIONAL(Whitespace),
                            OPTIONAL(NewLines)))
 
 
 class MultiplicativeExpression(Grammar):
     grammar = LIST_OF(FormatExpression,
-                      sep=((OPTIONAL(WHITESPACE),
+                      sep=((OPTIONAL(Whitespace),
                             OR("*", "/", "%"),
-                            OPTIONAL(WHITESPACE)),
+                            OPTIONAL(Whitespace)),
                            OPTIONAL(NewLines)))
 
 
 class AdditiveExpression(Grammar):
     grammar = LIST_OF(MultiplicativeExpression,
-                      sep=(OPTIONAL(WHITESPACE),
+                      sep=(OPTIONAL(Whitespace),
                            OR("+", Dash),
-                           OPTIONAL(WHITESPACE),
+                           OPTIONAL(Whitespace),
                            OPTIONAL(NewLines)))
 
 
 class ComparisonExpression(Grammar):
     grammar = LIST_OF(AdditiveExpression,
-                      sep=(OPTIONAL(WHITESPACE),
+                      sep=(OPTIONAL(Whitespace),
                            ComparisonOperator,
-                           OPTIONAL(WHITESPACE),
+                           OPTIONAL(Whitespace),
                            OPTIONAL(NewLines)))
 
 
 class BitwiseExpression(Grammar):
     grammar = LIST_OF(ComparisonExpression,
-                      sep=(OPTIONAL(WHITESPACE),
+                      sep=(OPTIONAL(Whitespace),
                            OR("-band", "-bor", "-bxor"),
-                           OPTIONAL(WHITESPACE),
+                           OPTIONAL(Whitespace),
                            OPTIONAL(NewLines)))
 
 
 class LogicalExpression(Grammar):
     grammar = LIST_OF(BitwiseExpression,
-                      sep=(OPTIONAL(WHITESPACE),
+                      sep=(OPTIONAL(Whitespace),
                            OR("-and", "-or", "-xor"),
-                           OPTIONAL(WHITESPACE),
+                           OPTIONAL(Whitespace),
                            OPTIONAL(NewLines)))
 
 
@@ -805,7 +952,7 @@ class AttributeArgument(Grammar):
         (
             OPTIONAL(NewLines),
             SimpleName,
-            OPTIONAL(WHITESPACE), "=", OPTIONAL(Spaces),
+            OPTIONAL(Whitespace), "=", OPTIONAL(Spaces),
             Expression
         )
     )
@@ -847,21 +994,6 @@ class AttributeList(Grammar):
 
 
 # Statements
-class CommandName(Grammar):
-    grammar = OR(GenericToken, GenericTokenWithSubexprStart)
-
-
-class CommandNameExpr(Grammar):
-    grammar = OR(CommandName, PrimaryExpression)
-
-
-class CommandArgument(Grammar):
-    grammar = CommandNameExpr
-
-
-class CommandParameter(Grammar):
-    grammar = (Dash, FirstParameterCharacter,
-               ParameterCharacters, OPTIONAL(Colon))
 
 
 class RedirectedFileName(Grammar):
@@ -871,7 +1003,7 @@ class RedirectedFileName(Grammar):
 class Redirection(Grammar):
     grammar = OR(
         "2>&1", "1>&2",
-        (FileRedirectionOperator, OPTIONAL(WHITESPACE), RedirectedFileName)
+        (FileRedirectionOperator, OPTIONAL(Whitespace), RedirectedFileName)
     )
 
 
@@ -880,7 +1012,7 @@ class CommandElement(Grammar):
 
 
 class CommandElements(Grammar):
-    grammar = LIST_OF(CommandElement, sep=OPTIONAL(WHITESPACE))
+    grammar = LIST_OF(CommandElement, sep=OPTIONAL(Whitespace))
 
 
 class CommandModule(Grammar):
@@ -893,12 +1025,12 @@ class CommandInvocationOperator(Grammar):
 
 class Command(Grammar):
     grammar = OR(
-        (CommandName, OPTIONAL(WHITESPACE), OPTIONAL(CommandElements)),
+        (CommandName, OPTIONAL(Whitespace), OPTIONAL(CommandElements)),
         (
             CommandInvocationOperator,
-            OPTIONAL(WHITESPACE),
+            OPTIONAL(Whitespace),
             OPTIONAL(CommandModule),
-            OPTIONAL(WHITESPACE),
+            OPTIONAL(Whitespace),
             CommandNameExpr,
             OPTIONAL(CommandElements)
         )
@@ -1097,12 +1229,12 @@ class FlowControlStatement(Grammar):
     grammar = OR(
         (
             OR("break", "continue"),
-            OPTIONAL(WHITESPACE),
+            OPTIONAL(Whitespace),
             OPTIONAL(LabelExpression)
         ),
         (
             OR("throw", "return", "exit"),
-            OPTIONAL(WHITESPACE),
+            OPTIONAL(Whitespace),
             OPTIONAL(Pipeline)
         ),
     )
@@ -1172,7 +1304,7 @@ class SwitchParameter(Grammar):
 
 
 class SwitchParameters(Grammar):
-    grammar = LIST_OF(SwitchParameter, sep=WHITESPACE)
+    grammar = LIST_OF(SwitchParameter, sep=Whitespace)
 
 
 class SwitchFilename(Grammar):
@@ -1213,15 +1345,15 @@ class SwitchClauses(Grammar):
 class SwitchBody(Grammar):
     grammar = (
         OPTIONAL(NewLines), "{", OPTIONAL(NewLines),
-        OPTIONAL(WHITESPACE), SwitchClauses, OPTIONAL(WHITESPACE), "}"
+        OPTIONAL(Whitespace), SwitchClauses, OPTIONAL(Whitespace), "}"
     )
 
 
 class SwitchStatement(Grammar):
     grammar = (
         "switch", OPTIONAL(NewLines),
-        OPTIONAL(WHITESPACE), OPTIONAL(SwitchParameters),
-        OPTIONAL(WHITESPACE), SwitchCondition, OPTIONAL(WHITESPACE), SwitchBody
+        OPTIONAL(Whitespace), OPTIONAL(SwitchParameters),
+        OPTIONAL(Whitespace), SwitchCondition, OPTIONAL(Whitespace), SwitchBody
     )
 
 
@@ -1326,7 +1458,7 @@ class SubExpression(Grammar):
 
 
 class ArrayExpression(Grammar):
-    grammar_whitespace_mode = "optional"
+    grammar_Whitespace_mode = "optional"
     grammar = ("@(", Spaces, OPTIONAL(StatementList),
                Spaces, ")")
 
@@ -1340,8 +1472,8 @@ class KeyExpression(Grammar):
 
 class HashEntry(Grammar):
     grammar = (KeyExpression,
-               OPTIONAL(WHITESPACE), "=",
-               OPTIONAL(WHITESPACE),
+               OPTIONAL(Whitespace), "=",
+               OPTIONAL(Whitespace),
                OPTIONAL(NewLines),
                Statement)
 
@@ -1353,16 +1485,16 @@ class HashLiteralBodyPrime(Grammar):
 
 class HashLiteralBody(Grammar):
     grammar = LIST_OF(HashEntry,
-                      sep=(OPTIONAL(WHITESPACE),
+                      sep=(OPTIONAL(Whitespace),
                            OPTIONAL(HashLiteralBodyPrime),
-                           OPTIONAL(WHITESPACE)))
+                           OPTIONAL(Whitespace)))
 
 
 class HashLiteralExpression(Grammar):
     grammar = ("@{", OPTIONAL(NewLines),
-               OPTIONAL(WHITESPACE),
+               OPTIONAL(Whitespace),
                OPTIONAL(HashLiteralBody),
-               OPTIONAL(WHITESPACE),
+               OPTIONAL(Whitespace),
                OPTIONAL(NewLines), "}")
 
 
@@ -1421,8 +1553,8 @@ class ArgumentList(Grammar):
 
 
 class AssignmentExpression(Grammar):
-    grammar = (Expression, OPTIONAL(WHITESPACE),
-               AssignmentOperator, OPTIONAL(WHITESPACE),
+    grammar = (Expression, OPTIONAL(Whitespace),
+               AssignmentOperator, OPTIONAL(Whitespace),
                Statement)
 
 
@@ -1455,7 +1587,7 @@ class ExpandableHereStringLiteralWithSubexpr(Grammar):
         ExpandableHereStringWithSubexprStart, OPTIONAL(StatementList),
         ExpandableHereStringWithSubexprCharacters,
         ExpandableHereStringWithSubexprEnd
-        )
+    )
 
 
 class StringLiteralWithSubexpression(Grammar):
