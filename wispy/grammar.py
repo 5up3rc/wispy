@@ -864,7 +864,7 @@ class CommandElement(Grammar):
 
 
 class CommandElements(Grammar):
-    grammar = REPEAT(CommandElement)
+    grammar = LIST_OF(CommandElement, sep=OPTIONAL(WHITESPACE))
 
 
 class RedirectedFileName(Grammar):
@@ -888,9 +888,15 @@ class CommandInvocationOperator(Grammar):
 
 class Command(Grammar):
     grammar = OR(
-        (CommandName, OPTIONAL(CommandElements)),
-        (CommandInvocationOperator, OPTIONAL(CommandModule), CommandNameExpr,
-         OPTIONAL(CommandElements))
+        (CommandName, OPTIONAL(WHITESPACE), OPTIONAL(CommandElements)),
+        (
+            CommandInvocationOperator,
+            OPTIONAL(WHITESPACE),
+            OPTIONAL(CommandModule),
+            OPTIONAL(WHITESPACE),
+            CommandNameExpr,
+            OPTIONAL(CommandElements)
+        )
     )
 
 
@@ -1216,9 +1222,9 @@ class SwitchStatement(Grammar):
 
 class ForeachStatement(Grammar):
     grammar = (
-        "foreach", OPTIONAL(NewLines), "(", OPTIONAL(NewLines), Variable,
-        OPTIONAL(NewLines), "in", OPTIONAL(NewLines), Pipeline,
-        OPTIONAL(NewLines), ")", StatementBlock
+        "foreach", Spaces, "(", Spaces, Variable,
+        Spaces, "in", Spaces, Pipeline,
+        Spaces, ")", Spaces, StatementBlock
     )
 
 
