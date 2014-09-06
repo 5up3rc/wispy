@@ -76,6 +76,7 @@ from wispy.grammar import (
     ForStatement, WhileStatement, DoStatement,
     ForCondition, ForIterator, ForInitializer,
     ForeachStatement,
+    SwitchClause, SwitchClauses, SwitchCondition,
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -1147,3 +1148,41 @@ class GrammarTest(unittest.TestCase):
             'foreach ($e in $h1.Keys) {}',
         ]
         self._test_expected(ForeachStatement, parts)
+
+    def test_switch_clause(self):
+        parts = [
+            '"`n"  { ++$lineCount }',
+            '"`n"  { ++$lineCount };',
+            'a*      { "a*, $_" }',
+            '?B?     { "?B? , $_" }',
+            'default { "default, $_" }',
+
+            # TODO: other pathological cases
+            # '{a$_ -lt 20 }	{ "-lt 20" }',
+            # '{$_ -band 1 }	{ "Odd" }',
+            # '{$_ -eq 19 }	{ "-eq 19" }'
+        ]
+        self._test_expected(SwitchClause, parts)
+
+    def test_switch_clauses(self):
+        parts = [
+            '"`n"  { ++$lineCount }\n'
+            '"`n"  { ++$lineCount };',
+
+            'a*      { "a*, $_" }\n\n'
+            '?B?     { "?B? , $_" }',
+        ]
+        self._test_expected(SwitchClauses, parts)
+
+    def test_switch_condition(self):
+        parts = [
+            '(0,1,19,20,21)',
+            '($s[$i])',
+            '("abc")',
+            '($someString.ToLower())',
+
+            # TODO: other pathological case
+            # '($PSBoundParameters.GetEnumerator().\n'
+            # 'Where({$_.Value -eq $true}).Key)',
+        ]
+        self._test_expected(SwitchCondition, parts)
