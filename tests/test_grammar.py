@@ -73,7 +73,9 @@ from wispy.grammar import (
     AssignmentExpression,
     HashLiteralExpression, HashLiteralBody, HashEntry,
     IfStatement, ElseClause, ElseIfClause, ElseIfClauses,
-    ForStatement, WhileStatement, DoStatement
+    ForStatement, WhileStatement, DoStatement,
+    ForCondition, ForIterator, ForInitializer,
+    ForeachStatement,
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -1090,6 +1092,18 @@ class GrammarTest(unittest.TestCase):
         ]
         self._test_expected(ForStatement, parts)
 
+    def test_for_condition(self):
+        parts = ["$i -le 10", "$i -gt 40"]
+        self._test_expected(ForCondition, parts)
+
+    def test_for_iterator(self):
+        parts = ["++$i", "--$i"]
+        self._test_expected(ForIterator, parts)
+
+    def test_for_initializer(self):
+        parts = ["$i = 1"]
+        self._test_expected(ForInitializer, parts)
+
     def test_while_statement(self):
         parts = [
             'while ($j -le 100) { $j }',
@@ -1108,3 +1122,13 @@ class GrammarTest(unittest.TestCase):
             'do { $i } until ($i -le 85)'
         ]
         self._test_expected(DoStatement, parts)
+
+    def test_foreach_statement(self):
+        parts = [
+            'foreach ($e in $a) {}',
+            'foreach ($e in -5..5)\n{}',
+            'foreach ($t in [byte],[int],[long]) {$t::MaxValue}',
+            'foreach ($f in dir *.txt)\n\n{}',
+            'foreach ($e in $h1.Keys) {}',
+        ]
+        self._test_expected(ForeachStatement, parts)
