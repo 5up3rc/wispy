@@ -162,14 +162,6 @@ class GrammarTest(unittest.TestCase):
         quotes = list(map(lambda x: x + x,
                           ["\u0022", "\u201C", "\u201D", "\u201E"]))
         self._test_expected(ExpandableStringPart, quotes)
-        elements = [
-            '$totalCost',
-            '$Maximum_Count_26',
-            '${Maximum_Count_26}',
-            '${Name with`twhite space and `{punctuation`}}',
-            r'${E:\File.txt}'
-        ]
-        self._test_expected(ExpandableStringPart, elements)
 
     def test_expandable_string_literal(self):
         literals = [
@@ -726,6 +718,11 @@ class GrammarTest(unittest.TestCase):
         test_ok = [
             "a", "ab", "abc",
             "$something", "${global:a}", "${a}",
+            '$totalCost',
+            '$Maximum_Count_26',
+            '${Maximum_Count_26}',
+            '${Name with`twhite space and `{punctuation`}}',
+            r'${E:\File.txt}'
             '""'
         ]
 

@@ -41,7 +41,7 @@ class Colon(Grammar):
 
 
 class NotGreaterThanOrHash(Grammar):
-    grammar = ANY_EXCEPT("#>")
+    grammar = ANY_EXCEPT("#>", max=1)
 
 
 class InputCharacter(Grammar):
@@ -316,9 +316,9 @@ class DoubleQuoteCharacter(Grammar):
 
 class ExpandableStringPart(Grammar):
     grammar = OR(
-        ANY_EXCEPT("$\u0022\u201C\u201D\u201E\u0060"),
+        ANY_EXCEPT("$\u0022\u201C\u201D\u201E\u0060", max=1),
         BracedVariable,
-        ("$", ANY_EXCEPT("({\u0022\u201C\u201D\u201E\u0060")),
+        ("$", ANY_EXCEPT("({\u0022\u201C\u201D\u201E\u0060", max=1)),
         ("$", EscapedCharacter),
         EscapedCharacter,
         (DoubleQuoteCharacter, DoubleQuoteCharacter)
@@ -335,13 +335,13 @@ class ExpandableStringCharacters(Grammar):
 
 class ExpandableHereStringPart(Grammar):
     grammar = OR(
-        EXCEPT(ANY_EXCEPT("$", max=1), NewLineCharacter),
+        ANY_EXCEPT("$", max=1) - NewLineCharacter,
         BracedVariable,
-        ("$", EXCEPT(ANY_EXCEPT("(", max=1), NewLineCharacter)),
-        ("$", NewLineCharacter, EXCEPT(ANY, DoubleQuoteCharacter)),
-        ("$", NewLineCharacter, DoubleQuoteCharacter, ANY_EXCEPT("@")),
-        (NewLineCharacter, EXCEPT(ANY, DoubleQuoteCharacter)),
-        (NewLineCharacter, DoubleQuoteCharacter, ANY_EXCEPT("@"))
+        ("$", ANY_EXCEPT("(", max=1) - NewLineCharacter),
+        ("$", NewLineCharacter, ANY - DoubleQuoteCharacter),
+        ("$", NewLineCharacter, DoubleQuoteCharacter, ANY_EXCEPT("@", max=1)),
+        (NewLineCharacter, ANY - DoubleQuoteCharacter),
+        (NewLineCharacter, DoubleQuoteCharacter, ANY_EXCEPT("@", max=1))
     )
 
 
@@ -389,7 +389,7 @@ class VerbatimHereStringPart(Grammar):
     grammar = OR(
         EXCEPT(ANY, NewLineCharacter),
         (NewLineCharacter, EXCEPT(ANY, SingleQuoteCharacter)),
-        (NewLineCharacter, SingleQuoteCharacter, ANY_EXCEPT("@"))
+        (NewLineCharacter, SingleQuoteCharacter, ANY_EXCEPT("@", max=1))
     )
 
 
@@ -1438,18 +1438,19 @@ class ExpandableStringWithSubexprCharacters(Grammar):
 
 
 class ExpandableStringLiteralWithSubexpr(Grammar):
-    grammar = OR(
-        (
+    grammar = (
             ExpandableStringWithSubexprStart, OPTIONAL(StatementList),
             ")", ExpandableStringWithSubexprCharacters,
             ExpandableStringWithSubexprEnd
-        ),
-        (
+    )
+
+
+class ExpandableHereStringLiteralWithSubexpr(Grammar):
+    grammar = (
             ExpandableHereStringWithSubexprStart, OPTIONAL(StatementList),
             ExpandableHereStringWithSubexprCharacters,
             ExpandableHereStringWithSubexprEnd
         )
-    )
 
 
 class StringLiteralWithSubexpression(Grammar):
@@ -1457,8 +1458,7 @@ class StringLiteralWithSubexpression(Grammar):
     # grammar is added.
     grammar = OR(
         ExpandableStringLiteralWithSubexpr,
-        # TODO: please define me!
-        # REF('ExpandableHereStringLiteralWithSubexpr')
+        ExpandableHereStringLiteralWithSubexpr
     )
 
 
