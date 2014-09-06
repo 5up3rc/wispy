@@ -632,11 +632,6 @@ class FirstParameterCharacter(Grammar):
     )
 
 
-class CommandParameter(Grammar):
-    grammar = (Dash, FirstParameterCharacter,
-               ParameterCharacters, OPTIONAL(Colon))
-
-
 class SimpleNameFirstCharacter(Grammar):
     grammar = TypeCharacter
 
@@ -859,12 +854,9 @@ class CommandArgument(Grammar):
     grammar = CommandNameExpr
 
 
-class CommandElement(Grammar):
-    grammar = OR(CommandParameter, CommandArgument, REF('Redirection'))
-
-
-class CommandElements(Grammar):
-    grammar = LIST_OF(CommandElement, sep=OPTIONAL(WHITESPACE))
+class CommandParameter(Grammar):
+    grammar = (Dash, FirstParameterCharacter,
+               ParameterCharacters, OPTIONAL(Colon))
 
 
 class RedirectedFileName(Grammar):
@@ -876,6 +868,14 @@ class Redirection(Grammar):
         "2>&1", "1>&2",
         (FileRedirectionOperator, OPTIONAL(WHITESPACE), RedirectedFileName)
     )
+
+
+class CommandElement(Grammar):
+    grammar = OR(CommandParameter, CommandArgument, Redirection)
+
+
+class CommandElements(Grammar):
+    grammar = LIST_OF(CommandElement, sep=OPTIONAL(WHITESPACE))
 
 
 class CommandModule(Grammar):

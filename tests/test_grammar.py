@@ -58,19 +58,19 @@ from wispy.grammar import (
     ExpandableHereStringPart, ExpandableHereStringCharacters,
     ExpandableHereStringWithSubexprStart, ExpandableHereStringWithSubexprEnd,
     CommandInvocationOperator,
-    AttributeName, CommandName,
+    AttributeName, CommandName, Command,
     StatementTerminator, StatementTerminators,
     BlockName, DataName,
     SwitchParameter, SwitchParameters,
     FlowControlStatement,
-    Redirection,
+    Redirection, LabelExpression,
     PreDecrementExpression, PreIncrementExpression,
     RedirectedFileName, ArgumentList,
     MultiplicativeExpression, RangeExpression, CastExpression,
     BitwiseExpression, ComparisonExpression,
     ArrayExpression, ArrayLiteralExpression,
     WhileCondition, LogicalExpression, AdditiveExpression, FormatExpression,
-    AssignmentExpression,
+    AssignmentExpression, KeyExpression,
     HashLiteralExpression, HashLiteralBody, HashEntry,
     IfStatement, ElseClause, ElseIfClause, ElseIfClauses,
     ForStatement, WhileStatement, DoStatement,
@@ -351,6 +351,15 @@ class GrammarTest(unittest.TestCase):
         for digit in string.digits:
             with self.assertRaises(ParseError):
                 self._parse(FirstParameterCharacter, digit)
+
+    def test_command(self):
+        parts = [
+            'Get-Factorial 5',
+            '& Get-Factorial 5',
+            '& "Get-Factorial" 5',
+            "New-Object 'int[,]' '3,2'",
+        ]
+        self._test_expected(Command, parts)
 
     def test_command_parameter(self):
         dashes = "-", "\u2013", "\u2014", "\u2015"
@@ -1006,6 +1015,9 @@ class GrammarTest(unittest.TestCase):
         ]
         self._test_expected(AssignmentExpression, parts)
 
+    def test_label_expression(self):
+        self._test_expected(LabelExpression, ["abc", "$abc"])
+
     def test_hash_literal_expression(self):
         parts = [
             '@{ FirstName = "James"; LastName = "Anderson"; IDNum = 123 }',
@@ -1040,6 +1052,9 @@ class GrammarTest(unittest.TestCase):
             'FirstName= "James"',
         ]
         self._test_expected(HashEntry, parts)
+
+    def test_key_expression(self):
+        self._test_expected(KeyExpression, ["$true", "LastName"])
 
     def test_if_statement(self):
         parts = [
