@@ -1,0 +1,2 @@
+1. The Command grammar can't parse the string "New-Object 'int[,]' 3,2"
+2. Pathological case for Command grammar for the string "New-Object -ArgumentList 3,2 -TypeName 'int[,]'"
