@@ -10,3 +10,5 @@
 
 ($PSBoundParameters.GetEnumerator().
  Where({$_.Value -eq $true}).Key)
+
+5. Keywords are actually case insensitive.
