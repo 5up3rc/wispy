@@ -670,7 +670,8 @@ class MemberName(Grammar):
 
 class MemberAccessPrime(Grammar):
     # Use this idiom to get rid of left recursion.
-    grammar = (OR(".", "::"), MemberName, OPTIONAL(REF('MemberAccessPrime')))
+    grammar = (OR(".", "::"), Spaces,
+               MemberName, OPTIONAL(REF('MemberAccessPrime')))
 
 
 class ElementAccessPrime(Grammar):
@@ -1315,7 +1316,7 @@ class Statement(Grammar):
 
 class ParenthesizedExpression(Grammar):
     grammar = (
-        "(", OPTIONAL(NewLines), Pipeline, OPTIONAL(NewLines), ")"
+        "(", Spaces, Pipeline, Spaces, ")"
     )
 
 

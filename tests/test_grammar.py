@@ -21,7 +21,7 @@ from wispy.grammar import (
     SimpleNameFirstCharacter, SimpleNameCharacter,
     SimpleNameCharacters, SimpleName,
     Dollars, DoubleQuoteCharacter,
-    SingleQuoteCharacter,
+    SingleQuoteCharacter, Spaces,
     Keyword, StringLiteral,
     ExpandableStringPart, ExpandableStringLiteral, ExpandableHereStringLiteral,
     GenericTokenChar, GenericTokenPart, GenericTokenParts,
@@ -67,6 +67,7 @@ from wispy.grammar import (
     FlowControlStatement,
     Redirection, LabelExpression,
     PreDecrementExpression, PreIncrementExpression,
+    ParenthesizedExpression, PrimaryExpression,
     RedirectedFileName, ArgumentList,
     MultiplicativeExpression, RangeExpression, CastExpression,
     BitwiseExpression, ComparisonExpression,
@@ -885,6 +886,36 @@ class GrammarTest(unittest.TestCase):
             with self.assertRaises(ParseError):
                 self._parse(PreIncrementExpression, literal)
 
+    def test_parenthesized_expression(self):
+        parts = [
+            "($x)",
+            "($a = 1234 * 3.5)",
+            "(($a = -23))",
+            "($b = 0)",
+            "($b--)",
+            "(\n$b-- )",
+            "(        $a=1246 *5 )",
+        ]
+        self._test_expected(ParenthesizedExpression, parts)
+
+        with self.assertRaises(ParseError):
+            self._parse(ParenthesizedExpression, "($b--")
+
+    def test_member_access(self):
+        parts = [
+            "$a.Length",
+            "(10,20,30).Length",
+            "$a.$property",
+            "[int]::MinValue",
+            "[long]::$property",
+            "(10,20,30).\nlength",
+            "[long]::\n  $property",
+        ]
+        # We test with PrimaryExpression, because MemberAccess grammar
+        # is written in a different way for solving the left
+        # recursion problem.
+        self._test_expected(PrimaryExpression, parts)
+
     def test_redirected_file_name(self):
         parts = ["output.txt", '"$abc"', "$null"]
         self._test_expected(RedirectedFileName, parts)
@@ -1137,6 +1168,10 @@ class GrammarTest(unittest.TestCase):
             'elseif($grade -ge 70){ "Grade C" }',
         ]
         self._test_expected(ElseIfClauses, parts)
+
+    def test_spaces(self):
+        parts = ["", " ", "\n", "\n \n", "\r   \n"]
+        self._test_expected(Spaces, parts)
 
     # Disabled for now
     # def test_for_statement(self):
