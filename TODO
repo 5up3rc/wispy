@@ -1,2 +1,12 @@
 1. The Command grammar can't parse the string "New-Object 'int[,]' 3,2"
 2. Pathological case for Command grammar for the string "New-Object -ArgumentList 3,2 -TypeName 'int[,]'"
+3. Other pathological cases for switch clause:
+
+'{a$_ -lt 20 }	{ "-lt 20" }',
+'{$_ -band 1 }	{ "Odd" }',
+'{$_ -eq 19 }	{ "-eq 19" }'
+
+4. Pathological case for SwitchCondition
+
+($PSBoundParameters.GetEnumerator().
+ Where({$_.Value -eq $true}).Key)
