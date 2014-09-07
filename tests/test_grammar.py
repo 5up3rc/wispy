@@ -41,7 +41,7 @@ from wispy.grammar import (
     DecimalDigit, DecimalDigits, DecimalIntegerLiteral,
     HexadecimalDigit, HexadecimalDigits, HexadecimalIntegerLiteral,
     IntegerLiteral, Literal,
-    Dash, Sign,
+    Dash, Sign, DashDash,
     ExponentPart, RealLiteral,
     EscapedCharacter,
     VariableCharacter, VariableCharacters,
@@ -78,7 +78,7 @@ from wispy.grammar import (
     IfStatement, ElseClause, ElseIfClause, ElseIfClauses,
     WhileStatement, DoStatement,
     ForCondition, ForIterator, ForInitializer,
-    ForeachStatement, ForStatement,
+    ForeachStatement, ForStatement, SwitchBody,
     SwitchClause, SwitchClauses, SwitchCondition,
 )
 
@@ -478,6 +478,8 @@ class GrammarTest(unittest.TestCase):
             "\u2014"
         ]
         self._test_expected(Dash, literals)
+        self._test_expected(DashDash,
+                            [literal + literal for literal in literals])
 
     def test_sign(self):
         literals = ["+", "\u2013"]
@@ -848,7 +850,7 @@ class GrammarTest(unittest.TestCase):
 
             "throw",
             "throw 100",
-            # Pathological case: 'throw "No such record in file"',
+            'throw "No such record in file"',
 
             "return 1",
             "return $4",
@@ -1061,8 +1063,7 @@ class GrammarTest(unittest.TestCase):
 
     def test_format_expression(self):
         parts = [
-            # TODO: Another pathological case which needs investigating.
-            # '"{2} <= {0} + {1}`n" -f $i,$j,($i+$j)',
+            '"{2} <= {0} + {1}`n" -f $i,$j,($i+$j)',
             '">{0,3}<" -f 5',
             '">{0,-3}<" -f 5',
             '">{0,3:000}<" -f 5',
@@ -1233,11 +1234,9 @@ class GrammarTest(unittest.TestCase):
             'a*      { "a*, $_" }',
             '?B?     { "?B? , $_" }',
             'default { "default, $_" }',
-
-            # TODO: other pathological cases
-            # '{a$_ -lt 20 }	{ "-lt 20" }',
-            # '{$_ -band 1 }	{ "Odd" }',
-            # '{$_ -eq 19 }	{ "-eq 19" }'
+            '{a$_ -lt 20 }	{ "-lt 20" }',
+            '{$_ -band 1 }	{ "Odd" }',
+            '{$_ -eq 19 }	{ "-eq 19" }'
         ]
         self._test_expected(SwitchClause, parts)
 
@@ -1263,6 +1262,27 @@ class GrammarTest(unittest.TestCase):
             # 'Where({$_.Value -eq $true}).Key)',
         ]
         self._test_expected(SwitchCondition, parts)
+
+    def test_switch_body(self):
+        parts = [
+            dedent('''{
+                       "`n"  { ++$lineCount }
+                       "`f"  { ++$pageCount }
+                       "`t"  { }
+                       default { ++$otherCount }
+                   }'''.strip()),
+            dedent('{"`n"  { ++$lineCount };"`f"  { ++$pageCount };"`t" { };'
+                   '  default { ++$otherCount }}'),
+
+            # TODO: this case is not working.
+            # dedent('''{
+            #            { $_ -lt 20 }	{ "-lt 20" }
+            #            { $_ -band 1 }	{ "Odd" }
+            #            { $_ -eq 19 }	{ "-eq 19" }
+            #            default { "default" }
+            #          }'''.strip()),
+        ]
+        self._test_expected(SwitchBody, parts)
 
     def test_member_name(self):
         elements = ["Sqrt", "IsUpper", "ToUpper"]

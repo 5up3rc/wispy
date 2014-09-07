@@ -817,22 +817,18 @@ class PostIncrementExpressionPrime(Grammar):
 
 class PostDecrementExpressionPrime(Grammar):
     # Use this idiom to get rid of left recursion.
-    grammar = (Dash, Dash, OPTIONAL(REF("PostDecrementExpressionPrime")))
+    grammar = (DashDash, OPTIONAL(REF("PostDecrementExpressionPrime")))
 
 
 class PrimaryExpression(Grammar):
-    grammar = OR(
-        # This production rule might be wrong..
-        (
-            Value,
-            OR(MemberAccessPrime,
-               ElementAccessPrime,
-               REF('InvocationExpressionPrime'),
-               PostIncrementExpressionPrime,
-               PostIncrementExpressionPrime),
-            OPTIONAL(REF('PrimaryExpression')),
-        ),
+    grammar = (
         Value,
+        OPTIONAL(OR(MemberAccessPrime,
+                    ElementAccessPrime,
+                    REF('InvocationExpressionPrime'),
+                    PostIncrementExpressionPrime,
+                    PostIncrementExpressionPrime)),
+        OPTIONAL(REF('PrimaryExpression')),
     )
 
 
@@ -858,7 +854,7 @@ class PreIncrementExpression(Grammar):
 
 
 class PreDecrementExpression(Grammar):
-    grammar = (Dash, Dash, OPTIONAL(NewLines), UnaryExpression)
+    grammar = (DashDash, OPTIONAL(NewLines), UnaryExpression)
 
 
 class CastExpression(Grammar):
@@ -1316,12 +1312,15 @@ class SwitchClauseCondition(Grammar):
 
 
 class SwitchClause(Grammar):
-    grammar = (SwitchClauseCondition, StatementBlock,
+    grammar = (SwitchClauseCondition, OPTIONAL(WHITESPACE), StatementBlock,
                OPTIONAL(StatementTerminators))
 
 
 class SwitchClauses(Grammar):
-    grammar = REPEAT(SwitchClause)
+    grammar = LIST_OF(
+        SwitchClause,
+        sep=Spaces
+    )
 
 
 class SwitchBody(Grammar):
