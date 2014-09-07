@@ -256,10 +256,10 @@ class GrammarTest(unittest.TestCase):
         literals = [
             "",
             "\n[test[]]\nparam\n($var\n$var\n)",
-            ";\n",
+            ";",
             "process { }",
             "\n[test[]]\nparam\n($var\n$var\n)"
-            ";\n"
+            ";"
             "process { }"
         ]
         self._test_expected(ScriptBlock, literals)
