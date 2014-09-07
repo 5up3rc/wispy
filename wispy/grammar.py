@@ -768,8 +768,6 @@ class Token(Grammar):
         # FIXME: Remove REF
         REF('Command'),
         CommandParameter,
-        # FIXME: Remove REF
-        REF('CommandArgumentToken'),
         IntegerLiteral,
         RealLiteral,
         StringLiteral,
@@ -781,11 +779,11 @@ class Token(Grammar):
 
 # Grammar for input
 class InputElement(Grammar):
-    grammar = OPTIONAL(WHITESPACE, Comment, Token)
+    grammar = OR(WHITESPACE, Comment, Token)
 
 
 class InputElements(Grammar):
-    grammar = REPEAT(InputElement)
+    grammar = LIST_OF(InputElement, sep=NewLineCharacter)
 
 
 class Input(Grammar):
@@ -1152,7 +1150,7 @@ class CatchClause(Grammar):
 
 
 class CatchClauses(Grammar):
-    grammar = REPEAT(CatchClause)
+    grammar = LIST_OF(CatchClause, sep=Spaces)
 
 
 class DataName(Grammar):

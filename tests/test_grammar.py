@@ -85,7 +85,8 @@ from wispy.grammar import (
     MergingRedirectionOperator, NonAmpersandCharacter,
     NonDoubleQuoteCharacter, NonDoubleQuoteCharacters,
     SignatureBegin, SignatureEnd, Signature, SignatureBlock,
-    TrapStatement, FinallyClause, CatchClause,
+    TrapStatement, FinallyClause, CatchClause, CatchClauses,
+    CatchTypeList, Value, InputElement, InputElements, Input,
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -1493,3 +1494,87 @@ class GrammarTest(unittest.TestCase):
                       }'''),
         ]
         self._test_expected(CatchClause, clauses)
+
+    def test_catch_clauses(self):
+        clauses = [
+            # 'catch\n{"Caught unexpected exception"}',
+            dedent('''catch [IndexOutOfRangeException]
+                   {
+                        "Handling out-of-bounds index, >$_<`n"
+                        $i = 5
+                      }
+                   catch [IndexOutOfRangeException], [Exception]
+                   {
+                        "Handling out-of-bounds index, >$_<`n"
+                         $i = 5
+                      }'''),
+            dedent('''catch [IndexOutOfRangeException]
+                   {
+                        "Handling out-of-bounds index, >$_<`n"
+                        $i = 5
+                      }catch [IndexOutOfRangeException], [Exception]{
+                        "Handling out-of-bounds index, >$_<`n"
+                         $i = 5
+                      }'''),
+        ]
+        self._test_expected(CatchClauses, clauses)
+
+    def test_catch_type_list(self):
+        parts = [
+            '[IndexOutofRangeException]',
+            '[IndexOutofRangeException], [TobiIsObito]',
+            '[KaguyaIsShinju], \n'
+            '[MadaraIsThirdMizukage]',
+        ]
+        self._test_expected(CatchTypeList, parts)
+
+    def test_value(self):
+        parts = [
+            "($x)",
+            "($a = 1234 * 3.5)",
+            "(($a = -23))",
+            "($b = 0)",
+            "($b--)",
+            "(\n$b-- )",
+            "(        $a=1246 *5 )",
+            "@($i = 10)",
+            "@(($i = 10))",
+            "@($i = 10; $j)",
+            "@(($i = 10); $j)",
+            "@(2, 4,    6)",
+            '@{ FirstName = "James"; LastName = "Anderson"; IDNum = 123 }',
+            '@{ 10 = "James"; 20.5 = "Anderson"; $true = 123 }',
+            '@{FirstName="James"}',
+            "1.4", "1.4e44", "1.4e44kb",
+            ".4", ".4e44", ".4e4d", ".4e4dkb", ".4Dkb",
+            "\"tralalala\"",
+            "@\"\ntest1\ntest2\n\"@",
+        ]
+        self._test_expected(Value, parts)
+
+    def test_input_element(self):
+        parts = [
+            ' ', '# Batman is Clark Kent', '$a',
+            'until'
+        ]
+        self._test_expected(InputElement, parts)
+
+    def test_input_elements(self):
+        parts = [
+            '# Tobi is Obito\n'
+            '$tobi = $Good_Boy'
+        ]
+        self._test_expected(InputElements, parts)
+
+    def test_input(self):
+        parts = [
+            '$tobi = $GoodBoy\n'
+            '\n# SIG # Begin signature block\n'
+            '# MIIEMwYJKoZIhvcNAQcCoIIEJDCCBCACAQEx\n'
+            '# gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgID\n'
+            '# tobi is obito\n'
+            '# Juubi is Shinju\n'
+            '# Juubi is Kaguya\n'
+            '# SIG # End signature block'
+        ]
+        self._test_expected(Input, parts)
