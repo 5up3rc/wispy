@@ -62,12 +62,12 @@ class DoubleQuoteCharacter(Grammar):
     grammar = OR("\u0022", "\u201C", "\u201D", "\u201E")
 
 
-class NonDoubleQuoteChar(Grammar):
+class NonDoubleQuoteCharacter(Grammar):
     grammar = EXCEPT(ANY, DoubleQuoteCharacter, max=1)
 
 
-class NonDoubleQuoteChars(Grammar):
-    grammar = REPEAT(NonDoubleQuoteChar)
+class NonDoubleQuoteCharacters(Grammar):
+    grammar = REPEAT(NonDoubleQuoteCharacter)
 
 
 class Dollars(Grammar):
@@ -736,7 +736,7 @@ class CommandArgument(Grammar):
 
 
 class VerbatimCommandString(Grammar):
-    grammar = (DoubleQuoteCharacter, NonDoubleQuoteChars,
+    grammar = (DoubleQuoteCharacter, NonDoubleQuoteCharacters,
                DoubleQuoteCharacter)
 
 

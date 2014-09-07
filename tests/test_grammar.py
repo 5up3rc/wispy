@@ -84,7 +84,7 @@ from wispy.grammar import (
     ScriptBlock, ScriptBlockBody, ScriptBlockExpression,
     ScriptParameter, ScriptParameterDefault,
     MergingRedirectionOperator, NonAmpersandCharacter,
-    NonDoubleQuoteChar, NonDoubleQuoteChars,
+    NonDoubleQuoteCharacter, NonDoubleQuoteCharacters,
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -1419,12 +1419,12 @@ class GrammarTest(unittest.TestCase):
         with self.assertRaises(ParseError):
             self._parse(NonAmpersandCharacter, '&')
 
-    def test_non_double_quote_char(self):
-        self._test_expected(NonDoubleQuoteChar, string.ascii_letters)
-        self._test_expected(NonDoubleQuoteChar, string.digits)
+    def test_non_double_quote_character(self):
+        self._test_expected(NonDoubleQuoteCharacter, string.ascii_letters)
+        self._test_expected(NonDoubleQuoteCharacter, string.digits)
 
         for char in ("\u0022", "\u201C", "\u201D", "\u201E"):
             with self.assertRaises(ParseError):
-                self._parse(NonDoubleQuoteChar, char)
+                self._parse(NonDoubleQuoteCharacter, char)
 
-        self._test_expected(NonDoubleQuoteChars, ['tobi', 'is', 'obito'])
+        self._test_expected(NonDoubleQuoteCharacters, ['tobi', 'is', 'obito'])
