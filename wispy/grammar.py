@@ -80,6 +80,10 @@ class NewLineCharacter(Grammar):
 
 class StatementTerminator(Grammar):
     grammar = OR(";", NewLineCharacter)
+
+
+class StatementTerminators(Grammar):
+    grammar = REPEAT(StatementTerminator)
 # End of Grammars without dependencies
 
 
@@ -1052,10 +1056,6 @@ class Pipeline(Grammar):
         (Expression, OPTIONAL(Redirection), OPTIONAL(PipelineTail)),
         (Command, OPTIONAL(PipelineTail))
     )
-
-
-class StatementTerminators(Grammar):
-    grammar = REPEAT(StatementTerminator)
 
 
 class StatementList(Grammar):
