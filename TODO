@@ -17,6 +17,15 @@
 
 for ($i = 1; $i -le 10; ++$i) { "$i $($i*$i)" }
 
-7. ParameterList -> LIST_OF with separator?
+7. This switch body case is not working:
 
-8. Infinite loop with "process {{{" over ScriptBlock (same for "process { } process { }" under ScriptBlockBody)
+{
+  { $_ -lt 20 }	{ "-lt 20" }
+  { $_ -band 1 }	{ "Odd" }
+  { $_ -eq 19 }	{ "-eq 19" }
+  default { "default" }
+}
+
+8. ParameterList -> LIST_OF with separator?
+
+9. Infinite loop with "process {{{" over ScriptBlock (same for "process { } process { }" under ScriptBlockBody)
