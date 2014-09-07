@@ -16,3 +16,7 @@
 6. Pathological case for the following:
 
 for ($i = 1; $i -le 10; ++$i) { "$i $($i*$i)" }
+
+7. ParameterList -> LIST_OF with separator?
+
+8. Infinite loop with "process {{{" over ScriptBlock (same for "process { } process { }" under ScriptBlockBody)
