@@ -80,6 +80,8 @@ from wispy.grammar import (
     ForCondition, ForIterator, ForInitializer,
     ForeachStatement, ForStatement,
     SwitchClause, SwitchClauses, SwitchCondition,
+    ScriptBlock, ScriptBlockBody, ScriptBlockExpression,
+    ScriptParameter, ScriptParameterDefault
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -249,6 +251,56 @@ class GrammarTest(unittest.TestCase):
 
         with self.assertRaises(ParseError):
             self._parse(ExpandableStringWithSubexprEnd, "\"test")
+
+    def test_script_block(self):
+        literals = [
+            "",
+            "\n[test[]]\nparam\n($var\n$var\n)",
+            ";\n",
+            "process { }",
+            "\n[test[]]\nparam\n($var\n$var\n)"
+            ";\n"
+            "process { }"
+        ]
+        self._test_expected(ScriptBlock, literals)
+
+    def test_script_block_body(self):
+        literals = [
+            'for ()\n{ "$i" }' +
+            '''if($grade -ge 90){"Grade A"}'''
+        ]
+        self._test_expected(ScriptBlockBody, literals)
+
+    def test_script_block_expression(self):
+        literals = [
+            "{process { $a = 1 }}",
+            "{\nprocess { $a = 1 }\n}"
+        ]
+        self._test_expected(ScriptBlockExpression, literals)
+
+        with self.assertRaises(ParseError):
+            self._parse(ScriptBlockExpression, "process")
+
+    def test_script_parameter(self):
+        literals = [
+            "$var",
+            "\n$var=1",
+            "\n\n[Smth[]]$var=''"
+        ]
+        self._test_expected(ScriptParameter, literals)
+
+        with self.assertRaises(ParseError):
+            self._parse(ScriptParameter, "test")
+
+    def test_script_parameter_default(self):
+        literals = [
+            "=0",
+            "\n=\n\n''"
+        ]
+        self._test_expected(ScriptParameterDefault, literals)
+
+        with self.assertRaises(ParseError):
+            self._parse(ScriptParameterDefault, "=$")
 
     def test_generic_token_char(self):
         self._test_expected(GenericTokenChar, ["\u0060a"])
