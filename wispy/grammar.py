@@ -693,7 +693,7 @@ class ParamBlock(Grammar):
 class ScriptBlock(Grammar):
     grammar = (
         # FIXME: Remove REF
-        OPTIONAL(ParamBlock), OPTIONAL(StatementTerminator),
+        OPTIONAL(ParamBlock), OPTIONAL(StatementTerminators),
         OPTIONAL(ScriptBlockBody)
     )
 
@@ -702,7 +702,7 @@ class ModuleFile(Grammar):
     grammar = ScriptBlock
 
 
-class ScritFile(Grammar):
+class ScriptFile(Grammar):
     grammar = ScriptBlock
 
 
