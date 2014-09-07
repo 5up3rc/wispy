@@ -75,7 +75,7 @@ class Dollars(Grammar):
 
 
 class NewLineCharacter(Grammar):
-    grammar = OR("\u000D\u000A", "\u000D", "u000A")
+    grammar = OR("\u000D\u000A", "\u000D", "\u000A")
 
 
 class StatementTerminator(Grammar):
