@@ -7,6 +7,7 @@ Tests for wispy.grammar.
 # pylint: disable=too-many-public-methods, invalid-name, no-self-use
 # pylint: disable=missing-docstring, import-error
 # pylint: disable=bad-builtin, star-args
+# pylint: disable=wildcard-import, unused-wildcard-import
 
 
 import unittest
@@ -17,77 +18,8 @@ from textwrap import dedent
 
 from modgrammar import ParseError
 from modgrammar.debugging import DEBUG_ALL
-from wispy.grammar import (
-    SimpleNameFirstCharacter, SimpleNameCharacter,
-    SimpleNameCharacters, SimpleName,
-    Dollars, DoubleQuoteCharacter,
-    SingleQuoteCharacter, Spaces,
-    Keyword, StringLiteral,
-    ExpandableStringPart, ExpandableStringLiteral, ExpandableHereStringLiteral,
-    GenericTokenChar, GenericTokenPart, GenericTokenParts,
-    GenericToken, GenericTokenWithSubexprStart,
-    Dimension,
-    TypeSpec, GenericTypeArguments, TypeLiteral,
-    Colon,
-    ParameterCharacter, ParameterCharacters,
-    FirstParameterCharacter, CommandParameter,
-    InputCharacter, InputCharacters,
-    NewLineCharacter, NewLines,
-    Hashes, NotGreaterThanOrHash,
-    DelimitedCommentSection, DelimitedComment, DelimitedCommentText,
-    SingleLineComment, Comment,
-    NumericMultiplier,
-    LongTypeSuffix, DecimalTypeSuffix, NumericTypeSuffix,
-    DecimalDigit, DecimalDigits, DecimalIntegerLiteral,
-    HexadecimalDigit, HexadecimalDigits, HexadecimalIntegerLiteral,
-    IntegerLiteral, Literal,
-    Dash, Sign, DashDash,
-    ExponentPart, RealLiteral,
-    EscapedCharacter,
-    VariableCharacter, VariableCharacters,
-    VariableScope, VariableNamespace, VerbatimStringLiteral,
-    VerbatimHereStringLiteral, VerbatimStringPart, VerbatimStringCharacters,
-    VerbatimHereStringCharacters, VerbatimHereStringPart, Variable,
-    BracedVariableCharacter, BracedVariableCharacters, BracedVariable,
-    FileRedirectionOperator, FormatOperator,
-    AssignmentOperator, ComparisonOperator, OperatorOrPunctuator,
-    TypeCharacter, TypeCharacters, TypeIdentifier, TypeName,
-    ExpandableStringCharacters,
-    ExpandableStringWithSubexprStart, ExpandableStringWithSubexprEnd,
-    ExpandableHereStringPart, ExpandableHereStringCharacters,
-    ExpandableHereStringWithSubexprStart, ExpandableHereStringWithSubexprEnd,
-    CommandInvocationOperator,
-    AttributeName, Attribute, AttributeArgument, AttributeArguments,
-    AttributeList, MemberName,
-    CommandName, Command,
-    StatementTerminator, StatementTerminators,
-    BlockName, DataName, UnaryExpression, ExpressionWithUnaryOperator,
-    SwitchParameter, SwitchParameters,
-    FlowControlStatement,
-    Redirection, LabelExpression,
-    PreDecrementExpression, PreIncrementExpression,
-    ParenthesizedExpression, PrimaryExpression,
-    RedirectedFileName, ArgumentList,
-    MultiplicativeExpression, RangeExpression, CastExpression,
-    BitwiseExpression, ComparisonExpression,
-    ArrayExpression, ArrayLiteralExpression,
-    WhileCondition, LogicalExpression, AdditiveExpression, FormatExpression,
-    AssignmentExpression, KeyExpression,
-    HashLiteralExpression, HashLiteralBody, HashEntry,
-    IfStatement, ElseClause, ElseIfClause, ElseIfClauses,
-    WhileStatement, DoStatement,
-    ForCondition, ForIterator, ForInitializer,
-    ForeachStatement, ForStatement, SwitchBody,
-    SwitchClause, SwitchClauses, SwitchCondition, SwitchStatement,
-    SwitchClauseCondition, SwitchFilename,
-    ScriptBlock, ScriptBlockBody, ScriptBlockExpression,
-    ScriptParameter, ScriptParameterDefault,
-    MergingRedirectionOperator, NonAmpersandCharacter,
-    NonDoubleQuoteCharacter, NonDoubleQuoteCharacters,
-    SignatureBegin, SignatureEnd, Signature, SignatureBlock,
-    TrapStatement, FinallyClause, CatchClause, CatchClauses,
-    CatchTypeList, Value, InputElement, InputElements, Input,
-)
+from wispy.grammar import *
+
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -257,6 +189,18 @@ class GrammarTest(unittest.TestCase):
         with self.assertRaises(ParseError):
             self._parse(ExpandableStringWithSubexprEnd, "\"test")
 
+    def test_interactive_input(self):
+        # Should be the same as ScriptBlock
+        literals = [
+            "",
+            "\n[test[]]\nparam\n($var\n$var\n)",
+            ";",
+            "process { }",
+            "\n[test[]]\nparam\n($var\n$var\n)"
+            ";",
+        ]
+        self._test_expected(InteractiveInput, literals)
+
     def test_script_block(self):
         literals = [
             "",
@@ -264,8 +208,7 @@ class GrammarTest(unittest.TestCase):
             ";",
             "process { }",
             "\n[test[]]\nparam\n($var\n$var\n)"
-            ";"
-            "process { }"
+            ";",
         ]
         self._test_expected(ScriptBlock, literals)
 
@@ -290,7 +233,8 @@ class GrammarTest(unittest.TestCase):
         literals = [
             "$var",
             "\n$var=1",
-            "\n\n[Smth[]]$var=''"
+            "\n\n[Smth[]]$var=''",
+            "$var4 =   42",
         ]
         self._test_expected(ScriptParameter, literals)
 
@@ -300,7 +244,8 @@ class GrammarTest(unittest.TestCase):
     def test_script_parameter_default(self):
         literals = [
             "=0",
-            "\n=\n\n''"
+            "\n=\n\n''",
+            "\n = $tobi",
         ]
         self._test_expected(ScriptParameterDefault, literals)
 
@@ -1578,3 +1523,63 @@ class GrammarTest(unittest.TestCase):
             '# SIG # End signature block'
         ]
         self._test_expected(Input, parts)
+
+    def test_function_name(self):
+        names = ['Get-Power', 'Find-Str', 'Test']
+        self._test_expected(FunctionName, names)
+
+    def test_parameter_list(self):
+        parts = [
+            '[long]$base, [int]$exponent',
+            '[string]$str, [int]$start_pos = 0',
+            '[switch]$trace, $p1, $p2',
+            '$a, $b, $c, $d',
+            '$tobi',
+            '[long]$base,\n'
+            '[int]$exponent'
+        ]
+        self._test_expected(ParameterList, parts)
+
+    def test_function_parameter_declaration(self):
+        params = [
+            '([long]$base, [int]$exponent)',
+            '([string]$str, [int]$start_pos = 0)',
+            '([switch]$trace, \n'
+            '$p1, $p2)',
+
+            '($a, $b, $c, $d)',
+            '(  [long]$base,\n'
+            '[int]$exponent)'
+        ]
+        self._test_expected(FunctionParameterDeclaration, params)
+
+    def test_function_statement(self):
+        funcs = [
+            dedent('''filter Get-Square2
+                   {
+                       $_ * $_
+                   }'''),
+            dedent('''function Get-Power ([long]$base, [int]$exponent)
+                   {
+                       $result = 1
+                       for ($i = 1; $i -le $exponent; ++$i)
+                       {
+                         $result *= $base
+                       }
+                       return $result
+                   }'''),
+            'function Find-Str ([string]$str, [int]$start_pos = 0) { $str }',
+            dedent('''function Get-Square1
+                   {
+                    foreach ($i in $input)
+                    {
+                     $i * $i
+                    }
+                   }'''),
+            dedent('''function Switch-Item {
+                   param ([switch]$on)
+                   if ($on) { "Switch on" }
+                   else { "Switch off" }
+                   }'''),
+        ]
+        self._test_expected(FunctionStatement, funcs)

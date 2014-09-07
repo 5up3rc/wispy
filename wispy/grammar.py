@@ -670,7 +670,126 @@ class CommandParameter(Grammar):
 # End of grammar for Commands
 
 
-# Grammar for Expressions
+# Syntactic grammar
+class ScriptBlockBody(Grammar):
+    # FIXME: Remove REF
+    grammar = OR(REF('NamedBlockList'), REF('StatementList'))
+
+
+class ParamBlock(Grammar):
+    grammar = (
+        # FIXME: Remove REF
+        OPTIONAL(NewLines), OPTIONAL(REF('AttributeList')),
+        OPTIONAL(NewLines),
+        "param", OPTIONAL(NewLines), "(",
+        # FIXME: Remove REF
+        OPTIONAL(REF('ParameterList')),
+        OPTIONAL(NewLines), ")"
+    )
+
+
+class ScriptBlock(Grammar):
+    grammar = (
+        OPTIONAL(ParamBlock), OPTIONAL(StatementTerminators),
+        OPTIONAL(ScriptBlockBody)
+    )
+
+
+class ModuleFile(Grammar):
+    grammar = ScriptBlock
+
+
+class ScriptFile(Grammar):
+    grammar = ScriptBlock
+
+
+class InteractiveInput(Grammar):
+    grammar = ScriptBlock
+
+
+class DataFile(Grammar):
+    # FIXME: Remove REF
+    grammar = REF('StatementList')
+# End of Syntactic grammar
+
+
+# ------------------------
+
+
+class CommandName(Grammar):
+    grammar = OR(GenericToken, GenericTokenWithSubexprStart)
+
+
+class CommandNameExpr(Grammar):
+    grammar = OR(CommandName, REF('PrimaryExpression'))
+
+
+class CommandArgument(Grammar):
+    grammar = CommandNameExpr
+
+
+class VerbatimCommandString(Grammar):
+    grammar = (DoubleQuoteCharacter, NonDoubleQuoteCharacters,
+               DoubleQuoteCharacter)
+
+
+class VerbatimCommandArgumentPart(Grammar):
+    grammar = OR(
+        VerbatimCommandString,
+        ("&", NonAmpersandCharacter),
+        EXCEPT(ANY, OR("|", NewLineCharacter))
+    )
+
+
+class VerbatimCommandArgumentChars(Grammar):
+    grammar = REPEAT(VerbatimCommandArgumentPart)
+# ---------------------------------------------
+
+
+# Grammar fo Keywords
+class Keyword(Grammar):
+
+    grammar = OR(
+        "workflow", "inlinescript", "parallel", "begin", "break", "catch",
+        "class", "continue", "data", "define", "do", "dynamicparam", "elseif",
+        "else", "end", "exit", "filter", "finally", "foreach", "for", "from",
+        "function", "if", "in", "param", "process", "return", "switch", "var",
+        "throw", "trap", "try", "until", "using", "while"
+    )
+# End of grammar for Keywords
+
+
+# Grammar for tokens
+class Token(Grammar):
+    grammar = OR(
+        Keyword,
+        Variable,
+        # FIXME: Remove REF
+        REF('Command'),
+        CommandParameter,
+        IntegerLiteral,
+        RealLiteral,
+        StringLiteral,
+        TypeLiteral,
+        OperatorOrPunctuator,
+    )
+# End of grammar for tokens
+
+
+# Grammar for input
+class InputElement(Grammar):
+    grammar = OR(WHITESPACE, Comment, Token)
+
+
+class InputElements(Grammar):
+    grammar = LIST_OF(InputElement, sep=NewLineCharacter)
+
+
+class Input(Grammar):
+    grammar = OPTIONAL(InputElements), OPTIONAL(SignatureBlock)
+# End of grammar for Input
+
+
 class Value(Grammar):
     grammar = OR(
         REF("ParenthesizedExpression"),
@@ -860,16 +979,6 @@ class ParameterList(Grammar):
     grammar = (ScriptParameter, OPTIONAL(ParameterListPrime))
 
 
-class ParamBlock(Grammar):
-    grammar = (
-        OPTIONAL(NewLines),
-        # FIXME: Remove REF
-        OPTIONAL(REF('AttributeList')), OPTIONAL(NewLines),
-        "param", OPTIONAL(NewLines), "(", OPTIONAL(ParameterList),
-        NewLines, ")"
-    )
-
-
 class BlockName(Grammar):
     grammar = OR("dynamicparam", "begin", "process", "end")
 
@@ -880,29 +989,6 @@ class NamedBlock(Grammar):
 
 class NamedBlockList(Grammar):
     grammar = REPEAT(NamedBlock)
-
-
-class ScriptBlockBody(Grammar):
-    grammar = OR(NamedBlockList, StatementList)
-
-
-class ScriptBlock(Grammar):
-    grammar = (
-        OPTIONAL(ParamBlock), OPTIONAL(StatementTerminators),
-        OPTIONAL(ScriptBlockBody)
-    )
-
-
-class CommandName(Grammar):
-    grammar = OR(GenericToken, GenericTokenWithSubexprStart)
-
-
-class CommandNameExpr(Grammar):
-    grammar = OR(CommandName, REF('PrimaryExpression'))
-
-
-class CommandArgument(Grammar):
-    grammar = CommandNameExpr
 
 
 class RedirectedFileName(Grammar):
@@ -1004,6 +1090,35 @@ class DataStatement(Grammar):
     )
 
 
+class ElseIfClause(Grammar):
+    grammar = (
+        Spaces, "elseif", Spaces, "(", Spaces, Pipeline, Spaces, ")",
+        StatementBlock
+    )
+
+
+class ElseIfClauses(Grammar):
+    grammar = REPEAT(ElseIfClause)
+
+
+class ElseClause(Grammar):
+    grammar = (Spaces, "else", StatementBlock)
+
+
+class IfStatement(Grammar):
+    grammar = (
+        "if",
+        Spaces, "(", Spaces, Pipeline, Spaces, ")", Spaces,
+        StatementBlock, OPTIONAL(ElseIfClauses),
+        OPTIONAL(ElseClause)
+    )
+
+
+
+class LabelExpression(Grammar):
+    grammar = OR(SimpleName, UnaryExpression)
+
+
 class FinallyClause(Grammar):
     grammar = (OPTIONAL(NewLines), "finally", StatementBlock)
 
@@ -1046,10 +1161,6 @@ class TrapStatement(Grammar):
     )
 
 
-class LabelExpression(Grammar):
-    grammar = OR(SimpleName, UnaryExpression)
-
-
 class FlowControlStatement(Grammar):
     grammar = OR(
         (
@@ -1065,8 +1176,9 @@ class FlowControlStatement(Grammar):
     )
 
 
+
 class FunctionParameterDeclaration(Grammar):
-    grammar = (OPTIONAL(NewLines), "(", ParameterList, OPTIONAL(NewLines), ")")
+    grammar = ("(", Spaces, ParameterList, Spaces, ")")
 
 
 class FunctionName(Grammar):
@@ -1227,30 +1339,6 @@ class LabeledStatement(Grammar):
     )
 
 
-class ElseClause(Grammar):
-    grammar = (Spaces, "else", StatementBlock)
-
-
-class ElseIfClause(Grammar):
-    grammar = (
-        Spaces, "elseif", Spaces, "(", Spaces, Pipeline, Spaces, ")",
-        StatementBlock
-    )
-
-
-class ElseIfClauses(Grammar):
-    grammar = REPEAT(ElseIfClause)
-
-
-class IfStatement(Grammar):
-    grammar = (
-        "if",
-        Spaces, "(", Spaces, Pipeline, Spaces, ")", Spaces,
-        StatementBlock, OPTIONAL(ElseIfClauses),
-        OPTIONAL(ElseClause)
-    )
-
-
 class Statement(Grammar):
 
     """A statement specifies some sort of action that is to be performed.
@@ -1271,89 +1359,6 @@ class Statement(Grammar):
         SequenceStatement,
         (Pipeline, OPTIONAL(StatementTerminator))
     )
-
-
-class ModuleFile(Grammar):
-    grammar = ScriptBlock
-
-
-class ScriptFile(Grammar):
-    grammar = ScriptBlock
-
-
-class InteractiveInput(Grammar):
-    grammar = ScriptBlock
-
-
-class DataFile(Grammar):
-    # FIXME: Remove REF
-    grammar = REF('StatementList')
-# End of Syntactic grammar
-
-
-# ------------------------
-
-
-class VerbatimCommandString(Grammar):
-    grammar = (DoubleQuoteCharacter, NonDoubleQuoteCharacters,
-               DoubleQuoteCharacter)
-
-
-class VerbatimCommandArgumentPart(Grammar):
-    grammar = OR(
-        VerbatimCommandString,
-        ("&", NonAmpersandCharacter),
-        EXCEPT(ANY, OR("|", NewLineCharacter))
-    )
-
-
-class VerbatimCommandArgumentChars(Grammar):
-    grammar = REPEAT(VerbatimCommandArgumentPart)
-# ---------------------------------------------
-
-
-# Grammar fo Keywords
-class Keyword(Grammar):
-
-    grammar = OR(
-        "workflow", "inlinescript", "parallel", "begin", "break", "catch",
-        "class", "continue", "data", "define", "do", "dynamicparam", "elseif",
-        "else", "end", "exit", "filter", "finally", "foreach", "for", "from",
-        "function", "if", "in", "param", "process", "return", "switch", "var",
-        "throw", "trap", "try", "until", "using", "while"
-    )
-# End of grammar for Keywords
-
-
-# Grammar for tokens
-class Token(Grammar):
-    grammar = OR(
-        Keyword,
-        Variable,
-        # FIXME: Remove REF
-        REF('Command'),
-        CommandParameter,
-        IntegerLiteral,
-        RealLiteral,
-        StringLiteral,
-        TypeLiteral,
-        OperatorOrPunctuator,
-    )
-# End of grammar for tokens
-
-
-# Grammar for input
-class InputElement(Grammar):
-    grammar = OR(WHITESPACE, Comment, Token)
-
-
-class InputElements(Grammar):
-    grammar = LIST_OF(InputElement, sep=NewLineCharacter)
-
-
-class Input(Grammar):
-    grammar = OPTIONAL(InputElements), OPTIONAL(SignatureBlock)
-# End of grammar for Input
 
 
 # Attributes
