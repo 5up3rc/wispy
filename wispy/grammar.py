@@ -12,8 +12,8 @@
 
 from modgrammar import (
     Grammar, OR, WORD, REPEAT, ANY_EXCEPT,
-    OPTIONAL, ANY, EXCEPT, WHITESPACE,
-    LIST_OF, REF,
+    OPTIONAL, ANY, EXCEPT,
+    LIST_OF, REF, WHITESPACE,
 )
 
 
@@ -137,7 +137,7 @@ class DelimitedComment(Grammar):
     as a whole source line, or it can span any number of source lines.
     """
 
-    grammar = ("<# ", OPTIONAL(DelimitedCommentText), Hashes, ">")
+    grammar = ("<#", OPTIONAL(DelimitedCommentText), Hashes, ">")
 
 
 class RequiresComment(Grammar):
@@ -179,7 +179,7 @@ class SignatureEnd(Grammar):
 
 
 class Signature(Grammar):
-    REPEAT(SingleLineComment)
+    grammar = REPEAT(SingleLineComment)
 
 
 class SignatureBlock(Grammar):
@@ -575,7 +575,6 @@ class VariableCharacter(Grammar):
         WORD("\u0660-\u0669", max=1),  # ARABIC-INDIC DIGIT
         WORD("\u06F0-\u06F9", max=1),  # EXTENDED ARABIC-INDIC DIGIT
         # TODO: Add more character from the 'Number, Decimal Digit' Category
-
         LetterTitlecase,
         LetterModifier,
         # The underscore character and question mark
@@ -1249,8 +1248,6 @@ class FunctionParameterDeclaration(Grammar):
     grammar = (OPTIONAL(NewLines), "(", ParameterList, OPTIONAL(NewLines), ")")
 
 
-
-
 class ScriptBlockExpression(Grammar):
     grammar = ("{", OPTIONAL(NewLines), ScriptBlock,
                OPTIONAL(NewLines), "}")
@@ -1439,7 +1436,7 @@ class SubExpression(Grammar):
 
 
 class ArrayExpression(Grammar):
-    grammar_WHITESPACE_mode = "optional"
+    grammar_whitespace_mode = "optional"
     grammar = ("@(", Spaces, OPTIONAL(StatementList),
                Spaces, ")")
 
