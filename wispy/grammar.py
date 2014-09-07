@@ -1118,9 +1118,7 @@ class IfStatement(Grammar):
 
 
 class ScriptParameterDefault(Grammar):
-    grammar = (
-        OPTIONAL(NewLines), "=", OPTIONAL(NewLines), Expression
-    )
+    grammar = (Spaces, "=", Spaces, Expression)
 
 
 class ScriptParameter(Grammar):
@@ -1220,15 +1218,11 @@ class FlowControlStatement(Grammar):
 
 
 class ParameterList(Grammar):
-    grammar = OR(
-        ScriptParameter,
-        # TODO: left recursion
-        (REF('ParameterList'), OPTIONAL(NewLines), ScriptParameter)
-    )
+    grammar = LIST_OF(ScriptParameter, sep=(Spaces, ",", Spaces))
 
 
 class FunctionParameterDeclaration(Grammar):
-    grammar = (OPTIONAL(NewLines), "(", ParameterList, OPTIONAL(NewLines), ")")
+    grammar = ("(", Spaces, ParameterList, Spaces, ")")
 
 
 class ScriptBlockExpression(Grammar):
@@ -1242,8 +1236,9 @@ class FunctionName(Grammar):
 
 class FunctionStatement(Grammar):
     grammar = (
-        OR("function", "filter"), OPTIONAL(NewLines), FunctionName,
-        OPTIONAL(FunctionParameterDeclaration), "{", ScriptBlock, "}"
+        OR("function", "filter"), Spaces, FunctionName,
+        Spaces, OPTIONAL(FunctionParameterDeclaration), Spaces,
+        "{", Spaces, ScriptBlock, Spaces, "}"
     )
 
 

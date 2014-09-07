@@ -87,6 +87,8 @@ from wispy.grammar import (
     SignatureBegin, SignatureEnd, Signature, SignatureBlock,
     TrapStatement, FinallyClause, CatchClause, CatchClauses,
     CatchTypeList, Value, InputElement, InputElements, Input,
+    FunctionName, ParameterList, FunctionParameterDeclaration,
+    FunctionStatement,
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -289,7 +291,8 @@ class GrammarTest(unittest.TestCase):
         literals = [
             "$var",
             "\n$var=1",
-            "\n\n[Smth[]]$var=''"
+            "\n\n[Smth[]]$var=''",
+            "$var4 =   42",
         ]
         self._test_expected(ScriptParameter, literals)
 
@@ -299,7 +302,8 @@ class GrammarTest(unittest.TestCase):
     def test_script_parameter_default(self):
         literals = [
             "=0",
-            "\n=\n\n''"
+            "\n=\n\n''",
+            "\n = $tobi",
         ]
         self._test_expected(ScriptParameterDefault, literals)
 
@@ -1577,3 +1581,63 @@ class GrammarTest(unittest.TestCase):
             '# SIG # End signature block'
         ]
         self._test_expected(Input, parts)
+
+    def test_function_name(self):
+        names = ['Get-Power', 'Find-Str', 'Test']
+        self._test_expected(FunctionName, names)
+
+    def test_parameter_list(self):
+        parts = [
+            '[long]$base, [int]$exponent',
+            '[string]$str, [int]$start_pos = 0',
+            '[switch]$trace, $p1, $p2',
+            '$a, $b, $c, $d',
+            '$tobi',
+            '[long]$base,\n'
+            '[int]$exponent'
+        ]
+        self._test_expected(ParameterList, parts)
+
+    def test_function_parameter_declaration(self):
+        params = [
+            '([long]$base, [int]$exponent)',
+            '([string]$str, [int]$start_pos = 0)',
+            '([switch]$trace, \n'
+            '$p1, $p2)',
+
+            '($a, $b, $c, $d)',
+            '(  [long]$base,\n'
+            '[int]$exponent)'
+        ]
+        self._test_expected(FunctionParameterDeclaration, params)
+
+    def test_function_statement(self):
+        funcs = [
+            dedent('''filter Get-Square2
+                   {
+                       $_ * $_
+                   }'''),
+            dedent('''function Get-Power ([long]$base, [int]$exponent)
+                   {
+                       $result = 1
+                       for ($i = 1; $i -le $exponent; ++$i)
+                       {
+                         $result *= $base
+                       }
+                       return $result
+                   }'''),
+            'function Find-Str ([string]$str, [int]$start_pos = 0) { $str }',
+            dedent('''function Get-Square1
+                   {
+                    foreach ($i in $input)
+                    {
+                     $i * $i
+                    }
+                   }'''),
+            dedent('''function Switch-Item {
+                   param ([switch]$on)
+                   if ($on) { "Switch on" }
+                   else { "Switch off" }
+                   }'''),
+        ]
+        self._test_expected(FunctionStatement, funcs)
