@@ -273,19 +273,13 @@ class TypeName(Grammar):
     grammar = LIST_OF(TypeIdentifier, sep=".")
 
 
-class ArrayTypeName(Grammar):
-    grammar = (TypeName, "[")
-
-
-class GenericTypeName(Grammar):
-    grammar = (TypeName, "[")
-
-
 class TypeSpec(Grammar):
-    grammar = OR(
-        (GenericTypeName, REF("GenericTypeArguments"), "]"),
-        (ArrayTypeName, OPTIONAL(Dimension), "]"),
-        TypeName
+    grammar = (
+        TypeName,
+        OPTIONAL(("[",
+                  OR(REF("GenericTypeArguments"),
+                     OPTIONAL(Dimension)),
+                  "]"))
     )
 
 

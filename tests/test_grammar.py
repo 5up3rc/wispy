@@ -52,7 +52,6 @@ from wispy.grammar import (
     FileRedirectionOperator, FormatOperator,
     AssignmentOperator, ComparisonOperator, OperatorOrPunctuator,
     TypeCharacter, TypeCharacters, TypeIdentifier, TypeName,
-    ArrayTypeName, GenericTypeName,
     ExpandableStringCharacters,
     ExpandableStringWithSubexprStart, ExpandableStringWithSubexprEnd,
     ExpandableHereStringPart, ExpandableHereStringCharacters,
@@ -376,6 +375,7 @@ class GrammarTest(unittest.TestCase):
         self._test_expected(TypeSpec, ["int[,]", "int[]"])
         self._test_expected(TypeSpec, ["int", "float", "double"])
         self._test_expected(TypeSpec, ["Dictionary[float,double]"])
+        self._test_expected(TypeSpec, ["Dictionary[int[float]]"])
 
     def test_type_literal(self):
         self._test_expected(TypeLiteral, ["[object[]]", "[int]", "[int[,,]]"])
@@ -697,11 +697,6 @@ class GrammarTest(unittest.TestCase):
 
         with self.assertRaises(ParseError):
             self._parse(TypeName, ".trop")
-
-    def test_array_type_name(self):
-        self._test_expected(ArrayTypeName, ["tzop[", "tzop.hop["])
-        # GenericTypeName is the same as ArrayTypeName
-        self._test_expected(GenericTypeName, ["hop[", "bop["])
 
     def test_verbatim_string_literal(self):
         self._test_expected(VerbatimStringLiteral, ["''", "'red'"])
