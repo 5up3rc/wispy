@@ -85,6 +85,7 @@ from wispy.grammar import (
     MergingRedirectionOperator, NonAmpersandCharacter,
     NonDoubleQuoteCharacter, NonDoubleQuoteCharacters,
     SignatureBegin, SignatureEnd, Signature, SignatureBlock,
+    TrapStatement, FinallyClause, CatchClause,
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -1454,3 +1455,41 @@ class GrammarTest(unittest.TestCase):
             '# SIG # End signature block\n'
         ]
         self._test_expected(SignatureBlock, parts)
+
+    def test_trap_statement(self):
+        stmts = [
+            'trap { $j = 2}',
+            'trap { $j =2; continue }',
+            'trap {$j =2; break }',
+            'trap{}',
+        ]
+        self._test_expected(TrapStatement, stmts)
+
+    def test_finally_clause(self):
+        clauses = [
+            'finally\n{ "Tobi is a good boy" }',
+            'finally{$a=4}',
+        ]
+        self._test_expected(FinallyClause, clauses)
+
+    def test_catch_clause(self):
+        clauses = [
+            # 'catch\n{"Caught unexpected exception"}',
+            dedent('''catch [IndexOutOfRangeException]
+                   {
+                        "Handling out-of-bounds index, >$_<`n"
+                        $i = 5
+                      }'''),
+            dedent('''catch [IndexOutOfRangeException], [Exception]
+                   {
+                        "Handling out-of-bounds index, >$_<`n"
+                         $i = 5
+                      }'''),
+            dedent('''catch [IndexOutOfRangeException],
+                            [Exception]
+                   {
+                        "Handling out-of-bounds index, >$_<`n"
+                        $i = 5
+                      }'''),
+        ]
+        self._test_expected(CatchClause, clauses)

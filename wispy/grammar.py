@@ -1142,17 +1142,13 @@ class FinallyClause(Grammar):
 
 
 class CatchTypeList(Grammar):
-    grammar = OPTIONAL(
-        (OPTIONAL(NewLines), TypeLiteral),
-        # TODO: left recursion
-        (REF('CatchTypeList'), OPTIONAL(NewLines), ",", OPTIONAL(NewLines),
-         TypeLiteral)
-    )
+    grammar = LIST_OF(TypeLiteral,
+                      sep=(Spaces, ",", Spaces))
 
 
 class CatchClause(Grammar):
-    grammar = (OPTIONAL(NewLines), "catch", OPTIONAL(CatchTypeList),
-               StatementBlock)
+    grammar = (OPTIONAL(NewLines), "catch", Spaces, OPTIONAL(CatchTypeList),
+               Spaces, StatementBlock)
 
 
 class CatchClauses(Grammar):
