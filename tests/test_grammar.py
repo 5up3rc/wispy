@@ -79,9 +79,12 @@ from wispy.grammar import (
     WhileStatement, DoStatement,
     ForCondition, ForIterator, ForInitializer,
     ForeachStatement, ForStatement, SwitchBody,
-    SwitchClause, SwitchClauses, SwitchCondition,
+    SwitchClause, SwitchClauses, SwitchCondition, SwitchStatement,
+    SwitchClauseCondition, SwitchFilename,
     ScriptBlock, ScriptBlockBody, ScriptBlockExpression,
-    ScriptParameter, ScriptParameterDefault
+    ScriptParameter, ScriptParameterDefault,
+    MergingRedirectionOperator, NonAmpersandCharacter,
+    NonDoubleQuoteChar, NonDoubleQuoteChars,
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -1302,18 +1305,28 @@ class GrammarTest(unittest.TestCase):
         ]
         self._test_expected(SwitchClauses, parts)
 
+    def test_switch_clause_condition(self):
+        parts = ['"`n"', 'a*', '?B', 'default', '^a*']
+        self._test_expected(SwitchClauseCondition, parts)
+
     def test_switch_condition(self):
         parts = [
             '(0,1,19,20,21)',
             '($s[$i])',
             '("abc")',
             '($someString.ToLower())',
+            '-file C:\\obito',
+            '-file $ps1',
 
             # TODO: other pathological case
             # '($PSBoundParameters.GetEnumerator().\n'
             # 'Where({$_.Value -eq $true}).Key)',
         ]
         self._test_expected(SwitchCondition, parts)
+
+    def test_switch_filename(self):
+        parts = ['C:\\obito', '$ps1']
+        self._test_expected(SwitchFilename, parts)
 
     def test_switch_body(self):
         parts = [
@@ -1335,6 +1348,30 @@ class GrammarTest(unittest.TestCase):
             #          }'''.strip()),
         ]
         self._test_expected(SwitchBody, parts)
+
+    def test_switch_statement(self):
+        stmts = [
+            dedent('''switch ($s[$i])
+                      {
+                      "`n"  { ++$lineCount }
+                      "`f"  { ++$pageCount }
+                      "`t"  { }
+                      " "  { }
+                      default { ++$otherCount }
+                   }'''),
+
+            dedent('''switch -wildcard ("abc")
+            {
+              a*      { ++$lineCount }
+            }'''),
+
+            dedent('''switch -regex -casesensitive ("abc")
+            {
+              ^a* { "a*" }
+              ^A* { "A*" }
+            }''')
+        ]
+        self._test_expected(SwitchStatement, stmts)
 
     def test_member_name(self):
         elements = ["Sqrt", "IsUpper", "ToUpper"]
@@ -1367,3 +1404,27 @@ class GrammarTest(unittest.TestCase):
             '++$k', '++${k}',
         ]
         self._test_expected(ExpressionWithUnaryOperator, parts)
+
+    def test_merging_redirection_operator(self):
+        operators = (
+            '*>&1', '2>&1', '3>&1', '4>&1', '5>&1', '6>&1',
+            '*>&2', '1>&2', '3>&2', '4>&2', '5>&2', '6>&2'
+        )
+        self._test_expected(MergingRedirectionOperator, operators)
+
+    def test_non_ampersand_character(self):
+        self._test_expected(NonAmpersandCharacter, string.ascii_letters)
+        self._test_expected(NonAmpersandCharacter, string.digits)
+
+        with self.assertRaises(ParseError):
+            self._parse(NonAmpersandCharacter, '&')
+
+    def test_non_double_quote_char(self):
+        self._test_expected(NonDoubleQuoteChar, string.ascii_letters)
+        self._test_expected(NonDoubleQuoteChar, string.digits)
+
+        for char in ("\u0022", "\u201C", "\u201D", "\u201E"):
+            with self.assertRaises(ParseError):
+                self._parse(NonDoubleQuoteChar, char)
+
+        self._test_expected(NonDoubleQuoteChars, ['tobi', 'is', 'obito'])

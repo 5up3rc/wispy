@@ -55,7 +55,7 @@ class Dimension(Grammar):
 
 
 class NonAmpersandCharacter(Grammar):
-    grammar = ANY_EXCEPT("&")
+    grammar = ANY_EXCEPT("&", max=1)
 
 
 class DoubleQuoteCharacter(Grammar):
@@ -63,7 +63,7 @@ class DoubleQuoteCharacter(Grammar):
 
 
 class NonDoubleQuoteChar(Grammar):
-    grammar = EXCEPT(ANY, DoubleQuoteCharacter)
+    grammar = EXCEPT(ANY, DoubleQuoteCharacter, max=1)
 
 
 class NonDoubleQuoteChars(Grammar):
@@ -1299,7 +1299,7 @@ class SwitchCondition(Grammar):
 
     grammar = OR(
         ("(", OPTIONAL(NewLines), Pipeline, OPTIONAL(NewLines), ")"),
-        ("-file", OPTIONAL(NewLines), SwitchFilename)
+        ("-file", Spaces, SwitchFilename)
     )
 
 
