@@ -12,3 +12,7 @@
  Where({$_.Value -eq $true}).Key)
 
 5. Keywords are actually case insensitive.
+
+6. Pathological case for the following:
+
+for ($i = 1; $i -le 10; ++$i) { "$i $($i*$i)" }

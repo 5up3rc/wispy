@@ -78,7 +78,7 @@ from wispy.grammar import (
     IfStatement, ElseClause, ElseIfClause, ElseIfClauses,
     WhileStatement, DoStatement,
     ForCondition, ForIterator, ForInitializer,
-    ForeachStatement,
+    ForeachStatement, ForStatement,
     SwitchClause, SwitchClauses, SwitchCondition,
 )
 
@@ -1173,18 +1173,17 @@ class GrammarTest(unittest.TestCase):
         parts = ["", " ", "\n", "\n \n", "\r   \n"]
         self._test_expected(Spaces, parts)
 
-    # Disabled for now
-    # def test_for_statement(self):
-    #    parts = [
-    #        'for ($i = 1; $i -le 10; ++$i) { "$i $($i*$i)" }',
-    #        'for ($i = 1; $i -le 10; ++$i)\n{ "$i $($i*$i)" }',
-    #        'for\n($i = 1; $i -le 10; ++$i)\n{ "$i $($i*$i)" }',
-    #        'for ($i = 1; $i -le 10;)\n{ "$i $($i*$i)" }',
-    #        'for ($i = 1;)\n{ "$i $($i*$i)" }',
-    #       'for ()\n{ "$i $($i*$i)" }',
-    #       'for (){ "$i $($i*$i)" }',
-    #    ]
-    #    self._test_expected(ForStatement, parts)
+    def test_for_statement(self):
+        parts = [
+            'for ($i = 1; $i -le 10; ++$i) { "$i" }',
+            'for ($i = 1; $i -le 10; ++$i)\n{ "$i*$i" }',
+            'for\n($i = 1; $i -le 10; ++$i)\n{ "$i*$i" }',
+            'for ($i = 1; $i -le 10;)\n{ "$i" }',
+            'for ($i = 1;)\n{ "$i" }',
+            'for ()\n{ "$i" }',
+            'for (){ "$i" }',
+        ]
+        self._test_expected(ForStatement, parts)
 
     def test_for_condition(self):
         parts = ["$i -le 10", "$i -gt 40"]
