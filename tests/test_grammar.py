@@ -85,6 +85,7 @@ from wispy.grammar import (
     ScriptParameter, ScriptParameterDefault,
     MergingRedirectionOperator, NonAmpersandCharacter,
     NonDoubleQuoteCharacter, NonDoubleQuoteCharacters,
+    SignatureBegin, SignatureEnd, Signature, SignatureBlock,
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -1428,3 +1429,33 @@ class GrammarTest(unittest.TestCase):
                 self._parse(NonDoubleQuoteCharacter, char)
 
         self._test_expected(NonDoubleQuoteCharacters, ['tobi', 'is', 'obito'])
+
+    def test_signature_begin(self):
+        parts = ['\n# SIG # Begin signature block\n']
+        self._test_expected(SignatureBegin, parts)
+
+    def test_signature_end(self):
+        parts = ['\n# SIG # End signature block\n']
+        self._test_expected(SignatureEnd, parts)
+
+    def test_signature(self):
+        parts = [
+            '# MIIEMwYJKoZIhvcNAQcCoIIEJDCCBCACAQEx\n'
+            '# gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgID\n'
+            '# tobi is obito\n'
+            '# Juubi is Shinju\n'
+            '# Juubi is Kaguya'
+        ]
+        self._test_expected(Signature, parts)
+
+    def test_signature_block(self):
+        parts = [
+            '\n# SIG # Begin signature block\n'
+            '# MIIEMwYJKoZIhvcNAQcCoIIEJDCCBCACAQEx\n'
+            '# gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgID\n'
+            '# tobi is obito\n'
+            '# Juubi is Shinju\n'
+            '# Juubi is Kaguya\n'
+            '# SIG # End signature block\n'
+        ]
+        self._test_expected(SignatureBlock, parts)

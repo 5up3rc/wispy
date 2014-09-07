@@ -183,7 +183,7 @@ class SignatureEnd(Grammar):
 
 
 class Signature(Grammar):
-    grammar = REPEAT(SingleLineComment)
+    grammar = LIST_OF(SingleLineComment, sep=NewLineCharacter)
 
 
 class SignatureBlock(Grammar):
