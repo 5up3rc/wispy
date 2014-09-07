@@ -954,9 +954,7 @@ class StatementBlock(Grammar):
 
 
 class ScriptParameterDefault(Grammar):
-    grammar = (
-        OPTIONAL(NewLines), "=", OPTIONAL(NewLines), Expression
-    )
+    grammar = (Spaces, "=", Spaces, Expression)
 
 
 class ScriptParameter(Grammar):
@@ -970,7 +968,7 @@ class ScriptParameter(Grammar):
 
 class ParameterListPrime(Grammar):
     grammar = (
-        OPTIONAL(NewLines), ScriptParameter,
+        OPTIONAL(NewLines), ",", Spaces, ScriptParameter,
         OPTIONAL(REF('ParameterListPrime'))
     )
 
@@ -1187,8 +1185,8 @@ class FunctionName(Grammar):
 
 class FunctionStatement(Grammar):
     grammar = (
-        OR("function", "filter", "workflow"), OPTIONAL(NewLines),
-        FunctionName, OPTIONAL(FunctionParameterDeclaration),
+        OR("function", "filter", "workflow"), Spaces,
+        FunctionName, Spaces, OPTIONAL(FunctionParameterDeclaration),
         "{", ScriptBlock, "}"
     )
 
