@@ -1224,6 +1224,10 @@ class GrammarTest(unittest.TestCase):
         ]
         self._test_expected(ForeachStatement, parts)
 
+    def test_foreach_parameter(self):
+        parsed = self._parse(ForeachParameter, "-parallel")
+        self.assertEqual(str(parsed), "-parallel")
+
     def test_switch_clause(self):
         parts = [
             '"`n"  { ++$lineCount }',
