@@ -252,13 +252,6 @@ class TypeIdentifier(Grammar):
 class TypeName(Grammar):
     grammar = LIST_OF(TypeIdentifier, sep=".")
 
-
-class ArrayTypeName(Grammar):
-    grammar = (TypeName, "[")
-
-
-class GenericTypeName(Grammar):
-    grammar = (TypeName, "[")
 # End of grammars for type names
 
 
