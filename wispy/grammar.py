@@ -1112,7 +1112,6 @@ class IfStatement(Grammar):
     )
 
 
-
 class LabelExpression(Grammar):
     grammar = OR(SimpleName, UnaryExpression)
 
@@ -1172,7 +1171,6 @@ class FlowControlStatement(Grammar):
             OPTIONAL(Pipeline)
         ),
     )
-
 
 
 class FunctionParameterDeclaration(Grammar):
