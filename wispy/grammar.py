@@ -250,14 +250,14 @@ class OperatorOrPunctuator(Grammar):
 # End of grammar Operators and punctuators
 
 
-# Grammar for Type Names
+# Grammars for Type Names
 class TypeCharacter(Grammar):
     grammar = OR(
         WORD("A-Z", max=1),  # Letter, Uppercase
         WORD("a-z", max=1),  # Letter, Lowercase,
-        LetterTitlecase,
-        LetterModifier,
         WORD("\u005F"),
+        # TODO: Add suport for unicode characters from classes Lo, or Nd
+        # TODO: Use the LetterTitlecase and the LetterModifier grammar
     )
 
 
@@ -271,6 +271,15 @@ class TypeIdentifier(Grammar):
 
 class TypeName(Grammar):
     grammar = LIST_OF(TypeIdentifier, sep=".")
+
+
+class ArrayTypeName(Grammar):
+    grammar = (TypeName, "[")
+
+
+class GenericTypeName(Grammar):
+    grammar = (TypeName, "[")
+# End of grammars for type names
 
 
 class TypeSpec(Grammar):
@@ -305,7 +314,6 @@ class SimpleNameCharacters(Grammar):
 
 class SimpleName(Grammar):
     grammar = (SimpleNameFirstCharacter, SimpleNameCharacters)
-# End of grammar for type names
 
 
 # Grammar for Literals
