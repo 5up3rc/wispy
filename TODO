@@ -26,6 +26,11 @@ for ($i = 1; $i -le 10; ++$i) { "$i $($i*$i)" }
   default { "default" }
 }
 
-8. ParameterList -> LIST_OF with separator?
 
-9. Infinite loop with "process {{{" over ScriptBlock (same for "process { } process { }" under ScriptBlockBody)
+8. Infinite loop with "process {{{" over ScriptBlock (same for "process { } process { }" under ScriptBlockBody)
+
+9. We don't support comments apparently.
+
+10. Test 'until'
+
+11. Test 'workflow'
