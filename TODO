@@ -34,3 +34,5 @@ for ($i = 1; $i -le 10; ++$i) { "$i $($i*$i)" }
 10. Test 'until'
 
 11. Test 'workflow'
+
+12. wispy doesn't support full Unicode variables.
