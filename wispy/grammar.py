@@ -1286,12 +1286,15 @@ class SwitchStatement(Grammar):
 
 
 class LabeledStatement(Grammar):
-    grammar = OR(
-        SwitchStatement,
-        ForeachStatement,
-        ForStatement,
-        WhileStatement,
-        DoStatement
+    grammar = (
+        OPTIONAL((":", SimpleName, Spaces)),
+        OR(
+            SwitchStatement,
+            ForeachStatement,
+            ForStatement,
+            WhileStatement,
+            DoStatement
+        )
     )
 
 
@@ -1304,7 +1307,7 @@ class Statement(Grammar):
 
     grammar = OR(
         IfStatement,
-        (OPTIONAL("label"), LabeledStatement),
+        LabeledStatement,
         FunctionStatement,
         (FlowControlStatement, StatementTerminator),
         TrapStatement,

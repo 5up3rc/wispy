@@ -1648,3 +1648,20 @@ class GrammarTest(unittest.TestCase):
                    }'''),
         ]
         self._test_expected(StatementBlock, stmts)
+
+    def test_labeled_statement(self):
+        stmts = [
+            dedent(''':go_here switch ($s[$i])
+                       {
+                        "`n"  { ++$lineCount }
+                        "`f"  { ++$pageCount }
+                        "`t"  { }
+                        " "  { }
+                        default { ++$otherCount }
+                       }'''),
+            ':TobiIsObito foreach ($e in $a) {}',
+            ':KaguyaIsJuubi for ($i = 1; $i -le 10; ++$i) { "$i" }',
+            ':MadaraIsThirdMizukage while ($j -le 100) { $j }',
+            ':HagoromoIsSageOfSixPaths do\n{\n$i;\n}\nwhile (++$i -le 5)',
+        ]
+        self._test_expected(LabeledStatement, stmts)
