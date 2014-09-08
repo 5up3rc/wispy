@@ -1012,7 +1012,7 @@ class Pipeline(Grammar):
 
 
 class InlinescriptStatement(Grammar):
-    grammar = ("inlinescript", StatementBlock)
+    grammar = ("inlinescript", Spaces, StatementBlock)
 
 
 class ParallelStatement(Grammar):

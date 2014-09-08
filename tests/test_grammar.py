@@ -1665,3 +1665,10 @@ class GrammarTest(unittest.TestCase):
             ':HagoromoIsSageOfSixPaths do\n{\n$i;\n}\nwhile (++$i -le 5)',
         ]
         self._test_expected(LabeledStatement, stmts)
+
+    def test_inlinescript_statement(self):
+        stmts = [
+            'inlinescript {"Inline A0 = $a"}',
+            'inlinescript{$a = $Using:a+1; $a}',
+        ]
+        self._test_expected(InlinescriptStatement, stmts)
