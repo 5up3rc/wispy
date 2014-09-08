@@ -563,12 +563,11 @@ class GrammarTest(unittest.TestCase):
         ]
         self._test_expected(OperatorOrPunctuator, literals)
 
-    def test_variable_character(self):
-        literals = list(chain(string.digits, string.ascii_letters, ["?"]))
-        self._test_expected(VariableCharacter, literals)
-
     def test_variable_characters(self):
-        literals = ["a", "abc"]
+        literals = list(chain(["a", "abc"],
+                              string.digits,
+                              string.ascii_letters,
+                              ["?"]))
         self._test_expected(VariableCharacters, literals)
 
     def test_variable_namespace(self):

@@ -240,7 +240,7 @@ class TypeCharacter(Grammar):
 
 
 class TypeCharacters(Grammar):
-    grammar = REPEAT(TypeCharacter)
+    grammar = WORD("A-Za-z\u005F")
 
 
 class TypeIdentifier(Grammar):
@@ -543,16 +543,8 @@ class BracedVariableCharacters(Grammar):
     grammar = REPEAT(BracedVariableCharacter)
 
 
-class VariableCharacter(Grammar):
-    grammar = OR(
-        WORD("A-Za-z0-9", max=1),
-        # The underscore character and question mark
-        "\u005F", "?"
-    )
-
-
 class VariableCharacters(Grammar):
-    grammar = REPEAT(VariableCharacter)
+    grammar = WORD("A-Za-z0-9?\u005F")
 
 
 class VariableNamespace(Grammar):
