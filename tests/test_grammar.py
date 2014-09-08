@@ -1583,3 +1583,65 @@ class GrammarTest(unittest.TestCase):
                    }'''),
         ]
         self._test_expected(FunctionStatement, funcs)
+
+    def test_statement_list(self):
+        stmts = [
+            dedent('''switch ($s[$i])
+                      {
+                      "`n"  { ++$lineCount }
+                      "`f"  { ++$pageCount }
+                      "`t"  { }
+                      " "  { }
+                      default { ++$otherCount }
+                   }
+                   do {$i;}
+                   while (++$i -le 5)'''),
+            dedent('''function Get-Power ([long]$base, [int]$exponent)
+                   {
+                       $result = 1
+                       for ($i = 1; $i -le $exponent; ++$i)
+                       {
+                         $result *= $base
+                       }
+                       return $result
+                   }
+                   if ($grade -ge 90) { "Grade A" }
+                   elseif ($grade -ge 80) { "Grade B" }
+                   elseif ($grade -ge 70) { "Grade C" }
+                   elseif ($grade -ge 60) { "Grade D" }
+                   else { "Grade F" }'''),
+        ]
+        self._test_expected(StatementList, stmts)
+
+    def test_statement_block(self):
+        stmts = [
+            dedent('''{
+                       switch ($s[$i])
+                       {
+                        "`n"  { ++$lineCount }
+                        "`f"  { ++$pageCount }
+                        "`t"  { }
+                        " "  { }
+                        default { ++$otherCount }
+                       }
+
+                       do {$i;}
+                       while (++$i -le 5)
+                      }'''),
+            dedent('''{function Get-Power ([long]$base, [int]$exponent)
+                   {
+                       $result = 1
+                       for ($i = 1; $i -le $exponent; ++$i)
+                       {
+                         $result *= $base
+                       }
+                       return $result
+                   }
+                   if ($grade -ge 90) { "Grade A" }
+                   elseif ($grade -ge 80) { "Grade B" }
+                   elseif ($grade -ge 70) { "Grade C" }
+                   elseif ($grade -ge 60) { "Grade D" }
+                   else { "Grade F" }
+                   }'''),
+        ]
+        self._test_expected(StatementBlock, stmts)
