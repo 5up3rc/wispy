@@ -236,8 +236,6 @@ class TypeCharacter(Grammar):
     grammar = OR(
         WORD("A-Za-z", max=1),
         WORD("\u005F"),
-        # TODO: Add suport for unicode characters from classes Lo, or Nd
-        # TODO: Use the LetterTitlecase and the LetterModifier grammar
     )
 
 
