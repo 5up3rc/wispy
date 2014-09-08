@@ -18,25 +18,6 @@ from modgrammar import (
 
 
 # Grammars without dependencies
-class LetterTitlecase(Grammar):
-    grammar = OR(
-        "\u01C5", "\u01C8", "\u01CB", "\u01F2", "\u1F88", "\u1F89",
-        "\u1F8A", "\u1F8B", "\u1F8C", "\u1F8D", "\u1F8E", "\u1F8F",
-        "\u1F98", "\u1F99", "\u1F9A", "\u1F9B", "\u1F9C", "\u1F9D",
-        "\u1F9E", "\u1F9F", "\u1FA8", "\u1FA9", "\u1FAA", "\u1FAB",
-        "\u1FAC", "\u1FAD", "\u1FAE", "\u1FAF", "\u1FBC", "\u1FCC",
-        "\u1FFC",
-    )
-
-
-class LetterModifier(Grammar):
-    grammar = OR(
-        # TODO: Add more characters from the 'Letter, Modifier` Category
-        WORD("\u02B0-\u02EE", max=1),
-        "\u0374", "\u037A", "\u0559", "\u0640", "\u06E5", "\u06E6",
-        "\u07F4", "\u07F5", "\u07FA", "\u081A", "\u0824", "\u0828",
-    )
-
 
 class EscapedCharacter(Grammar):
 
@@ -253,8 +234,7 @@ class OperatorOrPunctuator(Grammar):
 # Grammars for Type Names
 class TypeCharacter(Grammar):
     grammar = OR(
-        WORD("A-Z", max=1),  # Letter, Uppercase
-        WORD("a-z", max=1),  # Letter, Lowercase,
+        WORD("A-Za-z", max=1),
         WORD("\u005F"),
         # TODO: Add suport for unicode characters from classes Lo, or Nd
         # TODO: Use the LetterTitlecase and the LetterModifier grammar
@@ -574,15 +554,7 @@ class BracedVariableCharacters(Grammar):
 
 class VariableCharacter(Grammar):
     grammar = OR(
-        WORD("A-Z", max=1),           # Letter, Uppercase
-        WORD("a-z", max=1),           # Letter, Lowercase
-        # Number, Decimal Digit
-        WORD("0-9", max=1),
-        WORD("\u0660-\u0669", max=1),  # ARABIC-INDIC DIGIT
-        WORD("\u06F0-\u06F9", max=1),  # EXTENDED ARABIC-INDIC DIGIT
-        # TODO: Add more character from the 'Number, Decimal Digit' Category
-        LetterTitlecase,
-        LetterModifier,
+        WORD("A-Za-z0-9", max=1),
         # The underscore character and question mark
         "\u005F", "?"
     )
@@ -653,10 +625,7 @@ class GenericToken(Grammar):
 
 class FirstParameterCharacter(Grammar):
     grammar = OR(
-        WORD("A-Z", max=1),           # Letter, Uppercase
-        WORD("a-z", max=1),           # Letter, Lowercase
-        LetterTitlecase,
-        LetterModifier,
+        WORD("A-Za-z", max=1),
         # The underscore character and question mark
         "\u005F", "?"
     )
