@@ -234,8 +234,7 @@ class OperatorOrPunctuator(Grammar):
 # Grammar for Type Names
 class TypeCharacter(Grammar):
     grammar = OR(
-        WORD("A-Z", max=1),  # Letter, Uppercase
-        WORD("a-z", max=1),  # Letter, Lowercase,
+        WORD("A-Za-z", max=1),
         WORD("\u005F"),
     )
 
@@ -545,10 +544,7 @@ class BracedVariableCharacters(Grammar):
 
 class VariableCharacter(Grammar):
     grammar = OR(
-        WORD("A-Z", max=1),           # Letter, Uppercase
-        WORD("a-z", max=1),           # Letter, Lowercase
-        # Number, Decimal Digit
-        WORD("0-9", max=1),
+        WORD("A-Za-z0-9", max=1),
         # The underscore character and question mark
         "\u005F", "?"
     )
@@ -619,8 +615,7 @@ class GenericToken(Grammar):
 
 class FirstParameterCharacter(Grammar):
     grammar = OR(
-        WORD("A-Z", max=1),           # Letter, Uppercase
-        WORD("a-z", max=1),           # Letter, Lowercase
+        WORD("A-Za-z", max=1),
         # The underscore character and question mark
         "\u005F", "?"
     )
