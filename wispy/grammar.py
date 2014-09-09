@@ -918,7 +918,7 @@ class ScriptParameter(Grammar):
     grammar = (
         # FIXME: Remove REF
         OPTIONAL(NewLines),
-        OPTIONAL(REF('AttributeList')), OPTIONAL(NewLines),
+        OPTIONAL(REF('AttributeList')), Spaces,
         Variable, OPTIONAL(ScriptParameterDefault)
     )
 
