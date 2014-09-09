@@ -1361,8 +1361,7 @@ class Attribute(Grammar):
 
 
 class AttributeList(Grammar):
-    grammar = LIST_OF(Attribute,
-                      sep=OPTIONAL(NewLines))
+    grammar = LIST_OF(Attribute, sep=Spaces)
 
 
 # Statements
