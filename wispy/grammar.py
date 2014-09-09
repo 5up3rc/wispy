@@ -638,13 +638,10 @@ class ScriptBlockBody(Grammar):
 
 class ParamBlock(Grammar):
     grammar = (
+        "param", Spaces, "(", Spaces,
         # FIXME: Remove REF
-        OPTIONAL(NewLines), OPTIONAL(REF('AttributeList')),
-        OPTIONAL(NewLines),
-        "param", OPTIONAL(NewLines), "(",
-        # FIXME: Remove REF
-        OPTIONAL(REF('ParameterList')),
-        OPTIONAL(NewLines), ")"
+        OPTIONAL(LIST_OF(REF('ScriptParameter'), sep=(Spaces, ",", Spaces))),
+        Spaces, ")"
     )
 
 
