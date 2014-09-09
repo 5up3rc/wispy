@@ -1672,3 +1672,32 @@ class GrammarTest(unittest.TestCase):
             'inlinescript{$a = $Using:a+1; $a}',
         ]
         self._test_expected(InlinescriptStatement, stmts)
+
+    def test_parallel_statement(self):
+        stmts = [
+            'parallel {"Inline A0 = $a"}',
+            'parallel{$a = $Using:a+1; $a}',
+        ]
+        self._test_expected(ParallelStatement, stmts)
+
+    def test_sequence_statement(self):
+        stmts = [
+            'sequence {"Inline A0 = $a"}',
+            'sequence {$a = $Using:a+1; $a}',
+        ]
+        self._test_expected(SequenceStatement, stmts)
+
+    def test_param_block(self):
+        blocks = [
+            dedent('''param ([Parameter(Mandatory = $true)]
+                             [string[]] $ComputerName )'''),
+            dedent('''param (
+                       [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+                       [string[]]$ComputerName )'''),
+            dedent('''param([Parameter(Position = 0, ParameterSetname = "SetA")]
+                            [decimal]$dec,
+                            [Parameter(Position=0, ParameterSetname = "SetB")]
+                            [int]$in)'''),
+
+        ]
+        self._test_expected(ParamBlock, blocks)
