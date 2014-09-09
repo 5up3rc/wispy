@@ -286,6 +286,45 @@ class SimpleName(Grammar):
     grammar = (SimpleNameFirstCharacter, SimpleNameCharacters)
 
 
+# Grammar for Variables
+class BracedVariableCharacter(Grammar):
+    grammar = OR(
+        ANY_EXCEPT("\u007D\u0060", max=1),
+        EscapedCharacter
+    )
+
+
+class BracedVariableCharacters(Grammar):
+    grammar = REPEAT(BracedVariableCharacter)
+
+
+class VariableCharacters(Grammar):
+    grammar = WORD("A-Za-z0-9?\u005F")
+
+
+class VariableNamespace(Grammar):
+    grammar = (VariableCharacters, ":")
+
+
+class VariableScope(Grammar):
+    grammar = OR("global:", "local:", "private:", "script:",
+                 VariableNamespace)
+
+
+class BracedVariable(Grammar):
+    grammar = ("${", OPTIONAL(VariableScope),
+               BracedVariableCharacters, "}")
+
+
+class Variable(Grammar):
+    grammar = OR(
+        "$$", "$?", "$^",
+        (OR("$", "@"), OPTIONAL(VariableScope), VariableCharacters),
+        BracedVariable
+    )
+# End of grammar for variables
+
+
 # Grammar for Literals
 class SingleQuoteCharacter(Grammar):
     grammar = OR("\u0027", "\u2018", "\u2019", "\u201A", "\u201B")
@@ -353,8 +392,7 @@ class VerbatimStringLiteral(Grammar):
 class ExpandableStringPart(Grammar):
     grammar = OR(
         EXCEPT(ANY, OR('$', '\u0060', DoubleQuoteCharacter), max=1),
-        # FIXME: Remove REF
-        REF('BracedVariable'),
+        BracedVariable,
         ("$", ANY_EXCEPT("({\u0060", max=1) - DoubleQuoteCharacter),
         ("$", EscapedCharacter),
         EscapedCharacter,
@@ -365,8 +403,7 @@ class ExpandableStringPart(Grammar):
 class ExpandableHereStringPart(Grammar):
     grammar = OR(
         ANY_EXCEPT("$", max=1) - NewLineCharacter,
-        # FIXME: Remove REF
-        REF('BracedVariable'),
+        BracedVariable,
         ("$", ANY_EXCEPT("(", max=1) - NewLineCharacter),
         ("$", NewLineCharacter, ANY - DoubleQuoteCharacter),
         ("$", NewLineCharacter, DoubleQuoteCharacter, ANY_EXCEPT("@", max=1)),
@@ -530,45 +567,6 @@ class Literal(Grammar):
 # End of grammar for Literals
 
 
-# Grammar for Variables
-class BracedVariableCharacter(Grammar):
-    grammar = OR(
-        ANY_EXCEPT("\u007D\u0060", max=1),
-        EscapedCharacter
-    )
-
-
-class BracedVariableCharacters(Grammar):
-    grammar = REPEAT(BracedVariableCharacter)
-
-
-class VariableCharacters(Grammar):
-    grammar = WORD("A-Za-z0-9?\u005F")
-
-
-class VariableNamespace(Grammar):
-    grammar = (VariableCharacters, ":")
-
-
-class VariableScope(Grammar):
-    grammar = OR("global:", "local:", "private:", "script:",
-                 VariableNamespace)
-
-
-class BracedVariable(Grammar):
-    grammar = ("${", OPTIONAL(VariableScope),
-               BracedVariableCharacters, "}")
-
-
-class Variable(Grammar):
-    grammar = OR(
-        "$$", "$?", "$^",
-        (OR("$", "@"), OPTIONAL(VariableScope), VariableCharacters),
-        BracedVariable
-    )
-# End of grammar for variables
-
-
 # Grammar for Commands
 class GenericTokenChar(Grammar):
     grammar = OR(
@@ -694,7 +692,6 @@ class VerbatimCommandArgumentPart(Grammar):
 
 class VerbatimCommandArgumentChars(Grammar):
     grammar = REPEAT(VerbatimCommandArgumentPart)
-
 
 
 # Grammar fo Keywords
@@ -885,7 +882,6 @@ class LogicalExpression(Grammar):
 
 class Expression(Grammar):
     grammar = LogicalExpression
-
 
 
 # Syntactic grammar
@@ -1356,7 +1352,6 @@ class Attribute(Grammar):
 
 class AttributeList(Grammar):
     grammar = LIST_OF(Attribute, sep=Spaces)
-
 
 
 # Statements
