@@ -252,22 +252,9 @@ class TypeName(Grammar):
 # End of grammars for type names
 
 
-class TypeSpec(Grammar):
-    grammar = (
-        TypeName,
-        OPTIONAL(("[",
-                  OR(REF("GenericTypeArguments"),
-                     OPTIONAL(Dimension)),
-                  "]"))
-    )
-
-
-class TypeLiteral(Grammar):
-    grammar = ("[", TypeSpec, "]")
-
-
 class GenericTypeArguments(Grammar):
-    grammar = LIST_OF(TypeSpec, sep=",")
+    # FIXME: Remove reference
+    grammar = LIST_OF(REF('TypeSpec'), sep=",")
 
 
 class SimpleNameFirstCharacter(Grammar):
@@ -718,7 +705,8 @@ class Token(Grammar):
         IntegerLiteral,
         RealLiteral,
         StringLiteral,
-        TypeLiteral,
+        # FIXME: Remove reference
+        REF('TypeLiteral'),
         OperatorOrPunctuator,
     )
 # End of grammar for tokens
@@ -738,6 +726,229 @@ class Input(Grammar):
 # End of grammar for Input
 
 
+# Grammar for Expressions
+
+
+class TypeSpec(Grammar):
+    grammar = (
+        TypeName,
+        OPTIONAL(("[",
+                  OR(REF("GenericTypeArguments"),
+                     OPTIONAL(Dimension)),
+                  "]"))
+    )
+
+
+class TypeLiteral(Grammar):
+    grammar = ("[", TypeSpec, "]")
+
+
+class ExpandableHereStringLiteralWithSubexpr(Grammar):
+    # FIXME: Remove references
+    grammar = (
+        ExpandableHereStringWithSubexprStart,
+        OPTIONAL(REF('StatementList')),
+        REF('ExpandableHereStringWithSubexprCharacters'),
+        ExpandableHereStringWithSubexprEnd
+    )
+
+
+class ExpandableHereStringWithSubexprPart(Grammar):
+    # FIXME: Remove reference
+    grammar = OR(REF('SubExpression'), ExpandableHereStringPart)
+
+
+class ExpandableHereStringWithSubexprCharacters(Grammar):
+    grammar = REPEAT(ExpandableHereStringWithSubexprPart)
+
+
+class ExpandableStringWithSubexprPart(Grammar):
+    grammar = OR(REF('SubExpression'), ExpandableStringPart)
+
+
+class ExpandableStringWithSubexprCharacters(Grammar):
+    grammar = REPEAT(ExpandableStringWithSubexprPart)
+
+
+class ExpandableStringLiteralWithSubexpr(Grammar):
+    grammar = OR(
+        (
+            ExpandableStringWithSubexprStart, OPTIONAL(REF('StatementList')),
+            ")", ExpandableStringWithSubexprCharacters,
+            ExpandableStringWithSubexprEnd
+        ),
+        (
+            ExpandableHereStringWithSubexprStart, OPTIONAL(
+                REF('StatementList')),
+            ")", ExpandableHereStringWithSubexprCharacters,
+            ExpandableHereStringWithSubexprEnd
+        )
+    )
+
+
+class StringLiteralWithSubexpression(Grammar):
+    # grammar is added.
+    grammar = OR(
+        ExpandableStringLiteralWithSubexpr,
+        ExpandableHereStringLiteralWithSubexpr
+    )
+
+
+class MemberName(Grammar):
+    grammar = OR(
+        # FIXME: Remove references
+        SimpleName, StringLiteral, REF('StringLiteralWithSubexpression'),
+        REF('ExpressionWithUnaryOperator'), REF('Value')
+    )
+
+
+class RangeArgumentExpression(Grammar):
+    grammar = OR(
+        # FIXME: Remove references
+        REF('UnaryExpression'),
+        (
+            REF('RangeExpression'), "..", OPTIONAL(NewLines),
+            REF('UnaryExpression')
+        )
+    )
+
+
+class FormatArgumentExpression(Grammar):
+    grammar = LIST_OF(RangeArgumentExpression,
+                      sep=(FormatOperator, OPTIONAL(NewLines)))
+
+
+class MultiplicativeArgumentExpression(Grammar):
+    grammar = LIST_OF(FormatArgumentExpression,
+                      sep=(OR("*", "/", "%"), OPTIONAL(NewLines)))
+
+
+class AdditiveArgumentExpression(Grammar):
+    grammar = LIST_OF(MultiplicativeArgumentExpression,
+                      sep=(OR("+", Dash), OPTIONAL(NewLines)))
+
+
+class ComparisonArgumentExpression(Grammar):
+    grammar = LIST_OF(AdditiveArgumentExpression,
+                      sep=(ComparisonOperator, OPTIONAL(NewLines)))
+
+
+class BitwiseArgumentExpression(Grammar):
+    grammar = LIST_OF(ComparisonArgumentExpression,
+                      sep=(OR("-band", "-bor", "-bxor"), OPTIONAL(NewLines)))
+
+
+class LogicalArgumentExpression(Grammar):
+    grammar = LIST_OF(BitwiseArgumentExpression,
+                      sep=(OR("-and", "-or", "-xor"), OPTIONAL(NewLines)))
+
+
+class ArgumentExpression(Grammar):
+    grammar = (OPTIONAL(NewLines), LogicalArgumentExpression)
+
+
+class ArgumentExpressionList(Grammar):
+    grammar = OR(
+        ArgumentExpression,
+        (ArgumentExpression, OPTIONAL(NewLines),
+         ",", REF("ArgumentExpressionList"))
+    )
+
+
+class ArgumentList(Grammar):
+    grammar = ("(", OPTIONAL(ArgumentExpressionList),
+               OPTIONAL(NewLines), ")")
+
+
+class InvocationExpressionPrime(Grammar):
+    grammar = (OR(".", "::"), MemberName,
+               ArgumentList, OPTIONAL(REF("InvocationExpressionPrime")))
+
+
+class ElementAccessPrime(Grammar):
+    # Use this idiom to get rid of left recursion.
+    grammar = ("[", OPTIONAL(NewLines), REF("Expression"),
+               OPTIONAL(NewLines), "]",
+               OPTIONAL(REF("ElementAccessPrime")))
+
+
+class MemberAccessPrime(Grammar):
+    # Use this idiom to get rid of left recursion.
+    grammar = (OR(".", "::"), Spaces,
+               MemberName, OPTIONAL(REF('MemberAccessPrime')))
+
+
+class PostDecrementExpressionPrime(Grammar):
+    # Use this idiom to get rid of left recursion.
+    grammar = (DashDash, OPTIONAL(REF("PostDecrementExpressionPrime")))
+
+
+class PostIncrementExpressionPrime(Grammar):
+    # Use this idiom to get rid of left recursion.
+    grammar = ("++", OPTIONAL(REF("PostIncrementExpressionPrime")))
+
+
+class KeyExpression(Grammar):
+    # FIXME: Remove reference
+    grammar = OR(
+        SimpleName,
+        REF('UnaryExpression')
+    )
+
+
+class HashEntry(Grammar):
+    # FIXME: Remove reference
+    grammar = (KeyExpression,
+               OPTIONAL(WHITESPACE), "=",
+               OPTIONAL(WHITESPACE),
+               OPTIONAL(NewLines),
+               REF('Statement'))
+
+
+class HashLiteralBodyPrime(Grammar):
+    grammar = (StatementTerminators, HashEntry,
+               OPTIONAL(REF("HashLiteralBodyPrime")))
+
+
+class HashLiteralBody(Grammar):
+    grammar = LIST_OF(HashEntry,
+                      sep=(OPTIONAL(WHITESPACE),
+                           OPTIONAL(HashLiteralBodyPrime),
+                           OPTIONAL(WHITESPACE)))
+
+
+class HashLiteralExpression(Grammar):
+    grammar = ("@{", OPTIONAL(NewLines),
+               OPTIONAL(WHITESPACE),
+               OPTIONAL(HashLiteralBody),
+               OPTIONAL(WHITESPACE),
+               OPTIONAL(NewLines), "}")
+
+
+class ScriptBlockExpression(Grammar):
+    grammar = ("{", OPTIONAL(NewLines), ScriptBlock,
+               OPTIONAL(NewLines), "}")
+
+
+class ArrayExpression(Grammar):
+    # FIXME: Remove reference
+    grammar_whitespace_mode = "optional"
+    grammar = ("@(", Spaces, OPTIONAL(REF('StatementList')),
+               Spaces, ")")
+
+
+class SubExpression(Grammar):
+    # FIXME: Remove reference
+    grammar = ("$(", OPTIONAL(NewLines),
+               OPTIONAL(REF('StatementList')), OPTIONAL(NewLines), ")")
+
+
+class ParenthesizedExpression(Grammar):
+    grammar = (
+        "(", Spaces, REF('Pipeline'), Spaces, ")"
+    )
+
+
 class Value(Grammar):
     grammar = OR(
         REF("ParenthesizedExpression"),
@@ -749,36 +960,6 @@ class Value(Grammar):
         TypeLiteral,
         Variable
     )
-
-
-class MemberName(Grammar):
-    grammar = OR(
-        SimpleName, StringLiteral, REF('StringLiteralWithSubexpression'),
-        REF('ExpressionWithUnaryOperator'), Value
-    )
-
-
-class MemberAccessPrime(Grammar):
-    # Use this idiom to get rid of left recursion.
-    grammar = (OR(".", "::"), Spaces,
-               MemberName, OPTIONAL(REF('MemberAccessPrime')))
-
-
-class ElementAccessPrime(Grammar):
-    # Use this idiom to get rid of left recursion.
-    grammar = ("[", OPTIONAL(NewLines), REF("Expression"),
-               OPTIONAL(NewLines), "]",
-               OPTIONAL(REF("ElementAccessPrime")))
-
-
-class PostIncrementExpressionPrime(Grammar):
-    # Use this idiom to get rid of left recursion.
-    grammar = ("++", OPTIONAL(REF("PostIncrementExpressionPrime")))
-
-
-class PostDecrementExpressionPrime(Grammar):
-    # Use this idiom to get rid of left recursion.
-    grammar = (DashDash, OPTIONAL(REF("PostDecrementExpressionPrime")))
 
 
 class PrimaryExpression(Grammar):
@@ -793,10 +974,26 @@ class PrimaryExpression(Grammar):
     )
 
 
+class CastExpression(Grammar):
+    grammar = (TypeLiteral, REF('UnaryExpression'))
+
+
+class PreDecrementExpression(Grammar):
+    # FIXME: Remove reference
+    grammar = (DashDash, OPTIONAL(NewLines), REF('UnaryExpression'))
+
+
+class PreIncrementExpression(Grammar):
+    # FIXME: Remove reference
+    grammar = ("++", OPTIONAL(NewLines), REF('UnaryExpression'))
+
+
 class ExpressionWithUnaryOperator(Grammar):
     grammar = OR(
-        (OR(",", "-bnot", "-not", "-split", "-join", "!", "+", Dash),
-         Spaces, REF("UnaryExpression")),
+        (
+            OR(",", "-bnot", "-not", "-split", "-join", "!", "+", Dash),
+            Spaces, REF("UnaryExpression")
+        ),
         REF("PreIncrementExpression"),
         REF("PreDecrementExpression"),
         REF("CastExpression"),
@@ -806,20 +1003,8 @@ class ExpressionWithUnaryOperator(Grammar):
 class UnaryExpression(Grammar):
     grammar = OR(
         PrimaryExpression,
-        ExpressionWithUnaryOperator,
+        REF('ExpressionWithUnaryOperator'),
     )
-
-
-class PreIncrementExpression(Grammar):
-    grammar = ("++", OPTIONAL(NewLines), UnaryExpression)
-
-
-class PreDecrementExpression(Grammar):
-    grammar = (DashDash, OPTIONAL(NewLines), UnaryExpression)
-
-
-class CastExpression(Grammar):
-    grammar = (TypeLiteral, UnaryExpression)
 
 
 class ArrayLiteralExpression(Grammar):
@@ -882,6 +1067,7 @@ class LogicalExpression(Grammar):
 
 class Expression(Grammar):
     grammar = LogicalExpression
+# End of grammar for Expressions
 
 
 # Syntactic grammar
@@ -982,6 +1168,12 @@ class PipelineTail(Grammar):
         "|", OPTIONAL(NewLines),
         Command, OPTIONAL(REF('PipelineTail'))
     )
+
+
+class AssignmentExpression(Grammar):
+    grammar = (Expression, OPTIONAL(WHITESPACE),
+               AssignmentOperator, OPTIONAL(WHITESPACE),
+               REF('Statement'))
 
 
 class Pipeline(Grammar):
@@ -1352,166 +1544,3 @@ class Attribute(Grammar):
 
 class AttributeList(Grammar):
     grammar = LIST_OF(Attribute, sep=Spaces)
-
-
-# Statements
-class ScriptBlockExpression(Grammar):
-    grammar = ("{", OPTIONAL(NewLines), ScriptBlock,
-               OPTIONAL(NewLines), "}")
-
-
-class ParenthesizedExpression(Grammar):
-    grammar = (
-        "(", Spaces, Pipeline, Spaces, ")"
-    )
-
-
-class SubExpression(Grammar):
-    grammar = ("$(", OPTIONAL(NewLines),
-               OPTIONAL(StatementList), OPTIONAL(NewLines), ")")
-
-
-class ArrayExpression(Grammar):
-    grammar_whitespace_mode = "optional"
-    grammar = ("@(", Spaces, OPTIONAL(StatementList),
-               Spaces, ")")
-
-
-class KeyExpression(Grammar):
-    grammar = OR(
-        SimpleName,
-        UnaryExpression
-    )
-
-
-class HashEntry(Grammar):
-    grammar = (KeyExpression,
-               OPTIONAL(WHITESPACE), "=",
-               OPTIONAL(WHITESPACE),
-               OPTIONAL(NewLines),
-               Statement)
-
-
-class HashLiteralBodyPrime(Grammar):
-    grammar = (StatementTerminators, HashEntry,
-               OPTIONAL(REF("HashLiteralBodyPrime")))
-
-
-class HashLiteralBody(Grammar):
-    grammar = LIST_OF(HashEntry,
-                      sep=(OPTIONAL(WHITESPACE),
-                           OPTIONAL(HashLiteralBodyPrime),
-                           OPTIONAL(WHITESPACE)))
-
-
-class HashLiteralExpression(Grammar):
-    grammar = ("@{", OPTIONAL(NewLines),
-               OPTIONAL(WHITESPACE),
-               OPTIONAL(HashLiteralBody),
-               OPTIONAL(WHITESPACE),
-               OPTIONAL(NewLines), "}")
-
-
-class RangeArgumentExpression(Grammar):
-    grammar = OR(
-        UnaryExpression,
-        (RangeExpression, "..", OPTIONAL(NewLines), UnaryExpression)
-    )
-
-
-class FormatArgumentExpression(Grammar):
-    grammar = LIST_OF(RangeArgumentExpression,
-                      sep=(FormatOperator, OPTIONAL(NewLines)))
-
-
-class MultiplicativeArgumentExpression(Grammar):
-    grammar = LIST_OF(FormatArgumentExpression,
-                      sep=(OR("*", "/", "%"), OPTIONAL(NewLines)))
-
-
-class AdditiveArgumentExpression(Grammar):
-    grammar = LIST_OF(MultiplicativeArgumentExpression,
-                      sep=(OR("+", Dash), OPTIONAL(NewLines)))
-
-
-class ComparisonArgumentExpression(Grammar):
-    grammar = LIST_OF(AdditiveArgumentExpression,
-                      sep=(ComparisonOperator, OPTIONAL(NewLines)))
-
-
-class BitwiseArgumentExpression(Grammar):
-    grammar = LIST_OF(ComparisonArgumentExpression,
-                      sep=(OR("-band", "-bor", "-bxor"), OPTIONAL(NewLines)))
-
-
-class LogicalArgumentExpression(Grammar):
-    grammar = LIST_OF(BitwiseArgumentExpression,
-                      sep=(OR("-and", "-or", "-xor"), OPTIONAL(NewLines)))
-
-
-class ArgumentExpression(Grammar):
-    grammar = (OPTIONAL(NewLines), LogicalArgumentExpression)
-
-
-class ArgumentExpressionList(Grammar):
-    grammar = OR(
-        ArgumentExpression,
-        (ArgumentExpression, OPTIONAL(NewLines),
-         ",", REF("ArgumentExpressionList"))
-    )
-
-
-class ArgumentList(Grammar):
-    grammar = ("(", OPTIONAL(ArgumentExpressionList),
-               OPTIONAL(NewLines), ")")
-
-
-class AssignmentExpression(Grammar):
-    grammar = (Expression, OPTIONAL(WHITESPACE),
-               AssignmentOperator, OPTIONAL(WHITESPACE),
-               Statement)
-
-
-class ExpandableHereStringWithSubexprPart(Grammar):
-    grammar = OR(SubExpression, ExpandableHereStringPart)
-
-
-class ExpandableHereStringWithSubexprCharacters(Grammar):
-    grammar = REPEAT(ExpandableHereStringWithSubexprPart)
-
-
-class ExpandableStringWithSubexprPart(Grammar):
-    grammar = OR(SubExpression, ExpandableStringPart)
-
-
-class ExpandableStringWithSubexprCharacters(Grammar):
-    grammar = REPEAT(ExpandableStringWithSubexprPart)
-
-
-class ExpandableStringLiteralWithSubexpr(Grammar):
-    grammar = (
-        ExpandableStringWithSubexprStart, OPTIONAL(StatementList),
-        ")", ExpandableStringWithSubexprCharacters,
-        ExpandableStringWithSubexprEnd
-    )
-
-
-class ExpandableHereStringLiteralWithSubexpr(Grammar):
-    grammar = (
-        ExpandableHereStringWithSubexprStart, OPTIONAL(StatementList),
-        ExpandableHereStringWithSubexprCharacters,
-        ExpandableHereStringWithSubexprEnd
-    )
-
-
-class StringLiteralWithSubexpression(Grammar):
-    # grammar is added.
-    grammar = OR(
-        ExpandableStringLiteralWithSubexpr,
-        ExpandableHereStringLiteralWithSubexpr
-    )
-
-
-class InvocationExpressionPrime(Grammar):
-    grammar = (OR(".", "::"), MemberName,
-               ArgumentList, OPTIONAL(REF("InvocationExpressionPrime")))
