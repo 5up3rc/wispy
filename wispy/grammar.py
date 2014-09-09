@@ -1013,11 +1013,11 @@ class InlinescriptStatement(Grammar):
 
 
 class ParallelStatement(Grammar):
-    grammar = ("parallel", StatementBlock)
+    grammar = ("parallel", Spaces, StatementBlock)
 
 
 class SequenceStatement(Grammar):
-    grammar = ("sequence", StatementBlock)
+    grammar = ("sequence", Spaces, StatementBlock)
 
 
 class DataCommand(Grammar):
