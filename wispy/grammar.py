@@ -18,7 +18,6 @@ from modgrammar import (
 
 
 # Grammars without dependencies
-
 class EscapedCharacter(Grammar):
 
     """An escaped character is a way to assign a special interpretation
@@ -665,12 +664,7 @@ class InteractiveInput(Grammar):
 
 
 class DataFile(Grammar):
-    # FIXME: Remove REF
     grammar = REF('StatementList')
-# End of Syntactic grammar
-
-
-# ------------------------
 
 
 class CommandName(Grammar):
@@ -700,7 +694,7 @@ class VerbatimCommandArgumentPart(Grammar):
 
 class VerbatimCommandArgumentChars(Grammar):
     grammar = REPEAT(VerbatimCommandArgumentPart)
-# ---------------------------------------------
+
 
 
 # Grammar fo Keywords
@@ -891,7 +885,7 @@ class LogicalExpression(Grammar):
 
 class Expression(Grammar):
     grammar = LogicalExpression
-# End of grammar for Expressions
+
 
 
 # Syntactic grammar
@@ -1364,9 +1358,8 @@ class AttributeList(Grammar):
     grammar = LIST_OF(Attribute, sep=Spaces)
 
 
+
 # Statements
-
-
 class ScriptBlockExpression(Grammar):
     grammar = ("{", OPTIONAL(NewLines), ScriptBlock,
                OPTIONAL(NewLines), "}")
