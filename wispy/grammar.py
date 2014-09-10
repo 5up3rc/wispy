@@ -939,8 +939,8 @@ class ArrayExpression(Grammar):
 
 class SubExpression(Grammar):
     # FIXME: Remove reference
-    grammar = ("$(", OPTIONAL(NewLines),
-               OPTIONAL(REF('StatementList')), OPTIONAL(NewLines), ")")
+    grammar = ("$(", Spaces,
+               OPTIONAL(REF('StatementList')), Spaces, ")")
 
 
 class ParenthesizedExpression(Grammar):

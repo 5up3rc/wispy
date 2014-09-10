@@ -1701,3 +1701,15 @@ class GrammarTest(unittest.TestCase):
 
         ]
         self._test_expected(ParamBlock, blocks)
+
+    def test_subexpression(self):
+        exprs = [
+            '$($i = 10)',
+            '$(($i = 10))',
+            '$($i = 10; $j)',
+            '$(($i = 10); $j)',
+            '$(($i = 10); ++$j )',
+            '$( ( $i = 10); (++$j))',
+            '$(\n$i = 10; ++$j\n)',
+        ]
+        self._test_expected(SubExpression, exprs)
