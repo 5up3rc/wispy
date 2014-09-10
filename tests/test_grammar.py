@@ -1713,3 +1713,22 @@ class GrammarTest(unittest.TestCase):
             '$(\n$i = 10; ++$j\n)',
         ]
         self._test_expected(SubExpression, exprs)
+
+    def test_named_block(self):
+        blocks = [
+            dedent('''{} {{
+                       switch ($s[$i])
+                       {{
+                        "`n"  {{ ++$lineCount }}
+                        "`f"  {{ ++$pageCount }}
+                        "`t"  {{ }}
+                        " "  {{ }}
+                        default {{ ++$otherCount }}
+                       }}
+
+                       do {{$i;}}
+                       while (++$i -le 5)
+                      }}'''.format(block))
+            for block in ("dynamicparam", "begin", "process", "end")
+        ]
+        self._test_expected(NamedBlock, blocks)
