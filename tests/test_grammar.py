@@ -1032,6 +1032,13 @@ class GrammarTest(unittest.TestCase):
         ]
         self._test_expected(ArgumentList, parts)
 
+    def test_argument_expression(self):
+        parts = [
+            "2.0", '"a"', "\n$true", '"Sq"+"rt"',
+            "\n$true",
+        ]
+        self._test_expected(ArgumentExpression, parts)
+
     def test_array_expression(self):
         parts = [
             "@($i = 10)",
