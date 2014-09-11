@@ -1579,6 +1579,14 @@ class GrammarTest(unittest.TestCase):
                    if ($on) { "Switch on" }
                    else { "Switch off" }
                    }'''),
+            dedent('''workflow\nSwitch-Item {
+                   param ([switch]$on)
+                   if ($on) { "Switch on" }
+                   else { "Switch off" }
+                   }'''),
+            dedent('''workflow paralleltest {
+                   parallel {
+                      Get-Service -Name s*}}'''),
         ]
         self._test_expected(FunctionStatement, funcs)
 
