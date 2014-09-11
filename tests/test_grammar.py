@@ -189,18 +189,6 @@ class GrammarTest(unittest.TestCase):
         with self.assertRaises(ParseError):
             self._parse(ExpandableStringWithSubexprEnd, "\"test")
 
-    def test_interactive_input(self):
-        # Should be the same as ScriptBlock
-        literals = [
-            "",
-            "\n[test[]]\nparam\n($var\n$var\n)",
-            ";",
-            "process { }",
-            "\n[test[]]\nparam\n($var\n$var\n)"
-            ";",
-        ]
-        self._test_expected(InteractiveInput, literals)
-
     def test_script_block(self):
         literals = [
             "",

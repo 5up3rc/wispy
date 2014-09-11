@@ -636,18 +636,6 @@ class ScriptBlock(Grammar):
     )
 
 
-class ModuleFile(Grammar):
-    grammar = ScriptBlock
-
-
-class ScriptFile(Grammar):
-    grammar = ScriptBlock
-
-
-class InteractiveInput(Grammar):
-    grammar = ScriptBlock
-
-
 class CommandName(Grammar):
     grammar = OR(GenericToken, GenericTokenWithSubexprStart)
 
