@@ -1119,7 +1119,7 @@ class NamedBlock(Grammar):
 
 
 class NamedBlockList(Grammar):
-    grammar = REPEAT(NamedBlock)
+    grammar = LIST_OF(NamedBlock, sep=Spaces)
 
 
 class RedirectedFileName(Grammar):

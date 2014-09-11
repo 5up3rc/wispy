@@ -1732,3 +1732,24 @@ class GrammarTest(unittest.TestCase):
             for block in ("dynamicparam", "begin", "process", "end")
         ]
         self._test_expected(NamedBlock, blocks)
+
+    def test_named_block_list(self):
+        blocks = [
+            dedent('''{block} {{
+                        switch ($s[$i])
+                        {{
+                         "`n"  {{ ++$lineCount }}
+                         "`f"  {{ ++$pageCount }}
+                         "`t"  {{ }}
+                         " "  {{ }}
+                         default {{ ++$otherCount }}
+                        }}
+                      }}
+
+                       {block} {{
+                         do {{$i;}}
+                         while (++$i -le 5)
+                      }}'''.format(block=block))
+            for block in ("dynamicparam", "begin", "process", "end")
+        ]
+        self._test_expected(NamedBlockList, blocks)
