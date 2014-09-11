@@ -1028,16 +1028,16 @@ class GrammarTest(unittest.TestCase):
         parts = [
             "(2.0)", '("a")', "()",
             "($true)", '("Sq"+"rt")',
-            "(\n$true\n)",
+            "( $true, $false)",
         ]
         self._test_expected(ArgumentList, parts)
 
-    def test_argument_expression(self):
+    def test_argument_expression_list(self):
         parts = [
-            "2.0", '"a"', "\n$true", '"Sq"+"rt"',
-            "\n$true",
+            "2.0, 4.0", '"a", "b"', "$true,\n$false",
+            '"Sq"+"rt",$a, $b'
         ]
-        self._test_expected(ArgumentExpression, parts)
+        self._test_expected(ArgumentExpressionList, parts)
 
     def test_array_expression(self):
         parts = [

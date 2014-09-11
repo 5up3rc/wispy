@@ -843,21 +843,14 @@ class LogicalArgumentExpression(Grammar):
                       sep=(OR("-and", "-or", "-xor"), OPTIONAL(NewLines)))
 
 
-class ArgumentExpression(Grammar):
-    grammar = (OPTIONAL(NewLines), LogicalArgumentExpression)
-
-
 class ArgumentExpressionList(Grammar):
-    grammar = OR(
-        ArgumentExpression,
-        (ArgumentExpression, OPTIONAL(NewLines),
-         ",", REF("ArgumentExpressionList"))
-    )
+    grammar = LIST_OF(LogicalArgumentExpression,
+                      sep=(Spaces, ",", Spaces))
 
 
 class ArgumentList(Grammar):
-    grammar = ("(", OPTIONAL(ArgumentExpressionList),
-               OPTIONAL(NewLines), ")")
+    grammar = ("(", Spaces, OPTIONAL(ArgumentExpressionList),
+               Spaces, ")")
 
 
 class InvocationExpressionPrime(Grammar):
