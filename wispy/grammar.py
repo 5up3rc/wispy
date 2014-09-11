@@ -648,10 +648,6 @@ class InteractiveInput(Grammar):
     grammar = ScriptBlock
 
 
-class DataFile(Grammar):
-    grammar = REF('StatementList')
-
-
 class CommandName(Grammar):
     grammar = OR(GenericToken, GenericTokenWithSubexprStart)
 
