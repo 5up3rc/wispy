@@ -630,6 +630,7 @@ class ParamBlock(Grammar):
 
 
 class ScriptBlock(Grammar):
+    # This grammar can be considered the root grammar.
     grammar = (
         OPTIONAL(ParamBlock), OPTIONAL(StatementTerminators),
         OPTIONAL(ScriptBlockBody)
