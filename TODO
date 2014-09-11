@@ -31,8 +31,6 @@ for ($i = 1; $i -le 10; ++$i) { "$i $($i*$i)" }
 
 9. We don't support comments apparently.
 
-10. Test 'until'
+10. Test 'workflow'
 
-11. Test 'workflow'
-
-12. wispy doesn't support full Unicode variables.
+11. wispy doesn't support full Unicode variables.
