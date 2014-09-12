@@ -1776,3 +1776,12 @@ class GrammarTest(unittest.TestCase):
             # 'Format-Table path,linenumber -AutoSize',
         ]
         self._test_expected(Pipeline, pipelines)
+
+    def test_pipeline_tail(self):
+        pipelines = [
+            "| Foreach-Object {$_.Length}",
+            ' | Select-String -List "catch"',
+            ' | Tobi-is-Obito -List "catch-bijuus" |\n'
+            'KaguyaIsShinju "get-all-chakra"',
+        ]
+        self._test_expected(PipelineTail, pipelines)
