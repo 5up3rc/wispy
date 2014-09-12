@@ -940,15 +940,19 @@ class Value(Grammar):
     )
 
 
+class PrimaryExpressionPrime(Grammar):
+    grammar = OR(MemberAccessPrime,
+                 ElementAccessPrime,
+                 REF('InvocationExpressionPrime'),
+                 PostIncrementExpressionPrime,
+                 PostIncrementExpressionPrime)
+
+
 class PrimaryExpression(Grammar):
     grammar = (
         Value,
-        OPTIONAL(OR(MemberAccessPrime,
-                    ElementAccessPrime,
-                    REF('InvocationExpressionPrime'),
-                    PostIncrementExpressionPrime,
-                    PostIncrementExpressionPrime)),
-        OPTIONAL(REF('PrimaryExpression')),
+        OPTIONAL(OR(REPEAT(PrimaryExpressionPrime),
+                    REF('PrimaryExpression'))),
     )
 
 
