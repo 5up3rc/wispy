@@ -1106,7 +1106,7 @@ class RedirectedFileName(Grammar):
 
 class Redirection(Grammar):
     grammar = OR(
-        "2>&1", "1>&2",
+        MergingRedirectionOperator,
         (FileRedirectionOperator, OPTIONAL(WHITESPACE), RedirectedFileName)
     )
 
