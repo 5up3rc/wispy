@@ -945,7 +945,7 @@ class PrimaryExpressionPrime(Grammar):
                  ElementAccessPrime,
                  REF('InvocationExpressionPrime'),
                  PostIncrementExpressionPrime,
-                 PostIncrementExpressionPrime)
+                 PostDecrementExpressionPrime)
 
 
 class PrimaryExpression(Grammar):
