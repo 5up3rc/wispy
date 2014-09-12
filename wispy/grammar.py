@@ -1162,7 +1162,7 @@ class Pipeline(Grammar):
     to its successor."""
 
     grammar = OR(
-        REF('AssignmentExpression'),
+        AssignmentExpression,
         (Expression, OPTIONAL(Redirection), OPTIONAL(PipelineTail)),
         (Command, OPTIONAL(PipelineTail))
     )
