@@ -904,6 +904,52 @@ class GrammarTest(unittest.TestCase):
         # recursion problem.
         self._test_expected(PrimaryExpression, parts)
 
+    def test_primary_expression(self):
+        parts = [
+            # Member access
+            "$a.Length",
+            "(10,20,30).Length",
+            "$a.$property",
+            "[int]::MinValue",
+            "[long]::$property",
+            "(10,20,30).\nlength",
+            "[long]::\n  $property",
+
+            # Element access
+            "$a[1]",
+            "$a[-1]",
+            "$a[0,0]",
+            "$a[0,0]++",
+            "$list[2][1]",
+            '$a[1]["B"]',
+            "$a[1][$true]",
+            "$a[1,3,5]",
+            "$a[,5]",
+            "$a[@()]",
+            "$a[-1..-3]",
+            "$a[(0,1),(1,0)]",
+            "$h1[$null,'IDNum']",
+
+            # Invocation expression
+            "[math]::Sqrt(2.0)",
+            '[char]::IsUpper("a")',
+            "[math]::Sqrt(2D)",
+            "[math]::Sqrt($true)",
+            "$a.Invoke(2.0)",
+            '[math]::("Sq"+"rt")',
+
+            # Post increment and decrement
+            "$i++",
+            "$i--",
+            "$a[$i++]",
+
+            # Mixed
+            "$a[1][1,3,5]++",
+            "$a[1]::Sqrt(2.0)",
+            "[math]::Result(2D)[1]++",
+        ]
+        self._test_expected(PrimaryExpression, parts)
+
     def test_redirected_file_name(self):
         parts = ["output.txt", '"$abc"', "$null"]
         self._test_expected(RedirectedFileName, parts)
