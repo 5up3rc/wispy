@@ -32,3 +32,5 @@ for ($i = 1; $i -le 10; ++$i) { "$i $($i*$i)" }
 * We don't support comments apparently.
 
 * wispy doesn't support full Unicode variables.
+
+* 'Format-Table path,linenumber -AutoSize' is unrecognised by the Command grammar.
