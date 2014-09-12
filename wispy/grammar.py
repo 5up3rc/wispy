@@ -1136,6 +1136,7 @@ class Command(Grammar):
             OPTIONAL(CommandModule),
             OPTIONAL(WHITESPACE),
             CommandNameExpr,
+            OPTIONAL(WHITESPACE),
             OPTIONAL(CommandElements)
         )
     )
@@ -1143,7 +1144,7 @@ class Command(Grammar):
 
 class PipelineTail(Grammar):
     grammar = (
-        "|", OPTIONAL(NewLines),
+        Spaces, "|", Spaces,
         Command, OPTIONAL(REF('PipelineTail'))
     )
 

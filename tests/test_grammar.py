@@ -8,6 +8,7 @@ Tests for wispy.grammar.
 # pylint: disable=missing-docstring, import-error
 # pylint: disable=bad-builtin, star-args
 # pylint: disable=wildcard-import, unused-wildcard-import
+# pylint: disable=anomalous-backslash-in-string
 
 
 import unittest
@@ -1756,3 +1757,22 @@ class GrammarTest(unittest.TestCase):
             for block in ("dynamicparam", "begin", "process", "end")
         ]
         self._test_expected(NamedBlockList, blocks)
+
+    def test_pipeline(self):
+        pipelines = [
+            "$i > output1.txt",
+            "++$i >> output1.txt",
+            "type file1.txt 2> error1.txt",
+            "type file2.txt 2>> error1.txt",
+            "dir -Verbose 4> verbose1.txt",
+            "dir -Verbose -Debug -WarningAction Continue *> output2.txt",
+            "dir -Verbose 4>&2 2> error2.txt",
+            "dir e:\PowerShell\Scripts\*statement*.ps1 | "
+            "Foreach-Object {$_.Length}",
+
+            # TODO: Unsupported case
+            # 'dir e:\\PowerShell\Scripts\*.ps1 | '
+            # 'Select-String -List "catch" | '
+            # 'Format-Table path,linenumber -AutoSize',
+        ]
+        self._test_expected(Pipeline, pipelines)
