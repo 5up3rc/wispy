@@ -1049,6 +1049,35 @@ class GrammarTest(unittest.TestCase):
         ]
         self._test_expected(LogicalExpression, parts)
 
+    def test_expression(self):
+        parts = [
+            "($j -gt 5) -and (++$k -lt 15)",
+            "($j -gt 5) -and ($k -le 21)",
+            "0x0F0F -band 0xFE",
+            "0x0F0F -band 0xFEL",
+            "$j -isnot 5", "$j -isplit $x",
+            "12 + -10L",
+            "-10.300D + 12",
+            "-10.300D % 12",
+            "10.6 % 12",
+            '12 % "0xabc"',
+            "(10 * 4) % 5",
+            "(10* (5 % 4)) /4",
+            '">{0,-3}<" -f 5',
+            '">{0,3:000}<" -f 5',
+            '">{0,5:0.00}<" -f 5.0',
+            '">{0:C}<" -f     1234567.888',
+            "1..10",
+            "-500..-495",
+            "16..16",
+            "$x..5.40D",
+            "2,4,6",
+            "(2,4),6",
+            "(2,4,6),12,(2..4)",
+            '2,4,6,"red",$null,$true',
+        ]
+        self._test_expected(Expression, parts)
+
     def test_additive_expression(self):
         parts = [
             "12 + -10L",
