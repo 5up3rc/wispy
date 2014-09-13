@@ -58,6 +58,62 @@ class GrammarTest(unittest.TestCase):
     def test_simple_name(self):
         self._test_expected(SimpleName, ["tzop", "trop", "pop"])
 
+    def test_token(self):
+        tokens = [
+            # Keywords
+            "begin", "break", "catch", "class",
+            "continue", "data", "define", "do",
+            "dynamicparam", "else", "elseif", "end",
+            "exit", "filter", "finally", "for",
+            "foreach", "from", "function", "if",
+            "in", "param", "process", "return",
+            "switch", "throw", "trap", "try",
+            "until", "using", "var", "while",
+
+            # Integer literal
+            "0d", "0xa1",
+
+            # Real literal
+            "1.4", "1.4e44", "1.4e44kb",
+            ".4", ".4e44", ".4e4d", ".4e4dkb", ".4Dkb",
+            "4e4", "4e4D", "4e4d", "4e4dkb",
+
+            # Type literal
+            "[object[]]", "[int]", "[int[,,]]",
+
+            # String literal
+            "\"tralalala\"", "'tralalala'",
+            "@\"\ntest1\ntest2\n\"@", "@'\ntest1\ntest2\n'@",
+
+            # Command
+            'Get-Factorial 5', '& Get-Factorial 5',
+
+            # Operator or punctuator
+            "{", "}", "[", "]", "(", ")", "@(", "@{", "$(", ";",
+            "&&", "||", "&", "|", ",", "++", "..", "::", ".",
+            "!", "*", "/", "%", "+", "2>&1", "1>&2",
+            "-", "--",
+            "-and", "-band", "-bnot",
+            "-bor", "-bxor", "-not",
+            "-or", "-xor", "+=", "*=",
+            ">>", "-inotlike", "-f"
+
+            # Command
+            "$totalCost", "$Maximum_Count_26", "${Maximum_Count_26}",
+            "${Name with`twhite space and `{punctuation`}}",
+            r"${E:\File.txt}", "$$", "$?", "$^",
+            "$global:test_variable",
+            "$local:test_variable",
+            "$private:test_variable",
+            "$script:test_variable",
+            "@global:test_variable",
+            "@local:test_variable",
+            "@private:test_variable",
+            "@script:test_variable",
+
+        ]
+        self._test_expected(Token, tokens)
+
     def test_dollars(self):
         self._test_expected(Dollars, ["$", "$$"])
 
