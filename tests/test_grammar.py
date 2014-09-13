@@ -357,6 +357,33 @@ class GrammarTest(unittest.TestCase):
         self._test_expected(CommandParameter, parts)
         self._test_expected(CommandParameter, [part + ":" for part in parts])
 
+    def test_command_name_expr(self):
+        names = ['Get-Factorial', 'New-Object']
+        self._test_expected(CommandNameExpr, names)
+
+    def test_command_argument(self):
+        # The same as CommandNameExpr
+        names = ['Get-Factorial', 'New-Object']
+        self._test_expected(CommandArgument, names)
+
+    def test_command_element(self):
+        parts = list(chain(
+            ['Get-Factorial'],
+            ["-" + letter for letter in string.ascii_letters],
+            ["2>&1", "1>&2",
+             # with whitespace
+             ">> filename", "> a.txt", "< b.txt", "2>> c.txt", "2> d.txt",
+             # without whitespace
+             ">>filename", ">a.txt", "<b.txt", "2>>c.txt", "2>d.txt",
+             # variables
+             ">$null", "2>>$null"]
+        ))
+        self._test_expected(CommandElement, parts)
+
+    def test_command_elements(self):
+        parts = ["Get-Factorial -wispy", "Redirect >>filename"]
+        self._test_expected(CommandElements, parts)
+
     def test_generic_type_arguments(self):
         self._test_expected(GenericTypeArguments,
                             ["int,float", "int[,],float[,]"])
