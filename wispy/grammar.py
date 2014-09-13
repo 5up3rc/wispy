@@ -979,13 +979,9 @@ class StatementList(Grammar):
 
 
 class StatementBlock(Grammar):
-
-    """A statement-block allows a set of statements to be grouped
-    into a single syntactic unit."""
-
     grammar = (
-        Spaces, "{", Spaces, OPTIONAL(StatementList),
-        Spaces, "}"
+        "{", Spaces, OPTIONAL(StatementList), Spaces,
+        "}"
     )
 
 
@@ -1018,7 +1014,9 @@ class BlockName(Grammar):
 
 
 class NamedBlock(Grammar):
-    grammar = (BlockName, StatementBlock, OPTIONAL(StatementTerminators))
+    grammar = (BlockName, Spaces,
+               StatementBlock,
+               OPTIONAL(StatementTerminators))
 
 
 class NamedBlockList(Grammar):
@@ -1127,17 +1125,17 @@ class DataStatement(Grammar):
 
 class ElseIfClause(Grammar):
     grammar = (
-        Spaces, "elseif", Spaces, "(", Spaces, Pipeline, Spaces, ")",
+        Spaces, "elseif", Spaces, "(", Spaces, Pipeline, Spaces, ")", Spaces,
         StatementBlock
     )
 
 
 class ElseIfClauses(Grammar):
-    grammar = REPEAT(ElseIfClause)
+    grammar = LIST_OF(ElseIfClause, sep=Spaces)
 
 
 class ElseClause(Grammar):
-    grammar = (Spaces, "else", StatementBlock)
+    grammar = (Spaces, "else", Spaces, StatementBlock)
 
 
 class IfStatement(Grammar):
@@ -1154,7 +1152,7 @@ class LabelExpression(Grammar):
 
 
 class FinallyClause(Grammar):
-    grammar = (OPTIONAL(NewLines), "finally", StatementBlock)
+    grammar = (OPTIONAL(NewLines), "finally", Spaces, StatementBlock)
 
 
 class CatchTypeList(Grammar):
@@ -1172,14 +1170,8 @@ class CatchClauses(Grammar):
 
 
 class TryStatement(Grammar):
-
-    """The try statement provides a mechanism for catching exceptions that
-    occur during execution of a block. The try statement also provides
-    the ability to specify a block of code that is always executed when
-    control leaves the try statement.
-    """
     grammar = (
-        "try", StatementBlock,
+        "try", Spaces, StatementBlock,
         OR(
             (CatchClauses, FinallyClause),
             CatchClauses,
@@ -1190,8 +1182,8 @@ class TryStatement(Grammar):
 
 class TrapStatement(Grammar):
     grammar = (
-        "trap", OPTIONAL(NewLines), OPTIONAL(TypeLiteral),
-        OPTIONAL(NewLines), StatementBlock
+        "trap", Spaces, OPTIONAL(TypeLiteral),
+        Spaces, StatementBlock
     )
 
 
@@ -1199,13 +1191,11 @@ class FlowControlStatement(Grammar):
     grammar = OR(
         (
             OR("break", "continue"),
-            OPTIONAL(WHITESPACE),
-            OPTIONAL(LabelExpression)
+            OPTIONAL((WHITESPACE, LabelExpression))
         ),
         (
             OR("throw", "return", "exit"),
-            OPTIONAL(WHITESPACE),
-            OPTIONAL(Pipeline)
+            OPTIONAL((WHITESPACE, Pipeline))
         ),
     )
 

@@ -1218,7 +1218,7 @@ class GrammarTest(unittest.TestCase):
     def test_else_clause(self):
         parts = [
             'else { "grade f" }',
-            '    else{"grafe f"}',
+            'else{"grafe f"\n}',
             'else{"giraffe"}',
         ]
         self._test_expected(ElseClause, parts)
