@@ -115,12 +115,6 @@ class DelimitedCommentText(Grammar):
 
 
 class DelimitedComment(Grammar):
-
-    """ A :class:`DelimitedComment` begins with the character pair <# and ends
-    with the character pair #>. It can occur as part of a source line,
-    as a whole source line, or it can span any number of source lines.
-    """
-
     grammar = ("<#", OPTIONAL(DelimitedCommentText), Hashes, ">")
 
 
@@ -129,24 +123,10 @@ class RequiresComment(Grammar):
 
 
 class SingleLineComment(Grammar):
-
-    """A :class:`SingleLineComment` begins with the character `#` and ends
-    with a :class:`NewLineCharacter`.
-    """
     grammar = ("#", OPTIONAL(WHITESPACE), OPTIONAL(InputCharacters))
 
 
 class Comment(Grammar):
-
-    """A comment is treated as white space.
-
-    The productions above imply that
-        * Comments do not nest.
-        * The character sequences <# and #> have no special meaning in a
-        :class:`SingleLineComment`.
-        * The character # has no special meaning in a delimited comment.
-    """
-
     grammar = OR(SingleLineComment, RequiresComment, DelimitedComment)
 # Enf of grammar for comments
 
@@ -330,23 +310,6 @@ class VerbatimHereStringCharacters(Grammar):
 
 
 class VerbatimHereStringLiteral(Grammar):
-
-    """Verbatim here string literal (multi-line single-quoted), which is
-    a sequence of zero or more characters delimited by the character pairs
-    @single-quote-character and single-quote-character@, respectively, all
-    contained on two or more source lines.
-
-    Examples are:
-
-    ::
-    @'
-    '@
-
-    @'
-    line 1
-    line 2
-    '@
-    """
     grammar = ("@", SingleQuoteCharacter, OPTIONAL(WHITESPACE),
                NewLineCharacter, OPTIONAL(VerbatimHereStringCharacters),
                NewLineCharacter, SingleQuoteCharacter, "@")
@@ -364,14 +327,6 @@ class VerbatimStringCharacters(Grammar):
 
 
 class VerbatimStringLiteral(Grammar):
-
-    """Verbatim string literal (single-line single-quoted), which is a
-    sequence of zero or more characters delimited by a pair
-    of SingleQuoteCharacters.
-
-    Examples are '' and 'red'.
-    """
-
     grammar = (SingleQuoteCharacter, OPTIONAL(VerbatimStringCharacters),
                SingleQuoteCharacter)
 
@@ -413,13 +368,6 @@ class ExpandableStringWithSubexprEnd(Grammar):
 
 
 class ExpandableStringLiteral(Grammar):
-
-    """Expandable string literal (single-line double-quoted), which is
-    a sequence of zero or more characters delimited by a pair of
-    double-quote-characters.
-
-    Examples are "" and "red".
-    """
     grammar = (DoubleQuoteCharacter, OPTIONAL(ExpandableStringCharacters),
                OPTIONAL(Dollars), DoubleQuoteCharacter)
 
@@ -441,39 +389,12 @@ class ExpandableHereStringWithSubexprEnd(Grammar):
 
 
 class ExpandableHereStringLiteral(Grammar):
-
-    """Expandable here string literal (multi-line double-quoted), which is
-    a sequence of zero or more characters delimited by the character pairs
-    @double-quote-character and double-quote-character@, respectively,
-    all contained on two or more source lines.
-
-    Examples are:
-    ::
-    @"
-    "@
-
-    @"
-    line 1
-    "@
-
-    @"
-    line 1
-    line 2
-    "@
-    """
     grammar = ("@", DoubleQuoteCharacter, OPTIONAL(WHITESPACE),
                NewLineCharacter, OPTIONAL(ExpandableHereStringCharacters),
                NewLineCharacter, DoubleQuoteCharacter, "@")
 
 
 class StringLiteral(Grammar):
-
-    """String literal is one of the following:
-        * ExpandableStringLiteral
-        * ExpandableHereStringLiteral
-        * VerbatimStringLiteral
-        * VerbatimHereStringLiteral
-    """
     grammar = OR(ExpandableStringLiteral,
                  ExpandableHereStringLiteral,
                  VerbatimStringLiteral,
@@ -1160,12 +1081,6 @@ class AssignmentExpression(Grammar):
 
 
 class Pipeline(Grammar):
-
-    """A pipeline is a series of one or more commands each separated by
-    the pipe operator | (U+007C).
-    Each command receives input from its predecessor and writes output
-    to its successor."""
-
     grammar = OR(
         AssignmentExpression,
         (Expression, OPTIONAL(Redirection), OPTIONAL(PipelineTail)),
@@ -1401,17 +1316,6 @@ class SwitchFilename(Grammar):
 
 
 class SwitchCondition(Grammar):
-
-    """A switch must contain one or more :class:`SwitchClauses`, each starting
-    with a pattern (a non-default switch clause), or the keyword default
-    (a default switch clause).
-
-    A switch must contain zero or one default switch clauses, and zero or
-    more non-default switch clauses.
-
-    Switch clauses may be written in any order.
-    """
-
     grammar = OR(
         ("(", OPTIONAL(NewLines), Pipeline, OPTIONAL(NewLines), ")"),
         ("-file", Spaces, SwitchFilename)
@@ -1419,13 +1323,6 @@ class SwitchCondition(Grammar):
 
 
 class SwitchParameter(Grammar):
-
-    """A :class:`SwitchParameter` may be abbreviated; any distinct leading
-    part of a parameter may be used.
-
-    For example, -regex, -rege, -reg, -re, and -r are equivalent.
-    """
-
     grammar = OR(
         "-regex", "-rege", "-reg", "-re", "-r", "-wildcard", "-wildcar",
         "-wildca", "-wildc", "-wild", "-wil", "-wi", "-w", "-exact",
@@ -1461,12 +1358,6 @@ class LabeledStatement(Grammar):
 
 
 class Statement(Grammar):
-
-    """A statement specifies some sort of action that is to be performed.
-
-    Unless indicated otherwise within this clause,statements are executed
-    in lexical order."""
-
     grammar = OR(
         IfStatement,
         LabeledStatement,
@@ -1501,23 +1392,10 @@ class AttributeArguments(Grammar):
 
 
 class AttributeName(Grammar):
-
-    """ The :class:`AttributeName` is a reserved attribute type or some
-    implementation-defined attribute type.
-    """
     grammar = TypeSpec
 
 
 class Attribute(Grammar):
-
-    """ An attribute consists of an :class:`AttributeName` and an optional
-    list of positional and named arguments.
-
-    The positional arguments (if any) precede the named arguments.
-    A positional argument consists of a :class:`SimpleName`, followed by an
-    equal sign, followed by an :class:`Expression`.
-    """
-
     grammar = OR(
         ("[", AttributeName, "(", AttributeArguments, OPTIONAL(NewLines),
          ")", OPTIONAL(NewLines), "]"),
