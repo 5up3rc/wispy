@@ -800,9 +800,6 @@ class GrammarTest(unittest.TestCase):
         names = ["dynamicparam", "begin", "process", "end"]
         self._test_expected(BlockName, names)
 
-    def test_data_name(self):
-        self._test_expected(DataName, ["tzop", "trop", "pop"])
-
     def test_switch_parameters(self):
         params = ["-regex", "-wildcard", "-exact", "-casesensitive"]
         self._test_expected(SwitchParameter, params)
@@ -1860,3 +1857,49 @@ class GrammarTest(unittest.TestCase):
             'KaguyaIsShinju "get-all-chakra"',
         ]
         self._test_expected(PipelineTail, pipelines)
+
+    def test_data_command(self):
+        commands = ["ConvertFrom-StringData", "ConvertTo-Xml"]
+        self._test_expected(DataCommand, commands)
+
+    def test_data_commands_list(self):
+        commands = [
+            "ConvertFrom-String, ConvertTo-Xml",
+            "ConvertFrom-Xml ,\nConvertTo-Json",
+        ]
+        self._test_expected(DataCommandsList, commands)
+
+    def test_data_commands_allowed(self):
+        commands = [
+            "-supportedcommand ConvertFromString",
+            "-supportedcommand TobiIsObito",
+        ]
+        self._test_expected(DataCommandsAllowed, commands)
+
+    def test_data_statement(self):
+        stmts = [
+            # TODO: pathological case
+            # "data -supportedcommand Format-XML { "
+            # "Format-XML -strings string1, string2, string3}",
+
+            "data -supportedcommand Format-XML { "
+            "Format-XML -strings string1}",
+
+            '''data {
+                "Tobi is Obito."
+                "Kaguya is Shinju."
+                "Sasuke is evil."}''',
+
+            '''data {
+                 ConvertFrom-StringData -stringdata @'
+                    Text001 = Windows 7
+                    Text002 = Windows Server 2008 R2
+                 '@
+              }''',
+            '''data {
+                 if ($null) {
+                   "To get help for this cmdlet"
+                 }
+               }''',
+        ]
+        self._test_expected(DataStatement, stmts)

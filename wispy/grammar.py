@@ -1103,23 +1103,17 @@ class DataCommand(Grammar):
 
 
 class DataCommandsList(Grammar):
-    grammar = (
-        OPTIONAL(NewLines), DataCommand, OPTIONAL(REF('DataCommandsList'))
-    )
+    grammar = LIST_OF(DataCommand, sep=(Spaces, ",", Spaces))
 
 
 class DataCommandsAllowed(Grammar):
-    grammar = (OPTIONAL(NewLines), "-supportedcommand", DataCommandsList)
-
-
-class DataName(Grammar):
-    grammar = SimpleName
+    grammar = ("-supportedcommand", Spaces, DataCommandsList)
 
 
 class DataStatement(Grammar):
     grammar = (
-        "data", OPTIONAL(NewLines), DataName, OPTIONAL(DataCommandsAllowed),
-        StatementBlock
+        "data", Spaces, OPTIONAL(DataCommandsAllowed),
+        Spaces, StatementBlock
     )
 
 

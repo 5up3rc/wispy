@@ -34,3 +34,9 @@ for ($i = 1; $i -le 10; ++$i) { "$i $($i*$i)" }
 * wispy doesn't support full Unicode variables.
 
 * 'Format-Table path,linenumber -AutoSize' is unrecognised by the Command grammar.
+
+* Another pathological case:
+
+data -supportedcommand Format-XML {
+  Format-XML -strings string1, string2, string3
+}
