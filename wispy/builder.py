@@ -214,3 +214,12 @@ class Builder:
         newnode.iter = self.generic_visit(node[7], newnode)
         newnode.target = self.generic_visit(node[11], newnode)
         return newnode
+
+    def visit_switch_condition(self, node, parent):
+        newnode = tree.SwitchCondition()
+        newnode.parent = parent
+        newnode.grammar = node
+        newnode.file = node.find(grammar.SwitchFilename)
+        condition = node.find(grammar.Pipeline)
+        newnode.condition = node.generic_visit(condition, newnode)
+        return newnode
