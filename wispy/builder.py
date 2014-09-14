@@ -91,15 +91,19 @@ class Builder:
         return newnode
 
     def visit_statement(self, node, parent):
-        return self.generic_visit(node[0], parent)
+        if node[0].grammar_desc == '<GRAMMAR>':
+            child = node[0][0]
+        else:
+            child = node[0]
+        return self.generic_visit(child, parent)
 
     def visit_function_statement(self, node, parent):
+        stmts = node[8].find_all(grammar.Statement)
         newnode = tree.FunctionStatement()
         newnode.parent = parent
         newnode.type = tree.Name(value=node[0].string.lower())
         newnode.name = tree.Name(value=node[2].string)
-        newnode.body = self.visit_script_block(node[8])
-        newnode.body.parent = newnode
+        newnode.body = self.iter_generic_visit(stmts, newnode)
         newnode.params = self.generic_visit(node[4], newnode)
         return newnode
 
