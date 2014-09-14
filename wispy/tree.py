@@ -69,7 +69,7 @@ class Node(metaclass=NodeMeta):
         as specified by '_fields' attribute.
         """
         for name in self._fields:
-            yield getattr(self, name, None)
+            yield getattr(self, name)
 
 
 class Statement(Node):
