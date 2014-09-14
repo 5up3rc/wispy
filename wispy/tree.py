@@ -20,6 +20,7 @@ def make_signature(names):
 
 
 class NodeMeta(type):
+
     """
     Metaclass which reads the '_fields' attribute
     and builds a signature from it. This allows a class
@@ -42,6 +43,7 @@ class NodeMeta(type):
 
 
 class Node(metaclass=NodeMeta):
+
     """ Base class for all CST nodes.
 
     Exports a couple of attributes, which can be
@@ -73,11 +75,13 @@ class Node(metaclass=NodeMeta):
 
 
 class Statement(Node):
+
     """ Node representing a statement. """
     _fields = ('stmt', )
 
 
 class Expression(Node):
+
     """ Node representing an expression. """
     _fields = ('expr', )
 
@@ -103,6 +107,7 @@ class Range(Expression):
 
 
 class UnaryOp(Expression):
+
     """ This expression can be used for PreIncrementExpression,
     PreDecrementExpression, CastExpression and UnaryExpression with
     operators.
@@ -111,6 +116,7 @@ class UnaryOp(Expression):
 
 
 class BinOp(Expression):
+
     """ This expression can be used for MultiplicativeExpression,
     AdditiveExpression, ComparisonExpression, BitwiseExpression,
     LogicalExpression.
@@ -233,6 +239,10 @@ class Argument(Node):
 
 class Subscript(Expression):
     _fields = ('value', )
+
+
+class Variable(Node):
+    _fields = ('name', 'scope')
 
 
 class Getattr(Expression):

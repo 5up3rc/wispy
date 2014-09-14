@@ -187,3 +187,15 @@ class Builder:
         statements = node.find_all(grammar.Statement)
         newnode.body = self.iter_generic_visit(statements, newnode)
         return newnode
+
+    def visit_foreach_statement(self, node, parent):
+        statements = node.find_all(grammar.Statement)
+        parameter = node[2].string
+        newnode = tree.ForeachStatement()
+        newnode.parent = parent
+        newnode.grammar = node
+        newnode.body = self.iter_generic_visit(statements, newnode)
+        newnode.parameter = tree.Name(value=parameter) if parameter else None
+        newnode.iter = self.generic_visit(node[7], newnode)
+        newnode.target = self.generic_visit(node[11], newnode)
+        return newnode
