@@ -873,36 +873,34 @@ class PrimaryExpression(Grammar):
     )
 
 
+class UnaryExpression(Grammar):
+    grammar = OR(
+        PrimaryExpression,
+        REF('ExpressionWithUnaryOperator'),
+    )
+
+
 class CastExpression(Grammar):
     grammar = (TypeLiteral, REF('UnaryExpression'))
 
 
 class PreDecrementExpression(Grammar):
-    # FIXME: Remove reference
-    grammar = (DashDash, OPTIONAL(NewLines), REF('UnaryExpression'))
+    grammar = (DashDash, OPTIONAL(NewLines), UnaryExpression)
 
 
 class PreIncrementExpression(Grammar):
-    # FIXME: Remove reference
-    grammar = ("++", OPTIONAL(NewLines), REF('UnaryExpression'))
+    grammar = ("++", OPTIONAL(NewLines), UnaryExpression)
 
 
 class ExpressionWithUnaryOperator(Grammar):
     grammar = OR(
         (
             OR(",", "-bnot", "-not", "-split", "-join", "!", "+", Dash),
-            Spaces, REF("UnaryExpression")
+            Spaces, UnaryExpression
         ),
-        REF("PreIncrementExpression"),
-        REF("PreDecrementExpression"),
-        REF("CastExpression"),
-    )
-
-
-class UnaryExpression(Grammar):
-    grammar = OR(
-        PrimaryExpression,
-        REF('ExpressionWithUnaryOperator'),
+        PreIncrementExpression,
+        PreDecrementExpression,
+        CastExpression,
     )
 
 
@@ -1020,9 +1018,8 @@ class ScriptParameterDefault(Grammar):
 
 class ScriptParameter(Grammar):
     grammar = (
-        # FIXME: Remove REF
         OPTIONAL(NewLines),
-        OPTIONAL(REF('AttributeList')), Spaces,
+        OPTIONAL(AttributeList), Spaces,
         Variable, OPTIONAL(ScriptParameterDefault)
     )
 
@@ -1195,7 +1192,6 @@ class CatchClauses(Grammar):
 class TryStatement(Grammar):
     grammar_whitespace_mode = "optional"
     grammar = (
-        # TODO: Add space
         "try", StatementBlock,
         OR(
             (CatchClauses, FinallyClause),
