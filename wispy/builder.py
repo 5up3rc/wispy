@@ -109,6 +109,7 @@ class Builder:
 
         newnode = tree.IfStatement()
         newnode.parent = parent
+        # TODO: 4?
         newnode.test = self.generic_visit(node[4], newnode)
         newnode.body = self.iter_generic_visit(stmts, newnode)
         newnode.elifs = self.iter_generic_visit(elifs, newnode)
@@ -124,6 +125,7 @@ class Builder:
         pass
 
     def visit_function_parameter_declaration(self, node, parent):
+        # TODO: 2
         script_params = node[2].find_all(grammar.ScriptParameter)
         return self.iter_generic_visit(script_params, parent)
 
@@ -131,6 +133,7 @@ class Builder:
         newnode = tree.Parameter()
         attributes = node.find_all(grammar.Attribute)
         newnode.parent = parent
+        # TODO: 3, 4?
         newnode.variable = self.generic_visit(node[3], newnode)
         newnode.default = self.generic_visit(node[4], newnode)
         newnode.attributes = self.iter_generic_visit(
