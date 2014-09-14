@@ -8,6 +8,7 @@
 
 # pylint: disable=bad-builtin, missing-docstring
 # pylint: disable=no-self-use, no-init, invalid-name
+# pylint: disable=too-many-public-methods
 
 from functools import partial
 
