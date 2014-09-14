@@ -2089,3 +2089,14 @@ class GrammarTest(unittest.TestCase):
             #'finally { $Time=Get-Date}'
         ]
         self._test_expected(TryStatement, statement, debug=False)
+
+    def test_additive_argument_expression(self):
+        expressions = [
+            "$naruto[0,0]++",
+            "$(($i = 10); (++$j))",
+            "$($i = 10; ++$j)",
+            "@(($i = 10); (++$j))",
+            "@($i = 10; ++$j)",
+            "++$i"
+        ]
+        self._test_expected(AdditiveArgumentExpression, expressions)
