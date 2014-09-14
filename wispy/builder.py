@@ -79,39 +79,6 @@ class Builder:
         """
         return self.iter_generic_visit(node, node)
 
-    def visit_variable(self, node, parent):
-        scope = None
-        if isinstance(node[0], Literal):
-            name = node[0].string
-        else:
-            if isinstance(node[0][1], grammar.VariableScope):
-                scope = node[0][1].string.strip(":")
-            name = node[0][0].string + node[0][2].string
-        return tree.Variable(scope=scope, name=name)
-
-    def visit_script_block(self, node):
-        """
-        Visit a ScriptBlock grammar node and return the AST
-        representing it.
-        """
-        stmts = node.find_all(grammar.Statement)
-        blocks = node.find_all(grammar.NamedBlock)
-
-        newnode = tree.ScriptBlock()
-        newnode.body = self.visit_children(node)
-        newnode.statements = self.iter_generic_visit(stmts, newnode)
-        newnode.named_blocks = self.iter_generic_visit(blocks, newnode)
-        newnode.grammar = node
-        return newnode
-
-    def visit_named_block(self, node, parent):
-        """ Visit a NamedBlock. """
-        stmts = node.find_all(grammar.Statement)
-        newnode = tree.NamedBlock()
-        newnode.block_name = tree.Name(value=node[0].string.lower())
-        newnode.statements = self.iter_generic_visit(stmts, newnode)
-        return newnode
-
     def visit_statement(self, node, parent):
         if node[0].grammar_desc == '<GRAMMAR>':
             child = node[0][0]
@@ -119,57 +86,18 @@ class Builder:
             child = node[0]
         return self.generic_visit(child, parent)
 
-    def visit_function_statement(self, node, parent):
-        stmts = node[8].find_all(grammar.Statement)
-        newnode = tree.FunctionStatement()
-        newnode.type = tree.Name(value=node[0].string.lower())
-        newnode.name = tree.Name(value=node[2].string)
-        newnode.body = self.iter_generic_visit(stmts, newnode)
-        newnode.params = self.generic_visit(node[4], newnode)
-        return newnode
-
-    def visit_if_statement(self, node, parent):
-        stmts = node.find_all(grammar.Statement)
-        elifs = node.find_all(grammar.ElseIfClause)
-        orelse = node.find_all(grammar.ElseClause)
-
-        newnode = tree.IfStatement()
-        # TODO: 4?
-        newnode.test = self.generic_visit(node[4], newnode)
-        newnode.body = self.iter_generic_visit(stmts, newnode)
-        newnode.elifs = self.iter_generic_visit(elifs, newnode)
-        newnode.orelse = self.iter_generic_visit(orelse, newnode)
-        return newnode
-
-    def visit_else_clause(self, node, parent):
-        # TODO
-        pass
-
-    def visit_elseif_clause(self, node, parent):
-        # TODO
-        pass
-
-    def visit_function_parameter_declaration(self, node, parent):
-        # TODO: 2
-        script_params = node[2].find_all(grammar.ScriptParameter)
-        return self.iter_generic_visit(script_params, parent)
-
-    def visit_script_parameter(self, node, parent):
-        newnode = tree.Parameter()
-        attributes = node.find_all(grammar.Attribute)
-        # TODO: 3, 4?
-        newnode.variable = self.generic_visit(node[3], newnode)
-        newnode.default = self.generic_visit(node[4], newnode)
-        newnode.attributes = self.iter_generic_visit(
-            attributes, newnode.variable)
-        return newnode
-
-    def visit_type_spec(self, node, parent):
-        newnode = tree.TypeSpec()
-        newnode.name = tree.Name(value=node[0].string)
-        specs = node[1].find_all(grammar.TypeSpec) or []
-        newnode.types = self.iter_generic_visit(specs, newnode)
-        return newnode
+    # TODO: add visit_expression(self, node, parent)
+    # TODO: add visit_array_expression(self, node, parent)
+    # TODO: add visit_hash_expression(self, node, parent)
+    # TODO: add visit_assign(self, node, parent)
+    # TODO: add visit_array(self, node, parent)
+    # TODO: add visit_range(self, node, parent)
+    # TODO: add visit_unary_op(self, node, parent)
+    # TODO: add visit_bin_op(self, node, parent)
+    # TODO: add visit_labeled_statement(self, node, parent)
+    # TODO: add visit_trap_statement(self, node, parent)
+    # TODO: add visit_do_statement(self, node, parent)
+    # TODO: add visit_for_statement(self, node, parent)
 
     def visit_while_statement(self, node, parent):
         newnode = tree.WhileStatement()
@@ -197,6 +125,15 @@ class Builder:
         newnode.body = self.iter_generic_visit(statements, newnode)
         return newnode
 
+    def visit_function_statement(self, node, parent):
+        stmts = node[8].find_all(grammar.Statement)
+        newnode = tree.FunctionStatement()
+        newnode.type = tree.Name(value=node[0].string.lower())
+        newnode.name = tree.Name(value=node[2].string)
+        newnode.body = self.iter_generic_visit(stmts, newnode)
+        newnode.params = self.generic_visit(node[4], newnode)
+        return newnode
+
     def visit_foreach_statement(self, node, parent):
         statements = node.find_all(grammar.Statement)
         parameter = node[2].string
@@ -220,4 +157,95 @@ class Builder:
         statements = node.find_all(grammar.Statement)
         newnode.body = self.iter_generic_visit(statements, newnode)
         newnode.clause = self.iter_generic_visit(node[0], newnode)
+        return newnode
+
+    # TODO: add visit_switch_statement(self, node, parent)
+    def visit_script_block(self, node):
+        """
+        Visit a ScriptBlock grammar node and return the AST
+        representing it.
+        """
+        stmts = node.find_all(grammar.Statement)
+        blocks = node.find_all(grammar.NamedBlock)
+
+        newnode = tree.ScriptBlock()
+        newnode.body = self.visit_children(node)
+        newnode.statements = self.iter_generic_visit(stmts, newnode)
+        newnode.named_blocks = self.iter_generic_visit(blocks, newnode)
+        newnode.grammar = node
+        return newnode
+
+    def visit_named_block(self, node, parent):
+        """ Visit a NamedBlock. """
+        stmts = node.find_all(grammar.Statement)
+        newnode = tree.NamedBlock()
+        newnode.block_name = tree.Name(value=node[0].string.lower())
+        newnode.statements = self.iter_generic_visit(stmts, newnode)
+        return newnode
+
+    def visit_if_statement(self, node, parent):
+        stmts = node.find_all(grammar.Statement)
+        elifs = node.find_all(grammar.ElseIfClause)
+        orelse = node.find_all(grammar.ElseClause)
+
+        newnode = tree.IfStatement()
+        # TODO: 4?
+        newnode.test = self.generic_visit(node[4], newnode)
+        newnode.body = self.iter_generic_visit(stmts, newnode)
+        newnode.elifs = self.iter_generic_visit(elifs, newnode)
+        newnode.orelse = self.iter_generic_visit(orelse, newnode)
+        return newnode
+
+    # TODO: add visit_data_statement(self, node, parent)
+    def visit_elseif_clause(self, node, parent):
+        # TODO
+        pass
+
+    def visit_else_clause(self, node, parent):
+        # TODO
+        pass
+
+    # TODO: add visit_flow_control(self, node, parent)
+    # TODO: add visit_try_except(self, node, parent)
+    # TODO: add visit_catch_handler(self, node, parent)
+    # TODO: add visit_parameter(self, node, parent)
+
+    def visit_type_spec(self, node, parent):
+        newnode = tree.TypeSpec()
+        newnode.name = tree.Name(value=node[0].string)
+        specs = node[1].find_all(grammar.TypeSpec) or []
+        newnode.types = self.iter_generic_visit(specs, newnode)
+        return newnode
+
+    # TODO: add visit_name
+    # TODO: add visit_string
+    # TODO: add visit_number
+    # TODO: add visit_argument
+    # TODO: add visit_subscript
+
+    def visit_variable(self, node, parent):
+        scope = None
+        if isinstance(node[0], Literal):
+            name = node[0].string
+        else:
+            if isinstance(node[0][1], grammar.VariableScope):
+                scope = node[0][1].string.strip(":")
+            name = node[0][0].string + node[0][2].string
+        return tree.Variable(scope=scope, name=name)
+
+    # TODO: add_visit_getattr
+
+    def visit_function_parameter_declaration(self, node, parent):
+        # TODO: 2
+        script_params = node[2].find_all(grammar.ScriptParameter)
+        return self.iter_generic_visit(script_params, parent)
+
+    def visit_script_parameter(self, node, parent):
+        newnode = tree.Parameter()
+        attributes = node.find_all(grammar.Attribute)
+        # TODO: 3, 4?
+        newnode.variable = self.generic_visit(node[3], newnode)
+        newnode.default = self.generic_visit(node[4], newnode)
+        newnode.attributes = self.iter_generic_visit(
+            attributes, newnode.variable)
         return newnode
