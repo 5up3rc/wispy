@@ -955,6 +955,39 @@ class GrammarTest(unittest.TestCase):
         ]
         self._test_expected(AttributeArguments, elements)
 
+    def test_range_argument_expression(self):
+        literals = [
+            "23",
+            "2..100..3",
+            "2..100..\n3"
+        ]
+        self._test_expected(RangeArgumentExpression, literals)
+
+        with self.assertRaises(ParseError):
+            self._parse(RangeArgumentExpression, "1..10..\n1\n")
+
+    def test_multiplicative_argument_expression(self):
+        literals = [
+            "1..10..1*2..3..1",
+            "1..10..1/\n2..3..1",
+        ]
+        self._test_expected(MultiplicativeArgumentExpression, literals)
+
+        with self.assertRaises(ParseError):
+            self._parse(MultiplicativeArgumentExpression,
+                        "1..10..2+2..4..2")
+
+    def test_format_argument_expression(self):
+        literals = [
+            "1..10..1",
+            "1..10..1-f2..3..1",
+            "1..10..1-f\n2..3..1"
+        ]
+        self._test_expected(FormatArgumentExpression, literals)
+
+        with self.assertRaises(ParseError):
+            self._parse(FormatArgumentExpression, "4..5..1-f\n\n")
+
     def test_attribute_list(self):
         elements = [
             "[A(10,IgnoreCase=$true)]"
