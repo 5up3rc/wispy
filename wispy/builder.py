@@ -60,7 +60,16 @@ class Builder:
         visit_name = 'visit_' + to_underscore(cls)
         visit_method = getattr(self, visit_name, None)
         if visit_method:
-            return visit_method(node, parent)
+            ast = visit_method(node, parent)
+            if ast:
+                if isinstance(ast, list):
+                    for child in ast:
+                        child.parent = parent
+                        child.grammar = node
+                else:
+                    ast.parent = parent
+                    ast.grammar = node
+            return ast
 
     def visit_children(self, node):
         """ Visit the children of the given node, by calling
@@ -77,10 +86,7 @@ class Builder:
             if isinstance(node[0][1], grammar.VariableScope):
                 scope = node[0][1].string.strip(":")
             name = node[0][0].string + node[0][2].string
-        newnode = tree.Variable(scope=scope, name=name)
-        newnode.parent = parent
-        newnode.grammar = node
-        return newnode
+        return tree.Variable(scope=scope, name=name)
 
     def visit_script_block(self, node):
         """
@@ -101,7 +107,6 @@ class Builder:
         """ Visit a NamedBlock. """
         stmts = node.find_all(grammar.Statement)
         newnode = tree.NamedBlock()
-        newnode.parent = parent
         newnode.block_name = tree.Name(value=node[0].string.lower())
         newnode.statements = self.iter_generic_visit(stmts, newnode)
         return newnode
@@ -116,7 +121,6 @@ class Builder:
     def visit_function_statement(self, node, parent):
         stmts = node[8].find_all(grammar.Statement)
         newnode = tree.FunctionStatement()
-        newnode.parent = parent
         newnode.type = tree.Name(value=node[0].string.lower())
         newnode.name = tree.Name(value=node[2].string)
         newnode.body = self.iter_generic_visit(stmts, newnode)
@@ -129,7 +133,6 @@ class Builder:
         orelse = node.find_all(grammar.ElseClause)
 
         newnode = tree.IfStatement()
-        newnode.parent = parent
         # TODO: 4?
         newnode.test = self.generic_visit(node[4], newnode)
         newnode.body = self.iter_generic_visit(stmts, newnode)
@@ -153,7 +156,6 @@ class Builder:
     def visit_script_parameter(self, node, parent):
         newnode = tree.Parameter()
         attributes = node.find_all(grammar.Attribute)
-        newnode.parent = parent
         # TODO: 3, 4?
         newnode.variable = self.generic_visit(node[3], newnode)
         newnode.default = self.generic_visit(node[4], newnode)
@@ -163,7 +165,6 @@ class Builder:
 
     def visit_type_spec(self, node, parent):
         newnode = tree.TypeSpec()
-        newnode.parent = parent
         newnode.name = tree.Name(value=node[0].string)
         specs = node[1].find_all(grammar.TypeSpec) or []
         newnode.types = self.iter_generic_visit(specs, newnode)
@@ -171,8 +172,6 @@ class Builder:
 
     def visit_while_statement(self, node, parent):
         newnode = tree.WhileStatement()
-        newnode.parent = parent
-        newnode.grammar = node
         condition = node.find(grammar.WhileCondition)
         newnode.condition = self.generic_visit(condition, newnode)
         statements = node.find_all(grammar.Statement)
@@ -181,24 +180,18 @@ class Builder:
 
     def visit_inlinescript_statement(self, node, parent):
         newnode = tree.InlinescriptStatement()
-        newnode.parent = parent
-        newnode.grammar = node
         statements = node.find_all(grammar.Statement)
         newnode.body = self.iter_generic_visit(statements, newnode)
         return newnode
 
     def visit_parallel_statement(self, node, parent):
         newnode = tree.ParallelStatement()
-        newnode.parent = parent
-        newnode.grammar = node
         statements = node.find_all(grammar.Statement)
         newnode.body = self.iter_generic_visit(statements, newnode)
         return newnode
 
     def visit_sequence_statement(self, node, parent):
         newnode = tree.SequenceStatement()
-        newnode.parent = parent
-        newnode.grammar = node
         statements = node.find_all(grammar.Statement)
         newnode.body = self.iter_generic_visit(statements, newnode)
         return newnode
@@ -207,8 +200,6 @@ class Builder:
         statements = node.find_all(grammar.Statement)
         parameter = node[2].string
         newnode = tree.ForeachStatement()
-        newnode.parent = parent
-        newnode.grammar = node
         newnode.body = self.iter_generic_visit(statements, newnode)
         newnode.parameter = tree.Name(value=parameter) if parameter else None
         newnode.iter = self.generic_visit(node[7], newnode)
@@ -218,8 +209,6 @@ class Builder:
     def visit_switch_condition(self, node, parent):
         filename = node.find(grammar.SwitchFilename)
         newnode = tree.SwitchCondition()
-        newnode.parent = parent
-        newnode.grammar = node
         newnode.file = tree.Name(value=filename.string) if filename else None
         condition = node.find(grammar.Pipeline)
         newnode.condition = node.generic_visit(condition, newnode)
@@ -227,8 +216,6 @@ class Builder:
 
     def visit_switch_clause(self, node, parent):
         newnode = tree.SwitchClause()
-        newnode.parent = parent
-        newnode.grammar = node
         statements = node.find_all(grammar.Statement)
         newnode.body = self.iter_generic_visit(statements, newnode)
         newnode.clause = self.iter_generic_visit(node[0], newnode)
