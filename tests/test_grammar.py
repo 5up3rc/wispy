@@ -2216,3 +2216,10 @@ class GrammarTest(unittest.TestCase):
             '-split "Hashirama, Tobirama, Hiruzen, Minato"',
         ]
         self._test_expected(ComparisonArgumentExpression, expressions)
+
+    def test_bitwise_argument_expression(self):
+        expressions = [
+            # FIXME: Add relevant scenarios.
+            '-split "Hashirama, Tobirama, Hiruzen, Minato"',
+        ]
+        self._test_expected(BitwiseArgumentExpression, expressions)
