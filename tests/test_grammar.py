@@ -2111,3 +2111,21 @@ class GrammarTest(unittest.TestCase):
             "++$i"
         ]
         self._test_expected(AdditiveArgumentExpression, expressions)
+
+    def test_command_module(self):
+        # FIXME: CommandModule == PrimaryExpresion
+        expressions = [
+            # Invocation expression
+            "[math]::Sqrt(2.0)",
+            '[char]::IsUpper("a")',
+            "[math]::Sqrt(2D)",
+            "[math]::Sqrt($true)",
+            "$a.Invoke(2.0)",
+            '[math]::("Sq"+"rt")',
+
+            # Post increment and decrement
+            "$i++",
+            "$i--",
+            "$a[$i++]",
+        ]
+        self._test_expected(CommandModule, expressions)
