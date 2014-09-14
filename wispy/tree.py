@@ -65,6 +65,83 @@ class Node(metaclass=NodeMeta):
             setattr(self, name, val)
 
 
+class Statement(Node):
+    """ Node representing a statement. """
+
+
+class Expression(Node):
+    """ Node representing an expression. """
+
+
+class ArrayExpression(Expression):
+    _fields = ('body', )
+
+
+class HashExpression(Expression):
+    _fields = ('keys', 'values')
+
+
+class Assign(Expression):
+    _fields = ('targets', 'value', 'op')
+
+
+class Array(Expression):
+    _fields = ('elems', )
+
+
+class Range(Expression):
+    _fields = ('elems', )
+
+
+class BinOp(Expression):
+    """ This expression can be used for MultiplicativeExpression,
+    AdditiveExpression, ComparisonExpression, BitwiseExpression,
+    LogicalExpression.
+    """
+    _fields = ('left', 'right', 'op')
+
+
+class LabeledStatement(Statement):
+    _fields = ('name', 'stmt')
+
+
+class TrapStatement(Statement):
+    _fields = ('exception', 'body')
+
+
+class DoStatement(Statement):
+    # TODO: type is 'while' and 'until'
+    _fields = ('body', 'type', 'condition')
+
+
+class ForStatement(Statement):
+    _fields = ('initializer', 'condition', 'iterator', 'body')
+
+
+class WhileStatement(Statement):
+    _fields = ('body', 'condition')
+
+
+class InlinescriptStatement(Statement):
+    _fields = ('body', )
+
+
+class ParallelStatement(Statement):
+    _fields = ('body', )
+
+
+class SequenceStatement(Statement):
+    _fields = ('body', )
+
+
+class FunctionStatement(Statement):
+    _fields = ('type', 'name', 'params', 'body')
+
+
+class ForeachStatement(Statement):
+    _fields = ('body', 'parameter', 'iter', 'target')
+
+
 class ScriptBlock(Node):
     _fields = ('statements', 'named_blocks')
 
@@ -77,8 +154,24 @@ class IfStatement(Node):
     _fields = ('test', 'body', 'elifs', 'orelse')
 
 
-class FunctionStatement(Node):
-    _fields = ('type', 'name', 'params', 'body')
+class ElifClause(Node):
+    _fields = ('test', 'body')
+
+
+class ElseClause(Node):
+    _fields = ('body', )
+
+
+class FlowControl(Node):
+    _fields = ('keyword', 'value')
+
+
+class TryExcept(Node):
+    _fields = ('body', 'handlers', 'finalbody')
+
+
+class CatchHandler(Node):
+    _fields = ('body', 'types')
 
 
 class Parameter(Node):
@@ -90,4 +183,12 @@ class TypeSpec(Node):
 
 
 class Name(Node):
+    _fields = ('value', )
+
+
+class String(Node):
+    _fields = ('value', )
+
+
+class Number(Node):
     _fields = ('value', )
