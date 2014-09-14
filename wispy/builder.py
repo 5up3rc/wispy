@@ -171,3 +171,11 @@ class Builder:
         statements = node.find_all(grammar.Statement)
         newnode.body = self.iter_generic_visit(statements, newnode)
         return newnode
+
+    def visit_parallel_statement(self, node, parent):
+        newnode = tree.ParallelStatement()
+        newnode.parent = parent
+        newnode.grammar = node
+        statements = node.find_all(grammar.Statement)
+        newnode.body = self.iter_generic_visit(statements, newnode)
+        return newnode
