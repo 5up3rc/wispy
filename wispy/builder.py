@@ -11,6 +11,8 @@
 
 from functools import partial
 
+from modgrammar import Literal
+
 from . import tree
 from . import grammar
 
@@ -66,6 +68,19 @@ class Builder:
         Returns a list of AST nodes, representing the children.
         """
         return self.iter_generic_visit(node, node)
+
+    def visit_variable(self, node, parent):
+        scope = None
+        if isinstance(node[0], Literal):
+            name = node[0].string
+        else:
+            if isinstance(node[0][1], grammar.VariableScope):
+                scope = node[0][1].string.strip(":")
+            name = node[0][0].string + node[0][2].string
+        newnode = tree.Variable(scope=scope, name=name)
+        newnode.parent = parent
+        newnode.grammar = node
+        return newnode
 
     def visit_script_block(self, node):
         """
