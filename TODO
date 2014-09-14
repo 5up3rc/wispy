@@ -40,3 +40,16 @@ for ($i = 1; $i -le 10; ++$i) { "$i $($i*$i)" }
 data -supportedcommand Format-XML {
   Format-XML -strings string1, string2, string3
 }
+
+* Infinite loop with the following examples over the TryStatement:
+{
+	try { $value * 10 }
+	catch [ System.OutOfMemoryException ] { $err = "Naruto" }
+	catch { $err = $_.Exception.Message }	
+}
+{
+	try { $value * 10 }
+	catch [System.OutOfMemoryException] { $err = "Obito" }
+	catch { $err = $_.Exception.Message }
+	finally { $Time=Get-Date}	
+}
