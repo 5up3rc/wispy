@@ -224,3 +224,12 @@ class Builder:
         condition = node.find(grammar.Pipeline)
         newnode.condition = node.generic_visit(condition, newnode)
         return newnode
+
+    def visit_switch_clause(self, node, parent):
+        newnode = tree.SwitchClause()
+        newnode.parent = parent
+        newnode.grammar = node
+        statements = node.find_all(grammar.Statement)
+        newnode.body = self.iter_generic_visit(statements, newnode)
+        newnode.clause = self.iter_generic_visit(node[0], newnode)
+        return newnode
