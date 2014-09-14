@@ -216,10 +216,11 @@ class Builder:
         return newnode
 
     def visit_switch_condition(self, node, parent):
+        filename = node.find(grammar.SwitchFilename)
         newnode = tree.SwitchCondition()
         newnode.parent = parent
         newnode.grammar = node
-        newnode.file = node.find(grammar.SwitchFilename)
+        newnode.file = tree.Name(value=filename.string) if filename else None
         condition = node.find(grammar.Pipeline)
         newnode.condition = node.generic_visit(condition, newnode)
         return newnode
