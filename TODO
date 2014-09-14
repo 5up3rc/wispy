@@ -53,3 +53,6 @@ data -supportedcommand Format-XML {
 	catch { $err = $_.Exception.Message }
 	finally { $Time=Get-Date}	
 }
+
+
+* RequiresComment -> not supporting command arguments
