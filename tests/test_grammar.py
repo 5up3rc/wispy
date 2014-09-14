@@ -2168,6 +2168,7 @@ class GrammarTest(unittest.TestCase):
 
     def test_logical_argument_expression(self):
         expressions = [
+            # FIXME: Add relevant scenarios.
             '-not $true', '-not 0', '-not 1.23', '!"xyz"',
             "-not -not $false",
             "-bnot ($Kakashi -lt 100)",
@@ -2175,3 +2176,10 @@ class GrammarTest(unittest.TestCase):
             "-join ($Hashirama, $Tobirama, $Hiruzen, $Minato)",
         ]
         self._test_expected(LogicalArgumentExpression, expressions)
+
+    def test_comparison_argument_expression(self):
+        expressions = [
+            # FIXME: Add relevant scenarios.
+            '-split "Hashirama, Tobirama, Hiruzen, Minato"',
+        ]
+        self._test_expected(ComparisonArgumentExpression, expressions)
