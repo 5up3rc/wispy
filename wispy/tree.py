@@ -67,10 +67,12 @@ class Node(metaclass=NodeMeta):
 
 class Statement(Node):
     """ Node representing a statement. """
+    _fields = ('stmt', )
 
 
 class Expression(Node):
     """ Node representing an expression. """
+    _fields = ('expr', )
 
 
 class ArrayExpression(Expression):
@@ -91,6 +93,14 @@ class Array(Expression):
 
 class Range(Expression):
     _fields = ('elems', )
+
+
+class UnaryOp(Expression):
+    """ This expression can be used for PreIncrementExpression,
+    PreDecrementExpression, CastExpression and UnaryExpression with
+    operators.
+    """
+    _fields = ('op', 'expr')
 
 
 class BinOp(Expression):
@@ -142,6 +152,18 @@ class ForeachStatement(Statement):
     _fields = ('body', 'parameter', 'iter', 'target')
 
 
+class SwitchCondition(Statement):
+    _fields = ('file', 'condition')
+
+
+class SwitchClause(Statement):
+    _fields = ('clause', 'body')
+
+
+class SwitchStatement(Statement):
+    _fields = ('params', 'condition', 'body')
+
+
 class ScriptBlock(Node):
     _fields = ('statements', 'named_blocks')
 
@@ -152,6 +174,10 @@ class NamedBlock(Node):
 
 class IfStatement(Node):
     _fields = ('test', 'body', 'elifs', 'orelse')
+
+
+class DataStatement(Statement):
+    _fields = ('allowed_commands', 'body')
 
 
 class ElifClause(Node):
@@ -192,3 +218,15 @@ class String(Node):
 
 class Number(Node):
     _fields = ('value', )
+
+
+class Argument(Node):
+    _fields = ('arg', )
+
+
+class Subscript(Expression):
+    _fields = ('value', )
+
+
+class Getattr(Expression):
+    _fields = ('expr', 'attr')
