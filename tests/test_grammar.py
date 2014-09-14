@@ -246,6 +246,54 @@ class GrammarTest(unittest.TestCase):
         with self.assertRaises(ParseError):
             self._parse(ExpandableStringWithSubexprEnd, "\"test")
 
+    def test_expandable_string_with_subexpr_part(self):
+        literals = [
+            "$x",
+            "\"\"",
+            "$()",
+            "$(function test {})"
+        ]
+        self._test_expected(ExpandableStringWithSubexprPart, literals)
+
+    def test_expandable_string_with_subexpr_characters(self):
+        literals = [
+            "$a"
+            "\"\""
+            "$(function my_func {$a = 1})"
+        ]
+        self._test_expected(ExpandableStringWithSubexprCharacters,
+                            literals)
+
+    def test_expandable_string_literal_with_subexpr(self):
+        literals = [
+            "\"test$()$a\"\"$(function test {})\""
+        ]
+        self._test_expected(ExpandableStringLiteralWithSubexpr, literals)
+
+    def test_expandable_here_string_with_subexpr_part(self):
+        literals = [
+            "$({data {}} {})",
+            "$\nx"
+        ]
+        self._test_expected(ExpandableHereStringWithSubexprPart, literals)
+
+    def test_expandable_here_string_with_subexpr_characters(self):
+        literals = [
+            "$({} {})"
+            "$\nx",
+            "$({data {}} {})"
+            "$\nx"
+        ]
+        self._test_expected(ExpandableHereStringWithSubexprCharacters,
+                            literals)
+
+    def test_expandable_here_string_literal_with_subexpr(self):
+        literals = [
+            "@\"\n$($({} {})$\nx\n\"@",
+            "@\"\n if($grade -ge 90){\"Grade A\"} $($({} {})$\nx\n\"@"
+        ]
+        self._test_expected(ExpandableHereStringLiteralWithSubexpr, literals)
+
     def test_script_block(self):
         literals = [
             "",
