@@ -66,6 +66,13 @@ class Node(metaclass=NodeMeta):
         for name, val in bound.arguments.items():
             setattr(self, name, val)
 
+    def get_children(self):
+        """ Yield all the child nodes of the current node,
+        as specified by '_fields' attribute.
+        """
+        for name in self._fields:
+            yield getattr(self, name, None)
+
 
 class Statement(Node):
 
