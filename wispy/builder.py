@@ -158,10 +158,8 @@ class Builder:
         newnode = tree.WhileStatement()
         newnode.parent = parent
         newnode.grammar = node
-
         condition = node.find(grammar.WhileCondition)
         newnode.condition = self.generic_visit(condition, newnode)
-
         statements = node.find_all(grammar.Statement)
         newnode.body = self.iter_generic_visit(statements, newnode)
 
@@ -171,6 +169,5 @@ class Builder:
         newnode = tree.InlinescriptStatement()
         newnode.parent = parent
         newnode.grammar = node
-
         statements = node.find_all(grammar.Statement)
         newnode.body = self.iter_generic_visit(statements, newnode)
