@@ -307,8 +307,8 @@ class GrammarTest(unittest.TestCase):
 
     def test_script_block_body(self):
         literals = [
-            'for ()\n{ "$i" }' +
-            '''if($grade -ge 90){"Grade A"}'''
+            'for ()\n{ "$i" }'
+            'if($grade -ge 90){"Grade A"}'
         ]
         self._test_expected(ScriptBlockBody, literals)
 
@@ -2069,3 +2069,23 @@ class GrammarTest(unittest.TestCase):
                }''',
         ]
         self._test_expected(DataStatement, stmts)
+
+    def test_try_statement(self):
+        statement = [
+            'try { $value / 10 }\ncatch   { Break }',
+            'try { $value / 10 }\nfinally { $status=1 }',
+
+            'try\n{\n$value / 10\n}\ncatch\n{\nBreak\n}',
+            'try\n{\n$value / 10\n}\nfinally\n{\n$status=1\n}',
+
+            # TODO: Find o method to fix the following examples:
+            #'try { $value * 10 }\n'
+            #'catch [ System.OutOfMemoryException ] { $err = "Naruto" }\n'
+            #'catch { $err = $_.Exception.Message }',
+
+            #'try { $value * 10 }\n'
+            #'catch [System.OutOfMemoryException] { $err = "Obito" }\n'
+            #'catch { $err = $_.Exception.Message }\n'
+            #'finally { $Time=Get-Date}'
+        ]
+        self._test_expected(TryStatement, statement, debug=False)

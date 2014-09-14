@@ -542,11 +542,11 @@ class ScriptBlockBody(Grammar):
 
 
 class ParamBlock(Grammar):
+    # FIXME: Remove References
+    grammar_whitespace_mode = "optional"
     grammar = (
-        "param", Spaces, "(", Spaces,
-        # FIXME: Remove REF
-        OPTIONAL(LIST_OF(REF('ScriptParameter'), sep=(Spaces, ",", Spaces))),
-        Spaces, ")"
+        "param", OPTIONAL(NewLines),
+        "(", OPTIONAL(REF('ParameterList')), ")"
     )
 
 
@@ -633,8 +633,6 @@ class Input(Grammar):
 
 
 # Grammar for Expressions
-
-
 class TypeSpec(Grammar):
     grammar = (
         TypeName,
@@ -750,13 +748,13 @@ class LogicalArgumentExpression(Grammar):
 
 
 class ArgumentExpressionList(Grammar):
+    grammar_whitespace_mode = "optional"
     grammar = LIST_OF(LogicalArgumentExpression,
-                      sep=(Spaces, ",", Spaces))
+                      sep=(OPTIONAL(NewLines), ",", OPTIONAL(WHITESPACE)))
 
 
 class ArgumentList(Grammar):
-    grammar = ("(", Spaces, OPTIONAL(ArgumentExpressionList),
-               Spaces, ")")
+    grammar = ("(", OPTIONAL(ArgumentExpressionList), OPTIONAL(NewLines), ")")
 
 
 class InvocationExpressionPrime(Grammar):
@@ -832,20 +830,18 @@ class ScriptBlockExpression(Grammar):
 class ArrayExpression(Grammar):
     # FIXME: Remove reference
     grammar_whitespace_mode = "optional"
-    grammar = ("@(", Spaces, OPTIONAL(REF('StatementList')),
-               Spaces, ")")
+    grammar = ("@(", OPTIONAL(REF('StatementList')), ")")
 
 
 class SubExpression(Grammar):
     # FIXME: Remove reference
-    grammar = ("$(", Spaces,
-               OPTIONAL(REF('StatementList')), Spaces, ")")
+    grammar_whitespace_mode = "optional"
+    grammar = ("$(", OPTIONAL(REF('StatementList')), ")")
 
 
 class ParenthesizedExpression(Grammar):
-    grammar = (
-        "(", Spaces, REF('Pipeline'), Spaces, ")"
-    )
+    grammar_whitespace_mode = "optional"
+    grammar = ("(", REF('Pipeline'), ")")
 
 
 class Value(Grammar):
@@ -877,36 +873,34 @@ class PrimaryExpression(Grammar):
     )
 
 
+class UnaryExpression(Grammar):
+    grammar = OR(
+        PrimaryExpression,
+        REF('ExpressionWithUnaryOperator'),
+    )
+
+
 class CastExpression(Grammar):
     grammar = (TypeLiteral, REF('UnaryExpression'))
 
 
 class PreDecrementExpression(Grammar):
-    # FIXME: Remove reference
-    grammar = (DashDash, OPTIONAL(NewLines), REF('UnaryExpression'))
+    grammar = (DashDash, OPTIONAL(NewLines), UnaryExpression)
 
 
 class PreIncrementExpression(Grammar):
-    # FIXME: Remove reference
-    grammar = ("++", OPTIONAL(NewLines), REF('UnaryExpression'))
+    grammar = ("++", OPTIONAL(NewLines), UnaryExpression)
 
 
 class ExpressionWithUnaryOperator(Grammar):
     grammar = OR(
         (
             OR(",", "-bnot", "-not", "-split", "-join", "!", "+", Dash),
-            Spaces, REF("UnaryExpression")
+            Spaces, UnaryExpression
         ),
-        REF("PreIncrementExpression"),
-        REF("PreDecrementExpression"),
-        REF("CastExpression"),
-    )
-
-
-class UnaryExpression(Grammar):
-    grammar = OR(
-        PrimaryExpression,
-        REF('ExpressionWithUnaryOperator'),
+        PreIncrementExpression,
+        PreDecrementExpression,
+        CastExpression,
     )
 
 
@@ -973,16 +967,49 @@ class Expression(Grammar):
 # End of grammar for Expressions
 
 
+# Attributes
+class AttributeArgument(Grammar):
+    grammar = OR(
+        (OPTIONAL(NewLines), Expression),
+        (
+            OPTIONAL(NewLines),
+            SimpleName,
+            OPTIONAL(WHITESPACE), "=", OPTIONAL(Spaces),
+            Expression
+        )
+    )
+
+
+class AttributeArguments(Grammar):
+    grammar = LIST_OF(AttributeArgument,
+                      sep=(Spaces, ",", OPTIONAL(WHITESPACE)))
+
+
+class AttributeName(Grammar):
+    grammar = TypeSpec
+
+
+class Attribute(Grammar):
+    grammar = OR(
+        ("[", AttributeName, "(", AttributeArguments, OPTIONAL(NewLines),
+         ")", OPTIONAL(NewLines), "]"),
+        TypeLiteral
+    )
+
+
+class AttributeList(Grammar):
+    grammar = LIST_OF(Attribute, sep=OPTIONAL(WHITESPACE))
+
+
 # Syntactic grammar
 class StatementList(Grammar):
-    grammar = LIST_OF(REF('Statement'), sep=Spaces)
+    grammar_whitespace_mode = "optional"
+    grammar = LIST_OF(REF('Statement'), sep=OPTIONAL(WHITESPACE))
 
 
 class StatementBlock(Grammar):
-    grammar = (
-        "{", Spaces, OPTIONAL(StatementList), Spaces,
-        "}"
-    )
+    grammar_whitespace_mode = "optional"
+    grammar = ("{", OPTIONAL(StatementList), "}")
 
 
 class ScriptParameterDefault(Grammar):
@@ -991,18 +1018,15 @@ class ScriptParameterDefault(Grammar):
 
 class ScriptParameter(Grammar):
     grammar = (
-        # FIXME: Remove REF
         OPTIONAL(NewLines),
-        OPTIONAL(REF('AttributeList')), Spaces,
+        OPTIONAL(AttributeList), Spaces,
         Variable, OPTIONAL(ScriptParameterDefault)
     )
 
 
 class ParameterListPrime(Grammar):
-    grammar = (
-        Spaces, ",", Spaces, ScriptParameter,
-        OPTIONAL(REF('ParameterListPrime'))
-    )
+    grammar_whitespace_mode = "optional"
+    grammar = (",", ScriptParameter, OPTIONAL(REF('ParameterListPrime')))
 
 
 class ParameterList(Grammar):
@@ -1150,22 +1174,25 @@ class FinallyClause(Grammar):
 
 
 class CatchTypeList(Grammar):
-    grammar = LIST_OF(TypeLiteral,
-                      sep=(Spaces, ",", Spaces))
+    grammar_whitespace_mode = "optional"
+    grammar = LIST_OF(TypeLiteral, sep=(","), whitespace_mode="optional")
 
 
 class CatchClause(Grammar):
-    grammar = (OPTIONAL(NewLines), "catch", Spaces, OPTIONAL(CatchTypeList),
-               Spaces, StatementBlock)
+    grammar_whitespace_mode = "optional"
+    grammar = (OPTIONAL(NewLines), "catch", OPTIONAL(CatchTypeList),
+               StatementBlock)
 
 
 class CatchClauses(Grammar):
-    grammar = LIST_OF(CatchClause, sep=Spaces)
+    grammar_whitespace_mode = "optional"
+    grammar = REPEAT(CatchClause)
 
 
 class TryStatement(Grammar):
+    grammar_whitespace_mode = "optional"
     grammar = (
-        "try", Spaces, StatementBlock,
+        "try", StatementBlock,
         OR(
             (CatchClauses, FinallyClause),
             CatchClauses,
@@ -1285,7 +1312,8 @@ class SwitchClause(Grammar):
 
 
 class SwitchClauses(Grammar):
-    grammar = LIST_OF(SwitchClause, sep=Spaces)
+    grammar_whitespace_mode = "optional"
+    grammar = LIST_OF(SwitchClause, sep=OPTIONAL(WHITESPACE))
 
 
 class SwitchBody(Grammar):
@@ -1317,7 +1345,8 @@ class SwitchParameter(Grammar):
 
 
 class SwitchParameters(Grammar):
-    grammar = LIST_OF(SwitchParameter, sep=WHITESPACE)
+    grammar_whitespace_mode = "optional"
+    grammar = LIST_OF(SwitchParameter, sep=OPTIONAL(WHITESPACE))
 
 
 class SwitchStatement(Grammar):
@@ -1355,37 +1384,3 @@ class Statement(Grammar):
         SequenceStatement,
         (Pipeline, OPTIONAL(StatementTerminator))
     )
-
-
-# Attributes
-class AttributeArgument(Grammar):
-    grammar = OR(
-        (OPTIONAL(NewLines), Expression),
-        (
-            OPTIONAL(NewLines),
-            SimpleName,
-            OPTIONAL(WHITESPACE), "=", OPTIONAL(Spaces),
-            Expression
-        )
-    )
-
-
-class AttributeArguments(Grammar):
-    grammar = LIST_OF(AttributeArgument,
-                      sep=(Spaces, ",", OPTIONAL(Spaces)))
-
-
-class AttributeName(Grammar):
-    grammar = TypeSpec
-
-
-class Attribute(Grammar):
-    grammar = OR(
-        ("[", AttributeName, "(", AttributeArguments, OPTIONAL(NewLines),
-         ")", OPTIONAL(NewLines), "]"),
-        TypeLiteral
-    )
-
-
-class AttributeList(Grammar):
-    grammar = LIST_OF(Attribute, sep=Spaces)
