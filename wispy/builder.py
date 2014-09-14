@@ -37,6 +37,7 @@ def build_tree(grammar_node):
 
 
 class Builder:
+
     """ An AST builder, implemented using the visitor pattern. """
 
     def iter_generic_visit(self, nodes, parent):
@@ -146,4 +147,17 @@ class Builder:
         newnode.name = tree.Name(value=node[0].string)
         specs = node[1].find_all(grammar.TypeSpec) or []
         newnode.types = self.iter_generic_visit(specs, newnode)
+        return newnode
+
+    def visit_while_statement(self, node, parent):
+        newnode = tree.WhileStatement()
+        newnode.parent = parent
+        newnode.grammar = node
+
+        condition = node.find(grammar.WhileCondition)
+        newnode.condition = self.generic_visit(condition, newnode)
+
+        statements = node.find_all(grammar.Statement)
+        newnode.body = self.iter_generic_visit(statements, newnode)
+
         return newnode
