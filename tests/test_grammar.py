@@ -2198,3 +2198,13 @@ class GrammarTest(unittest.TestCase):
             "$a[$i++]",
         ]
         self._test_expected(CommandModule, expressions)
+
+    def test_logical_argument_expression(self):
+        expressions = [
+            '-not $true', '-not 0', '-not 1.23', '!"xyz"',
+            "-not -not $false",
+            "-bnot ($Kakashi -lt 100)",
+            "-not ($Obito -eq $Madara)",
+            "-join ($Hashirama, $Tobirama, $Hiruzen, $Minato)",
+        ]
+        self._test_expected(LogicalArgumentExpression, expressions)
