@@ -294,6 +294,19 @@ class GrammarTest(unittest.TestCase):
         ]
         self._test_expected(ExpandableHereStringLiteralWithSubexpr, literals)
 
+    def test_string_literal_with_subexpression(self):
+        literals = [
+            "@\"\n$($({} {})$\nx\n\"@",
+            "\"test$()$a\"\"$(function test {})\""
+        ]
+        self._test_expected(StringLiteralWithSubexpression, literals)
+
+    def test_requires_comment(self):
+        literals = [
+            "#requires New-Object"
+        ]
+        self._test_expected(RequiresComment, literals)
+
     def test_script_block(self):
         literals = [
             "",
@@ -2089,3 +2102,26 @@ class GrammarTest(unittest.TestCase):
             #'finally { $Time=Get-Date}'
         ]
         self._test_expected(TryStatement, statement, debug=False)
+
+    def test_statement(self):
+        statements = [
+            dedent('''if ($grade -ge 90) { "Grade A" }'''),
+            "':TobiIsObito foreach ($e in $a) {}'",
+            dedent('''function Get-Square1
+                   {
+                    foreach ($i in $input)
+                    {
+                     $i * $i
+                    }
+                   }'''),
+            "return 100;",
+            "trap {$a = 1}",
+            'try { $value / 10 }\ncatch   { Break }',
+            "data -supportedcommand Format-XML { "
+            "Format-XML -strings string1}",
+            'inlinescript{$a = $Using:a+1; $a}',
+            'parallel{$a = $Using:a+1; $a}',
+            'sequence {"Inline A0 = $a"}',
+            "Foreach-Object {$_.Length};"
+        ]
+        self._test_expected(Statement, statements)
