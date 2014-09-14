@@ -832,8 +832,7 @@ class ScriptBlockExpression(Grammar):
 class ArrayExpression(Grammar):
     # FIXME: Remove reference
     grammar_whitespace_mode = "optional"
-    grammar = ("@(", Spaces, OPTIONAL(REF('StatementList')),
-               Spaces, ")")
+    grammar = ("@(", OPTIONAL(REF('StatementList')), ")")
 
 
 class SubExpression(Grammar):
@@ -975,13 +974,14 @@ class Expression(Grammar):
 
 # Syntactic grammar
 class StatementList(Grammar):
-    grammar = LIST_OF(REF('Statement'), sep=Spaces)
+    grammar_whitespace_mode = "optional"
+    grammar = LIST_OF(REF('Statement'), sep=OPTIONAL(WHITESPACE))
 
 
 class StatementBlock(Grammar):
+    grammar_whitespace_mode = "optional"
     grammar = (
-        "{", Spaces, OPTIONAL(StatementList), Spaces,
-        "}"
+        "{", OPTIONAL(StatementList), "}"
     )
 
 
@@ -1150,22 +1150,26 @@ class FinallyClause(Grammar):
 
 
 class CatchTypeList(Grammar):
-    grammar = LIST_OF(TypeLiteral,
-                      sep=(Spaces, ",", Spaces))
+    grammar_whitespace_mode = "optional"
+    grammar = LIST_OF(TypeLiteral, sep=(","), whitespace_mode="optional")
 
 
 class CatchClause(Grammar):
-    grammar = (OPTIONAL(NewLines), "catch", Spaces, OPTIONAL(CatchTypeList),
-               Spaces, StatementBlock)
+    grammar_whitespace_mode = "optional"
+    grammar = (OPTIONAL(NewLines), "catch", OPTIONAL(CatchTypeList),
+               StatementBlock)
 
 
 class CatchClauses(Grammar):
-    grammar = LIST_OF(CatchClause, sep=Spaces)
+    grammar_whitespace_mode = "optional"
+    grammar = REPEAT(CatchClause)
 
 
 class TryStatement(Grammar):
+    grammar_whitespace_mode = "optional"
     grammar = (
-        "try", Spaces, StatementBlock,
+        # TODO: Add space
+        "try", StatementBlock,
         OR(
             (CatchClauses, FinallyClause),
             CatchClauses,
