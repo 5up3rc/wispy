@@ -16,6 +16,7 @@ from . import grammar
 
 __all__ = ['build_tree', 'Builder']
 
+
 def to_underscore(string):
     new_string = []
     for char in string:
