@@ -71,3 +71,23 @@ class ScriptBlock(Node):
 
 class NamedBlock(Node):
     _fields = ('block_name', 'statements')
+
+
+class IfStatement(Node):
+    _fields = ('test', 'body', 'elifs', 'orelse')
+
+
+class FunctionStatement(Node):
+    _fields = ('type', 'name', 'params', 'body')
+
+
+class Parameter(Node):
+    _fields = ('attributes', 'variable', 'default')
+
+
+class TypeSpec(Node):
+    _fields = ('name', 'types')
+
+
+class Name(Node):
+    _fields = ('value', )
