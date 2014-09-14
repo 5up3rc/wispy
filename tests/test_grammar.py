@@ -765,6 +765,40 @@ class GrammarTest(unittest.TestCase):
         ]
         self._test_expected(VerbatimHereStringCharacters, test_ok)
 
+    def test_verbatim_command_string(self):
+        literals = [
+            "\"x\"",
+            "\"xxx\"",
+            "\"a#@$^%$  ++\""
+        ]
+        self._test_expected(VerbatimCommandString, literals)
+
+        with self.assertRaises(ParseError):
+            self._parse(VerbatimCommandString, "\"aaa")
+
+    def test_verbatim_command_argument_part(self):
+        literals = [
+            "\"test\"",
+            "&x",
+            "t"
+        ]
+        self._test_expected(VerbatimCommandArgumentPart, literals)
+
+        with self.assertRaises(ParseError):
+            self._parse(VerbatimCommandArgumentPart, "&&")
+
+    def test_verbatim_command_argument_chars(self):
+        literals = [
+            "\"test\""
+            "aaa"
+            "x"
+            "&a"
+        ]
+        self._test_expected(VerbatimCommandArgumentChars, literals)
+
+        with self.assertRaises(ParseError):
+            self._parse(VerbatimCommandArgumentChars, "||")
+
     def test_variable(self):
         test_ok = [
             "$totalCost", "$Maximum_Count_26", "${Maximum_Count_26}",
@@ -1853,10 +1887,11 @@ class GrammarTest(unittest.TestCase):
             dedent('''param (
                        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
                        [string[]]$ComputerName )'''),
-            dedent('''param([Parameter(Position = 0, ParameterSetname = "SetA")]
-                            [decimal]$dec,
-                            [Parameter(Position=0, ParameterSetname = "SetB")]
-                            [int]$in)'''),
+            dedent(
+                '''param([Parameter(Position = 0, ParameterSetname = "SetA")]
+                         [decimal]$dec,
+                         [Parameter(Position=0, ParameterSetname = "SetB")]
+                         [int]$in)'''),
 
         ]
         self._test_expected(ParamBlock, blocks)
