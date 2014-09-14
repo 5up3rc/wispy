@@ -31,7 +31,8 @@ class Colon(Grammar):
 
 
 class Dimension(Grammar):
-    grammar = REPEAT(",")
+    grammar_whitespace_mode = "optional"
+    grammar = REPEAT((",", OPTIONAL(WHITESPACE)))
 
 
 class NonAmpersandCharacter(Grammar):
@@ -233,8 +234,8 @@ class TypeName(Grammar):
 
 
 class GenericTypeArguments(Grammar):
-    # FIXME: Remove reference
-    grammar = LIST_OF(REF('TypeSpec'), sep=",")
+    grammar_whitespace_mode = "optional"
+    grammar = LIST_OF(REF('TypeSpec'), sep=(",", OPTIONAL(WHITESPACE)))
 
 
 class SimpleNameFirstCharacter(Grammar):
@@ -636,10 +637,11 @@ class Input(Grammar):
 class TypeSpec(Grammar):
     grammar = (
         TypeName,
-        OPTIONAL(("[",
-                  OR(REF("GenericTypeArguments"),
-                     OPTIONAL(Dimension)),
-                  "]"))
+        OPTIONAL(
+            ("[", OR(
+                GenericTypeArguments,
+                OPTIONAL(Dimension)
+            ), "]"))
     )
 
 

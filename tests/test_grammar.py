@@ -9,7 +9,7 @@ Tests for wispy.grammar.
 # pylint: disable=bad-builtin, star-args
 # pylint: disable=wildcard-import, unused-wildcard-import
 # pylint: disable=anomalous-backslash-in-string
-
+# pylint: disable=undefined-variable
 
 import unittest
 import string
@@ -426,6 +426,8 @@ class GrammarTest(unittest.TestCase):
 
     def test_type_spec(self):
         self._test_expected(TypeSpec, ["int[,]", "int[]"])
+        self._test_expected(TypeSpec, ["int[, ]", "int[, ,]", "int[,, ]",
+                                       "int[, , ]"])
         self._test_expected(TypeSpec, ["int", "float", "double"])
         self._test_expected(TypeSpec, ["Dictionary[float,double]"])
         self._test_expected(TypeSpec, ["Dictionary[int[float]]"])
@@ -502,8 +504,17 @@ class GrammarTest(unittest.TestCase):
         self._test_expected(CommandElements, parts)
 
     def test_generic_type_arguments(self):
-        self._test_expected(GenericTypeArguments,
-                            ["int,float", "int[,],float[,]"])
+        arguments = [
+            "string[]",
+            "int[,]",
+            "int[,,]",
+            "int[,,]",
+            "int,float",
+            "int[,],float[,]",
+            "int[,,], float[,,]",
+            "string[,], int, float"
+        ]
+        self._test_expected(GenericTypeArguments, arguments)
 
     def test_newline(self):
         self._test_expected(NewLineCharacter, ["\r", "\n", "\r\n"])
@@ -2125,3 +2136,14 @@ class GrammarTest(unittest.TestCase):
             "Foreach-Object {$_.Length};"
         ]
         self._test_expected(Statement, statements)
+
+    def test_additive_argument_expression(self):
+        expressions = [
+            "$naruto[0,0]++",
+            "$(($i = 10); (++$j))",
+            "$($i = 10; ++$j)",
+            "@(($i = 10); (++$j))",
+            "@($i = 10; ++$j)",
+            "++$i"
+        ]
+        self._test_expected(AdditiveArgumentExpression, expressions)
