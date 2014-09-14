@@ -489,8 +489,17 @@ class GrammarTest(unittest.TestCase):
         self._test_expected(CommandElements, parts)
 
     def test_generic_type_arguments(self):
-        self._test_expected(GenericTypeArguments,
-                            ["int,float", "int[,],float[,]"])
+        arguments = [
+            "string[]",
+            "int[,]",
+            "int[,,]",
+            "int[,,]",
+            "int,float",
+            "int[,],float[,]",
+            "int[,,], float[,,]",
+            "string[,], int, float"
+        ]
+        self._test_expected(GenericTypeArguments, arguments)
 
     def test_newline(self):
         self._test_expected(NewLineCharacter, ["\r", "\n", "\r\n"])
