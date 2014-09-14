@@ -9,7 +9,7 @@ Tests for wispy.grammar.
 # pylint: disable=bad-builtin, star-args
 # pylint: disable=wildcard-import, unused-wildcard-import
 # pylint: disable=anomalous-backslash-in-string
-
+# pylint: disable=undefined-variable
 
 import unittest
 import string
@@ -413,6 +413,8 @@ class GrammarTest(unittest.TestCase):
 
     def test_type_spec(self):
         self._test_expected(TypeSpec, ["int[,]", "int[]"])
+        self._test_expected(TypeSpec, ["int[, ]", "int[, ,]", "int[,, ]",
+                                       "int[, , ]"])
         self._test_expected(TypeSpec, ["int", "float", "double"])
         self._test_expected(TypeSpec, ["Dictionary[float,double]"])
         self._test_expected(TypeSpec, ["Dictionary[int[float]]"])

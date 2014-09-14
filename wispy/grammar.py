@@ -32,7 +32,7 @@ class Colon(Grammar):
 
 class Dimension(Grammar):
     grammar_whitespace_mode = "optional"
-    grammar = REPEAT(",")
+    grammar = REPEAT((",", OPTIONAL(WHITESPACE)))
 
 
 class NonAmpersandCharacter(Grammar):
