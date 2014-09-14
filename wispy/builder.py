@@ -51,7 +51,8 @@ class Builder:
         if the builder implements it. If so, it should return
         a new AST node representing the type of the node.
         """
-
+        if node is None:
+            return
         cls = node.__class__.__name__.replace("<", "").replace(">", "")
         visit_name = 'visit_' + to_underscore(cls)
         visit_method = getattr(self, visit_name, None)
