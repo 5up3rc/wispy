@@ -119,7 +119,7 @@ class DelimitedComment(Grammar):
 
 
 class RequiresComment(Grammar):
-    grammar = ("#requires", WHITESPACE, REF('CommandArguments'))
+    grammar = ("#requires", WHITESPACE, REF('CommandArgument'))
 
 
 class SingleLineComment(Grammar):
