@@ -56,3 +56,11 @@ data -supportedcommand Format-XML {
 
 
 * RequiresComment -> not supporting command arguments
+
+* Handle extra new lines issue under statements (matching something else)
+
+function My-Function
+{
+}\n
+
+-> Pipeline instead FunctionStatement due the fact that there is a new line after the last brace
