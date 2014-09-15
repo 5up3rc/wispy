@@ -2249,7 +2249,6 @@ class GrammarTest(unittest.TestCase):
         self._test_expected(AdditiveArgumentExpression, expressions)
 
     def test_command_module(self):
-        # FIXME: CommandModule == PrimaryExpresion
         expressions = [
             # Invocation expression
             "[math]::Sqrt(2.0)",
