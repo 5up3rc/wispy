@@ -204,14 +204,15 @@ class Builder:
         return newnode
 
     def visit_else_clause(self, node, parent):
-        # TODO
-        pass
+        newnode = tree.ElseClause()
+        statements = node.find_all(grammar.Statement)
+        newnode.body = self.iter_generic_visit(statements, newnode)
+        return newnode
 
     # TODO: add visit_flow_control(self, node, parent)
     # TODO: add visit_try_except(self, node, parent)
     # TODO: add visit_catch_handler(self, node, parent)
     # TODO: add visit_parameter(self, node, parent)
-
     def visit_type_spec(self, node, parent):
         newnode = tree.TypeSpec()
         newnode.name = tree.Name(value=node[0].string)
