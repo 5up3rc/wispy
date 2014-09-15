@@ -209,7 +209,15 @@ class Builder:
         newnode.body = self.iter_generic_visit(statements, newnode)
         return newnode
 
-    # TODO: add visit_flow_control(self, node, parent)
+    def visit_flow_control(self, node, parent):
+        newnode = tree.FlowControl()
+        newnode.keyword = tree.Name(value=node[0].string)
+        value = node.find(grammar.LabelExpression)
+        if not value:
+            value = node.find(grammar.Pipeline)
+        newnode.value = self.iter_generic_visit(value, newnode)
+        return newnode
+
     # TODO: add visit_try_except(self, node, parent)
     # TODO: add visit_catch_handler(self, node, parent)
     # TODO: add visit_parameter(self, node, parent)
