@@ -2136,14 +2136,14 @@ class GrammarTest(unittest.TestCase):
             'try\n{\n$value / 10\n}\nfinally\n{\n$status=1\n}',
 
             # TODO: Find o method to fix the following examples:
-            #'try { $value * 10 }\n'
-            #'catch [ System.OutOfMemoryException ] { $err = "Naruto" }\n'
-            #'catch { $err = $_.Exception.Message }',
+            # 'try { $value * 10 }\n'
+            # 'catch [ System.OutOfMemoryException ] { $err = "Naruto" }\n'
+            # 'catch { $err = $_.Exception.Message }',
 
-            #'try { $value * 10 }\n'
-            #'catch [System.OutOfMemoryException] { $err = "Obito" }\n'
-            #'catch { $err = $_.Exception.Message }\n'
-            #'finally { $Time=Get-Date}'
+            # 'try { $value * 10 }\n'
+            # 'catch [System.OutOfMemoryException] { $err = "Obito" }\n'
+            # 'catch { $err = $_.Exception.Message }\n'
+            # 'finally { $Time=Get-Date}'
         ]
         self._test_expected(TryStatement, statement, debug=False)
 
