@@ -1784,7 +1784,7 @@ class GrammarTest(unittest.TestCase):
 
     def test_catch_clauses(self):
         clauses = [
-            # 'catch\n{"Caught unexpected exception"}',
+            'catch\n{"Caught unexpected exception"}',
             dedent('''catch [IndexOutOfRangeException]
                    {
                         "Handling out-of-bounds index, >$_<`n"
