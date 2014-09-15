@@ -218,7 +218,16 @@ class Builder:
         newnode.value = self.iter_generic_visit(value, newnode)
         return newnode
 
-    # TODO: add visit_try_except(self, node, parent)
+    def visit_try_except(self, node, parent):
+        statements = node.find_all(grammar.Statement)
+        handlers = node.find_all(grammar.CatchClauses)
+        final = node.find(grammar.FinallyClause)
+        newnode = tree.TryExcept()
+        newnode.body = self.iter_generic_visit(statements, newnode)
+        newnode.handlers = self.iter_generic_visit(handlers, newnode)
+        newnode.finalbody = self.iter_generic_visit(final, newnode)
+        return newnode
+
     # TODO: add visit_catch_handler(self, node, parent)
     # TODO: add visit_parameter(self, node, parent)
     def visit_type_spec(self, node, parent):
