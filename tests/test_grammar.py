@@ -14,7 +14,7 @@ Tests for wispy.grammar.
 import unittest
 import string
 import logging
-from itertools import chain
+from itertools import chain, tee
 from textwrap import dedent
 
 from modgrammar import ParseError
@@ -41,7 +41,7 @@ class GrammarTest(unittest.TestCase):
             self.assertEqual(str(parsed), expected)
 
     def _test_expected(self, grammar, texts, *, debug=False):
-        text_pairs = zip(texts, texts)
+        text_pairs = zip(*tee(texts))
         self._test_expected_pairs(grammar, text_pairs, debug=debug)
 
     def test_simple_name_first_character(self):
@@ -452,7 +452,7 @@ class GrammarTest(unittest.TestCase):
         self._test_expected(ParameterCharacters, ["char", "float", "double"])
 
     def test_first_parameter_character(self):
-        literals = list(chain(string.ascii_letters, ["\u005F", "?"]))
+        literals = chain(string.ascii_letters, ["\u005F", "?"])
         self._test_expected(FirstParameterCharacter, literals)
 
         for digit in string.digits:
@@ -486,7 +486,7 @@ class GrammarTest(unittest.TestCase):
         self._test_expected(CommandArgument, names)
 
     def test_command_element(self):
-        parts = list(chain(
+        parts = chain(
             ['Get-Factorial'],
             ["-" + letter for letter in string.ascii_letters],
             ["2>&1", "1>&2",
@@ -496,7 +496,7 @@ class GrammarTest(unittest.TestCase):
              ">>filename", ">a.txt", "<b.txt", "2>>c.txt", "2>d.txt",
              # variables
              ">$null", "2>>$null"]
-        ))
+        )
         self._test_expected(CommandElement, parts)
 
     def test_command_elements(self):
@@ -708,10 +708,10 @@ class GrammarTest(unittest.TestCase):
         self._test_expected(OperatorOrPunctuator, literals)
 
     def test_variable_characters(self):
-        literals = list(chain(["a", "abc"],
-                              string.digits,
-                              string.ascii_letters,
-                              ["?"]))
+        literals = chain(["a", "abc"],
+                         string.digits,
+                         string.ascii_letters,
+                         ["?"])
         self._test_expected(VariableCharacters, literals)
 
     def test_variable_namespace(self):
@@ -770,7 +770,7 @@ class GrammarTest(unittest.TestCase):
         self._test_expected(Comment, literals)
 
     def test_type_character(self):
-        literals = list(chain(string.ascii_letters, ["\u005F"]))
+        literals = chain(string.ascii_letters, ["\u005F"])
         self._test_expected(TypeCharacter, literals)
 
     def test_type_characters(self):
