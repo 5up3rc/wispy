@@ -228,7 +228,13 @@ class Builder:
         newnode.finalbody = self.iter_generic_visit(final, newnode)
         return newnode
 
-    # TODO: add visit_catch_handler(self, node, parent)
+    def visit_catch_handler(self, node, parent):
+        statements = node.find_all(grammar.Statement)
+        newnode = tree.CatchHandler()
+        newnode.body = self.iter_generic_visit(statements, newnode)
+        newnode.types = self.iter_generic_visit(node[2], newnode)
+        return newnode
+        
     # TODO: add visit_parameter(self, node, parent)
     def visit_type_spec(self, node, parent):
         newnode = tree.TypeSpec()
