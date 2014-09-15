@@ -11,8 +11,6 @@
 ($PSBoundParameters.GetEnumerator().
  Where({$_.Value -eq $true}).Key)
 
-* Keywords are actually case insensitive.
-
 * Pathological case for the following:
 
 for ($i = 1; $i -le 10; ++$i) { "$i $($i*$i)" }
