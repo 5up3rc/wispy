@@ -30,6 +30,11 @@ def to_underscore(string):
     return "".join(new_string).strip("_")
 
 
+def _set_info(ast, grammar_node, parent):
+    ast.parent = parent
+    ast.grammar = grammar_node
+
+
 def build_tree(grammar_node):
     """
     Visit the nodes from the given grammar, returning
@@ -65,11 +70,9 @@ class Builder:
             if ast:
                 if isinstance(ast, list):
                     for child in ast:
-                        child.parent = parent
-                        child.grammar = node
+                        _set_info(child, node, parent)
                 else:
-                    ast.parent = parent
-                    ast.grammar = node
+                    _set_info(ast, node, parent)
             return ast
 
     def visit_children(self, node):
