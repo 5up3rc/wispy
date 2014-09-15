@@ -198,8 +198,10 @@ class Builder:
 
     # TODO: add visit_data_statement(self, node, parent)
     def visit_elseif_clause(self, node, parent):
-        # TODO
-        pass
+        newnode = tree.ElifClause()
+        newnode.test = self.iter_generic_visit(node[5], newnode)
+        newnode.body = self.iter_generic_visit(node[9], newnode)
+        return newnode
 
     def visit_else_clause(self, node, parent):
         # TODO
