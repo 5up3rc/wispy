@@ -9,12 +9,35 @@
 """
 # pylint: disable=missing-docstring, no-init, too-few-public-methods
 # pylint: disable=anomalous-unicode-escape-in-string
+import re
 
 from modgrammar import (
     Grammar, OR, WORD, REPEAT, ANY_EXCEPT,
     OPTIONAL, ANY, EXCEPT,
     LIST_OF, REF, WHITESPACE,
 )
+from modgrammar.extras import RE
+
+# pylint: disable=invalid-name
+def RE_LITERAL(regex, *args, regex_flags=re.I | re.MULTILINE, **kwargs):
+    """ A Literal grammar which uses a regular expression instead
+    of a simple string check.
+
+    This has the benefit that certain flags can be applied to the
+    regex, before building the grammar, using *regex_flags* keyword argument.
+    By default, using *RE_LITERAL* ignores the case of the match.
+    """
+
+    regex = re.compile(regex, regex_flags)
+    return RE(regex, *args, **kwargs)
+
+def ignore_case_literals(*args):
+    """ Receive a list of strings and return a list of grammars
+    for each of those strings.
+
+    In this case, the grammars ignores the case of the match.
+    """
+    return list(map(RE_LITERAL, args))
 
 
 # Grammars without dependencies
@@ -160,7 +183,7 @@ class FormatOperator(Grammar):
 class ComparisonOperator(Grammar):
     grammar = (
         Dash,
-        OR(
+        OR(*ignore_case_literals(
             "as", "ccontains", "ceq", "cge", "cgt", "cle", "clike",
             "clt", "cmatch", "cne", "cnotcontains", "cnotlike",
             "cnotmatch", "contains", "creplace", "csplit", "eq",
@@ -171,7 +194,7 @@ class ComparisonOperator(Grammar):
             "notcontains", "notin", "notlike", "notmatch", "replace",
             "shl", "shr", "split"
         )
-    )
+    ))
 
 
 class FileRedirectionOperator(Grammar):
@@ -198,8 +221,8 @@ class OperatorOrPunctuator(Grammar):
         "{", "}", "[", "]", "(", ")", "@(", "@{", "$(", ";",
         "&&", "||", "&", "|", ",", "++", "..", "::", ".",
         "!", "*", "/", "%", "+",
-        (Dash, OR("and", "band", "bnot", "bor",
-                  "bxor", "not", "or", "xor", Dash)),
+        (Dash, OR(Dash, *ignore_case_literals("and", "band", "bnot", "bor",
+                  "bxor", "not", "or", "xor"))),
         Dash,
         AssignmentOperator,
         MergingRedirectionOperator,
@@ -275,8 +298,8 @@ class VariableNamespace(Grammar):
 
 
 class VariableScope(Grammar):
-    grammar = OR("global:", "local:", "private:", "script:",
-                 VariableNamespace)
+    grammar = OR(VariableNamespace,
+                 *ignore_case_literals("global:", "local:", "private:", "script:"))
 
 
 class BracedVariable(Grammar):
@@ -411,7 +434,7 @@ class DecimalDigits(Grammar):
 
 
 class NumericMultiplier(Grammar):
-    grammar = OR("kb", "mb", "tb", "pb", "gb")
+    grammar = OR(*ignore_case_literals("kb", "mb", "tb", "pb", "gb"))
 
 
 class LongTypeSuffix(Grammar):
@@ -546,7 +569,7 @@ class ParamBlock(Grammar):
     # FIXME: Remove References
     grammar_whitespace_mode = "optional"
     grammar = (
-        "param", OPTIONAL(NewLines),
+        RE_LITERAL("param"), OPTIONAL(NewLines),
         "(", OPTIONAL(REF('ParameterList')), ")"
     )
 
@@ -591,13 +614,13 @@ class VerbatimCommandArgumentChars(Grammar):
 # Grammar fo Keywords
 class Keyword(Grammar):
 
-    grammar = OR(
+    grammar = OR(*ignore_case_literals(
         "workflow", "inlinescript", "parallel", "begin", "break", "catch",
         "class", "continue", "data", "define", "do", "dynamicparam", "elseif",
         "else", "end", "exit", "filter", "finally", "foreach", "for", "from",
         "function", "if", "in", "param", "process", "return", "switch", "var",
         "throw", "trap", "try", "until", "using", "while"
-    )
+    ))
 # End of grammar for Keywords
 
 
@@ -741,12 +764,14 @@ class ComparisonArgumentExpression(Grammar):
 
 class BitwiseArgumentExpression(Grammar):
     grammar = LIST_OF(ComparisonArgumentExpression,
-                      sep=(OR("-band", "-bor", "-bxor"), OPTIONAL(NewLines)))
+                      sep=(OR(RE_LITERAL("-band"), RE_LITERAL("-bor"), RE_LITERAL("-bxor")),
+                           OPTIONAL(NewLines)))
 
 
 class LogicalArgumentExpression(Grammar):
     grammar = LIST_OF(BitwiseArgumentExpression,
-                      sep=(OR("-and", "-or", "-xor"), OPTIONAL(NewLines)))
+                      sep=(OR(RE_LITERAL("-and"), RE_LITERAL("-or"), RE_LITERAL("-xor")),
+                           OPTIONAL(NewLines)))
 
 
 class ArgumentExpressionList(Grammar):
@@ -897,7 +922,8 @@ class PreIncrementExpression(Grammar):
 class ExpressionWithUnaryOperator(Grammar):
     grammar = OR(
         (
-            OR(",", "-bnot", "-not", "-split", "-join", "!", "+", Dash),
+            OR(",", RE_LITERAL("-bnot"), RE_LITERAL("-not"),
+               RE_LITERAL("-split"), RE_LITERAL("-join"), "!", "+", Dash),
             Spaces, UnaryExpression
         ),
         PreIncrementExpression,
@@ -951,7 +977,9 @@ class ComparisonExpression(Grammar):
 class BitwiseExpression(Grammar):
     grammar = LIST_OF(ComparisonExpression,
                       sep=(OPTIONAL(WHITESPACE),
-                           OR("-band", "-bor", "-bxor"),
+                           OR(RE_LITERAL("-band"),
+                              RE_LITERAL("-bor"),
+                              RE_LITERAL("-bxor")),
                            OPTIONAL(WHITESPACE),
                            OPTIONAL(NewLines)))
 
@@ -959,7 +987,9 @@ class BitwiseExpression(Grammar):
 class LogicalExpression(Grammar):
     grammar = LIST_OF(BitwiseExpression,
                       sep=(OPTIONAL(WHITESPACE),
-                           OR("-and", "-or", "-xor"),
+                           OR(RE_LITERAL("-and"),
+                              RE_LITERAL("-or"),
+                              RE_LITERAL("-xor")),
                            OPTIONAL(WHITESPACE),
                            OPTIONAL(NewLines)))
 
@@ -1036,7 +1066,7 @@ class ParameterList(Grammar):
 
 
 class BlockName(Grammar):
-    grammar = OR("dynamicparam", "begin", "process", "end")
+    grammar = OR(*ignore_case_literals("dynamicparam", "begin", "process", "end"))
 
 
 class NamedBlock(Grammar):
@@ -1113,15 +1143,15 @@ class Pipeline(Grammar):
 
 
 class InlinescriptStatement(Grammar):
-    grammar = ("inlinescript", Spaces, StatementBlock)
+    grammar = (RE_LITERAL("inlinescript"), Spaces, StatementBlock)
 
 
 class ParallelStatement(Grammar):
-    grammar = ("parallel", Spaces, StatementBlock)
+    grammar = (RE_LITERAL("parallel"), Spaces, StatementBlock)
 
 
 class SequenceStatement(Grammar):
-    grammar = ("sequence", Spaces, StatementBlock)
+    grammar = (RE_LITERAL("sequence"), Spaces, StatementBlock)
 
 
 class DataCommand(Grammar):
@@ -1133,19 +1163,19 @@ class DataCommandsList(Grammar):
 
 
 class DataCommandsAllowed(Grammar):
-    grammar = ("-supportedcommand", Spaces, DataCommandsList)
+    grammar = (RE_LITERAL("-supportedcommand"), Spaces, DataCommandsList)
 
 
 class DataStatement(Grammar):
     grammar = (
-        "data", Spaces, OPTIONAL(DataCommandsAllowed),
+        RE_LITERAL("data"), Spaces, OPTIONAL(DataCommandsAllowed),
         Spaces, StatementBlock
     )
 
 
 class ElseIfClause(Grammar):
     grammar = (
-        Spaces, "elseif", Spaces, "(", Spaces, Pipeline, Spaces, ")", Spaces,
+        Spaces, RE_LITERAL("elseif"), Spaces, "(", Spaces, Pipeline, Spaces, ")", Spaces,
         StatementBlock
     )
 
@@ -1155,12 +1185,12 @@ class ElseIfClauses(Grammar):
 
 
 class ElseClause(Grammar):
-    grammar = (Spaces, "else", Spaces, StatementBlock)
+    grammar = (Spaces, RE_LITERAL("else"), Spaces, StatementBlock)
 
 
 class IfStatement(Grammar):
     grammar = (
-        "if",
+        RE_LITERAL("if"),
         Spaces, "(", Spaces, Pipeline, Spaces, ")", Spaces,
         StatementBlock, OPTIONAL(ElseIfClauses),
         OPTIONAL(ElseClause)
@@ -1172,7 +1202,7 @@ class LabelExpression(Grammar):
 
 
 class FinallyClause(Grammar):
-    grammar = (OPTIONAL(NewLines), "finally", Spaces, StatementBlock)
+    grammar = (OPTIONAL(NewLines), RE_LITERAL("finally"), Spaces, StatementBlock)
 
 
 class CatchTypeList(Grammar):
@@ -1182,7 +1212,7 @@ class CatchTypeList(Grammar):
 
 class CatchClause(Grammar):
     grammar_whitespace_mode = "optional"
-    grammar = (OPTIONAL(NewLines), "catch", OPTIONAL(CatchTypeList),
+    grammar = (OPTIONAL(NewLines), RE_LITERAL("catch"), OPTIONAL(CatchTypeList),
                StatementBlock)
 
 
@@ -1194,7 +1224,7 @@ class CatchClauses(Grammar):
 class TryStatement(Grammar):
     grammar_whitespace_mode = "optional"
     grammar = (
-        "try", StatementBlock,
+        RE_LITERAL("try"), StatementBlock,
         OR(
             (CatchClauses, FinallyClause),
             CatchClauses,
@@ -1205,7 +1235,7 @@ class TryStatement(Grammar):
 
 class TrapStatement(Grammar):
     grammar = (
-        "trap", Spaces, OPTIONAL(TypeLiteral),
+        RE_LITERAL("trap"), Spaces, OPTIONAL(TypeLiteral),
         Spaces, StatementBlock
     )
 
@@ -1213,11 +1243,11 @@ class TrapStatement(Grammar):
 class FlowControlStatement(Grammar):
     grammar = OR(
         (
-            OR("break", "continue"),
+            OR(RE_LITERAL("break"), RE_LITERAL("continue")),
             OPTIONAL((WHITESPACE, LabelExpression))
         ),
         (
-            OR("throw", "return", "exit"),
+            OR(RE_LITERAL("throw"), RE_LITERAL("return"), RE_LITERAL("exit")),
             OPTIONAL((WHITESPACE, Pipeline))
         ),
     )
@@ -1233,7 +1263,7 @@ class FunctionName(Grammar):
 
 class FunctionStatement(Grammar):
     grammar = (
-        OR("function", "filter", "workflow"), Spaces,
+        OR(RE_LITERAL("function"), RE_LITERAL("filter"), RE_LITERAL("workflow")), Spaces,
         FunctionName, Spaces, OPTIONAL(FunctionParameterDeclaration), Spaces,
         "{", Spaces, ScriptBlock, Spaces, "}"
     )
@@ -1245,14 +1275,14 @@ class WhileCondition(Grammar):
 
 class DoStatement(Grammar):
     grammar = (
-        "do", Spaces, StatementBlock, Spaces, OR("while", "until"),
+        RE_LITERAL("do"), Spaces, StatementBlock, Spaces, OR(RE_LITERAL("while"), RE_LITERAL("until")),
         Spaces, "(", WhileCondition, Spaces, ")"
     )
 
 
 class WhileStatement(Grammar):
     grammar = (
-        "while", Spaces, "(", Spaces, WhileCondition,
+        RE_LITERAL("while"), Spaces, "(", Spaces, WhileCondition,
         Spaces, ")", Spaces, StatementBlock
     )
 
@@ -1272,20 +1302,20 @@ class ForIterator(Grammar):
 class ForStatement(Grammar):
     grammar = OR(
         (
-            "for", Spaces, "(",
+            RE_LITERAL("for"), Spaces, "(",
             Spaces, OPTIONAL(ForInitializer), StatementTerminator,
             Spaces, OPTIONAL(ForCondition), StatementTerminator,
             Spaces, OPTIONAL(ForIterator), Spaces, ")",
             Spaces, StatementBlock
         ),
         (
-            "for", Spaces, "(",
+            RE_LITERAL("for"), Spaces, "(",
             Spaces, OPTIONAL(ForInitializer), StatementTerminator,
             Spaces, OPTIONAL(ForCondition), Spaces, ")",
             Spaces, StatementBlock
         ),
         (
-            "for", Spaces, "(", Spaces,
+            RE_LITERAL("for"), Spaces, "(", Spaces,
             OPTIONAL(ForInitializer), Spaces, ")",
             Spaces, StatementBlock
         ),
@@ -1293,13 +1323,13 @@ class ForStatement(Grammar):
 
 
 class ForeachParameter(Grammar):
-    grammar = "-parallel"
+    grammar = RE_LITERAL("-parallel")
 
 
 class ForeachStatement(Grammar):
     grammar = (
-        "foreach", Spaces, OPTIONAL(ForeachParameter), Spaces,
-        "(", Spaces, Variable, Spaces, "in", Spaces, Pipeline,
+        RE_LITERAL("foreach"), Spaces, OPTIONAL(ForeachParameter), Spaces,
+        "(", Spaces, Variable, Spaces, RE_LITERAL("in"), Spaces, Pipeline,
         Spaces, ")", Spaces, StatementBlock
     )
 
@@ -1337,13 +1367,13 @@ class SwitchCondition(Grammar):
 
 
 class SwitchParameter(Grammar):
-    grammar = OR(
+    grammar = OR(*ignore_case_literals(
         "-regex", "-rege", "-reg", "-re", "-r", "-wildcard", "-wildcar",
         "-wildca", "-wildc", "-wild", "-wil", "-wi", "-w", "-exact",
         "-exac", "-exa", "-ex", "-e", "-casesensitive", "-casesensitiv",
         "-casesensiti", "-casesensit", "-casesensi", "-casesens",
         "-casesen", "-casese", "-cases", "-case", "-cas", "-ca", "-c"
-    )
+    ))
 
 
 class SwitchParameters(Grammar):
@@ -1353,7 +1383,7 @@ class SwitchParameters(Grammar):
 
 class SwitchStatement(Grammar):
     grammar = (
-        "switch", OPTIONAL(NewLines), OPTIONAL(WHITESPACE),
+        RE_LITERAL("switch"), OPTIONAL(NewLines), OPTIONAL(WHITESPACE),
         OPTIONAL(SwitchParameters), OPTIONAL(WHITESPACE),
         SwitchCondition, OPTIONAL(WHITESPACE), SwitchBody
     )

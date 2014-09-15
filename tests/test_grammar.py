@@ -142,6 +142,8 @@ class GrammarTest(unittest.TestCase):
                     "in", "param", "process", "return",
                     "switch", "throw", "trap", "try",
                     "until", "using", "var", "while")
+        literals = chain(literals,
+                         [literal.swapcase() for literal in literals])
         self._test_expected(Keyword, literals)
 
     def test_expandable_string_part(self):
@@ -547,7 +549,8 @@ class GrammarTest(unittest.TestCase):
             self._parse(SingleLineComment, "t#rrop")
 
     def test_numeric_multiplier(self):
-        multipliers = ["kb", "mb", "gb", "tb", "pb"]
+        multipliers = ["kb", "mb", "gb", "tb", "pb",
+                       "Kb", "MB", "gB", "TB", "Pb"]
         self._test_expected(NumericMultiplier, multipliers)
 
         with self.assertRaises(ParseError):
@@ -689,6 +692,8 @@ class GrammarTest(unittest.TestCase):
             "split"
         ]
         literals = ["-{}".format(op) for op in ops]
+        literals = chain(literals,
+                         [literal.swapcase() for literal in literals])
         self._test_expected(ComparisonOperator, literals)
 
     def test_operator_or_punctuator(self):
@@ -699,10 +704,10 @@ class GrammarTest(unittest.TestCase):
             "-", "--",
             "-and", "-band", "-bnot",
             "-bor", "-bxor", "-not",
-            "-or", "-xor",
+            "-or", "-xor", "-AND", "-BAND", "-BNOT",
+            "-BOR", "-Bxor", "-nOt",
             "+=", "*=",
-            ">>",
-            "-inotlike",
+            ">>", "-INOTliKe", "-inotlike",
             "-f"
         ]
         self._test_expected(OperatorOrPunctuator, literals)
@@ -722,9 +727,9 @@ class GrammarTest(unittest.TestCase):
             self._parse(VariableNamespace, ":a")
 
     def test_variable_scope(self):
-        scopes = ["globe:", "local:", "private:", "script:"]
+        scopes = ["globe:", "global:", "local:", "private:", "script:",
+                  "GLOBE:", "GLOBAL:", "Local:", "Private:", "SCRIPT:"]
         self._test_expected(VariableScope, scopes)
-
         self._test_expected(VariableScope, ["abc:"])
 
     def test_braced_variable(self):
@@ -1019,12 +1024,15 @@ class GrammarTest(unittest.TestCase):
         self._test_expected(StatementTerminators, [";;", "\n\n"])
 
     def test_block_name(self):
-        names = ["dynamicparam", "begin", "process", "end"]
+        names = ["dynamicparam", "begin", "process", "end",
+                 "DynamicParam", "BEGIN", "PrOcEss", "End"]
         self._test_expected(BlockName, names)
 
     def test_switch_parameters(self):
         params = ["-regex", "-wildcard", "-exact", "-casesensitive"]
         self._test_expected(SwitchParameter, params)
+        self._test_expected(SwitchParameter,
+                            [param.upper() for param in params])
 
         params = [param + " " + param
                   for param in params]
@@ -1048,20 +1056,25 @@ class GrammarTest(unittest.TestCase):
             "break",
             "break $lab",
             "break labelA",
+            "Break $lab",
 
             "continue",
             "continue $lab",
             "continue labelA",
+            "CONTINUE labelB",
 
             "throw",
             "throw 100",
             'throw "No such record in file"',
+            "Throw 42",
 
             "return 1",
             "return $4",
+            "Return $52",
 
             "exit",
             "exit $4",
+            "EXIT $42",
         ]
         self._test_expected(FlowControlStatement, parts)
 
@@ -1227,6 +1240,9 @@ class GrammarTest(unittest.TestCase):
             "0x0F0F -bxor 0xFEL",
             "0x0F0F -bxor 14.40D",
             "0x0F0F -bxor 14.6",
+            "0x0F0F -BXOR 14",
+            "0x0F0F -BOR 24",
+            "0x0F0F -BaND 23",
         ]
         self._test_expected(BitwiseExpression, parts)
 
@@ -1265,6 +1281,9 @@ class GrammarTest(unittest.TestCase):
             "($j -eq 5) -and (++$k -gt 15)",
             "($j++ -gt 5) -or (++$k -lt 15)",
             "($j -eq 10) -or ($k -gt 15)",
+            "($j -eq 10) -OR ($k -gt 15)",
+            "($j -eq 10) -XoR ($k -gt 15)",
+            "($j -eq 10) -AND ($k -gt 15)",
         ]
         self._test_expected(LogicalExpression, parts)
 
@@ -1431,6 +1450,8 @@ class GrammarTest(unittest.TestCase):
                    else { "Grade F" }'''),
             dedent('''if ($grade -ge 90) { "Grade A" }'''),
             dedent('''if($grade -ge 90){"Grade A"}'''),
+            dedent('''IF($grade -ge 90){"Grade A"}'''),
+            dedent('''If($grade -ge 90){"Grade A"}'''),
         ]
         self._test_expected(IfStatement, parts)
 
@@ -1439,6 +1460,8 @@ class GrammarTest(unittest.TestCase):
             'else { "grade f" }',
             'else{"grafe f"\n}',
             'else{"giraffe"}',
+            'ELSE{"giraffe"}',
+            'Else{"giraffe"}',
         ]
         self._test_expected(ElseClause, parts)
 
@@ -1447,6 +1470,8 @@ class GrammarTest(unittest.TestCase):
             'elseif ($grade -ge 80) { "Grade B" }',
             'elseif($grade -ge 70){ "Grade C" }',
             'elseif($grade -ge 60)\n{"Grade D"}',
+            'ELSEIF($grade -ge 60)\n{"Grade D"}',
+            'ElseIf($grade -ge 60)\n{"Grade D"}',
         ]
         self._test_expected(ElseIfClause, parts)
 
@@ -1470,6 +1495,8 @@ class GrammarTest(unittest.TestCase):
             'for ($i = 1;)\n{ "$i" }',
             'for ()\n{ "$i" }',
             'for (){ "$i" }',
+            'For (){ "$i" }',
+            'FOR (){ "$i" }',
         ]
         self._test_expected(ForStatement, parts)
 
@@ -1491,7 +1518,9 @@ class GrammarTest(unittest.TestCase):
             'while ($i++ -lt 2) { $i }',
             'while ($i++ -lt 2)\n{ $i }',
             'while (\n$i++ -lt 2\n) { $i }',
-            'while (1) { $i }'
+            'while (1) { $i }',
+            'WHILE (1) { $i }',
+            'While (1) { $i }',
         ]
         self._test_expected(WhileStatement, parts)
 
@@ -1500,7 +1529,9 @@ class GrammarTest(unittest.TestCase):
             'do\n{\n$i;\n}\nwhile (++$i -le 5)',
             'do\n{\n$i;}\nuntil (++$i -gt 5)',
             'do { $i } while ($i)',
-            'do { $i } until ($i -le 85)'
+            'do { $i } until ($i -le 85)',
+            'DO { $i } Until ($i -le 85)',
+            'Do { $i } WHILE ($i)',
         ]
         self._test_expected(DoStatement, parts)
 
@@ -1511,12 +1542,14 @@ class GrammarTest(unittest.TestCase):
             'foreach ($t in [byte],[int],[long]) {$t::MaxValue}',
             'foreach ($f in dir *.txt)\n\n{}',
             'foreach ($e in $h1.Keys) {}',
+            'Foreach ($e In $h1.Keys) {}',
+            'FOREACH ($e IN $h1.Keys) {}',
         ]
         self._test_expected(ForeachStatement, parts)
 
     def test_foreach_parameter(self):
-        parsed = self._parse(ForeachParameter, "-parallel")
-        self.assertEqual(str(parsed), "-parallel")
+        params = ["-parallel", "-Parallel", "-PARALLEL"]
+        self._test_expected(ForeachParameter, params)
 
     def test_switch_clause(self):
         parts = [
@@ -1600,6 +1633,14 @@ class GrammarTest(unittest.TestCase):
             {
               a*      { ++$lineCount }
             }'''),
+            dedent('''Switch -wildcard ("abc")
+            {
+              a*      { ++$lineCount }
+            }'''),
+            dedent('''SWITCH -wildcard ("abc")
+            {
+              a*      { ++$lineCount }
+            }'''),
 
             dedent('''switch -regex -casesensitive ("abc")
             {
@@ -1631,14 +1672,17 @@ class GrammarTest(unittest.TestCase):
             for operator in
             (",", "-bnot", "-not", "-split", "-join", "!", "+")
         ]
-        parts += [
-            "[bool]-10",
-            "[int]-10.70D",
-            "[int]10.7",
-            '[long]"+2.3e+3"',
-            '[char[]]"Hello"',
-            '++$k', '++${k}',
-        ]
+        parts = chain(
+            parts,
+            [literal.swapcase() for literal in parts],
+            [
+                "[bool]-10",
+                "[int]-10.70D",
+                "[int]10.7",
+                '[long]"+2.3e+3"',
+                '[char[]]"Hello"',
+                '++$k', '++${k}',
+            ])
         self._test_expected(ExpressionWithUnaryOperator, parts)
 
     def test_merging_redirection_operator(self):
@@ -1701,6 +1745,8 @@ class GrammarTest(unittest.TestCase):
             'trap { $j =2; continue }',
             'trap {$j =2; break }',
             'trap{}',
+            'Trap{}',
+            'TRAP{}',
         ]
         self._test_expected(TrapStatement, stmts)
 
@@ -1708,12 +1754,16 @@ class GrammarTest(unittest.TestCase):
         clauses = [
             'finally\n{ "Tobi is a good boy" }',
             'finally{$a=4}',
+            'Finally{$a=4}',
+            'FINALLY{$a=4}',
         ]
         self._test_expected(FinallyClause, clauses)
 
     def test_catch_clause(self):
         clauses = [
             'catch\n{"Caught unexpected exception"}',
+            'Catch\n{"Caught unexpected exception"}',
+            'CATCH\n{"Caught unexpected exception"}',
             dedent('''catch [IndexOutOfRangeException]
                    {
                         "Handling out-of-bounds index, >$_<`n"
@@ -1852,6 +1902,10 @@ class GrammarTest(unittest.TestCase):
                    {
                        $_ * $_
                    }'''),
+            dedent('''FILTER Get-Square2
+                   {
+                       $_ * $_
+                   }'''),
             dedent('''function Get-Power ([long]$base, [int]$exponent)
                    {
                        $result = 1
@@ -1862,6 +1916,7 @@ class GrammarTest(unittest.TestCase):
                        return $result
                    }'''),
             'function Find-Str ([string]$str, [int]$start_pos = 0) { $str }',
+            'Function Find-Str ([string]$str, [int]$start_pos = 0) { $str }',
             dedent('''function Get-Square1
                    {
                     foreach ($i in $input)
@@ -1880,6 +1935,9 @@ class GrammarTest(unittest.TestCase):
                    else { "Switch off" }
                    }'''),
             dedent('''workflow paralleltest {
+                   parallel {
+                      Get-Service -Name s*}}'''),
+            dedent('''WORKflow paralleltest {
                    parallel {
                       Get-Service -Name s*}}'''),
         ]
@@ -1968,6 +2026,8 @@ class GrammarTest(unittest.TestCase):
         stmts = [
             'inlinescript {"Inline A0 = $a"}',
             'inlinescript{$a = $Using:a+1; $a}',
+            'InlineScript{$a = $Using:a+1; $a}',
+
         ]
         self._test_expected(InlinescriptStatement, stmts)
 
@@ -1975,6 +2035,8 @@ class GrammarTest(unittest.TestCase):
         stmts = [
             'parallel {"Inline A0 = $a"}',
             'parallel{$a = $Using:a+1; $a}',
+            'Parallel{$a = $Using:a+1; $a}',
+            'PARALLEL{$a = $Using:a+1; $a}',
         ]
         self._test_expected(ParallelStatement, stmts)
 
@@ -1982,12 +2044,15 @@ class GrammarTest(unittest.TestCase):
         stmts = [
             'sequence {"Inline A0 = $a"}',
             'sequence {$a = $Using:a+1; $a}',
+            'Sequence {$a = $Using:a+1; $a}',
         ]
         self._test_expected(SequenceStatement, stmts)
 
     def test_param_block(self):
         blocks = [
             dedent('''param ([Parameter(Mandatory = $true)]
+                             [string[]] $ComputerName )'''),
+            dedent('''PARAM ([Parameter(Mandatory = $true)]
                              [string[]] $ComputerName )'''),
             dedent('''param (
                        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
@@ -2096,6 +2161,7 @@ class GrammarTest(unittest.TestCase):
         commands = [
             "-supportedcommand ConvertFromString",
             "-supportedcommand TobiIsObito",
+            "-SupportedCommand TobiIsObito",
         ]
         self._test_expected(DataCommandsAllowed, commands)
 
@@ -2104,7 +2170,7 @@ class GrammarTest(unittest.TestCase):
             # TODO: pathological case
             # "data -supportedcommand Format-XML { "
             # "Format-XML -strings string1, string2, string3}",
-
+            "DATA {}",
             "data -supportedcommand Format-XML { "
             "Format-XML -strings string1}",
 
@@ -2130,6 +2196,8 @@ class GrammarTest(unittest.TestCase):
     def test_try_statement(self):
         statement = [
             'try { $value / 10 }\ncatch   { Break }',
+            'Try { $value / 10 }\nCatch   { Break }',
+            'TRY { $value / 10 }\ncatch   { Break }',
             'try { $value / 10 }\nfinally { $status=1 }',
 
             'try\n{\n$value / 10\n}\ncatch\n{\nBreak\n}',
