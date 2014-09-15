@@ -234,7 +234,7 @@ class Builder:
         newnode.body = self.iter_generic_visit(statements, newnode)
         newnode.types = self.iter_generic_visit(node[2], newnode)
         return newnode
-        
+
     # TODO: add visit_parameter(self, node, parent)
     def visit_type_spec(self, node, parent):
         newnode = tree.TypeSpec()
