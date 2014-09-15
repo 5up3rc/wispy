@@ -1608,13 +1608,12 @@ class GrammarTest(unittest.TestCase):
             dedent('{"`n"  { ++$lineCount };"`f"  { ++$pageCount };"`t" { };'
                    '  default { ++$otherCount }}'),
 
-            # TODO: this case is not working.
-            # dedent('''{
-            #            { $_ -lt 20 }	{ "-lt 20" }
-            #            { $_ -band 1 }	{ "Odd" }
-            #            { $_ -eq 19 }	{ "-eq 19" }
-            #            default { "default" }
-            #          }'''.strip()),
+            dedent('''{
+                        { $_ -lt 20 }	{ "-lt 20" }
+                        { $_ -band 1 }	{ "Odd" }
+                        { $_ -eq 19 }	{ "-eq 19" }
+                        default { "default" }
+                      }'''.strip()),
         ]
         self._test_expected(SwitchBody, parts)
 
