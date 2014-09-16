@@ -162,7 +162,13 @@ class Builder:
         newnode.clause = self.iter_generic_visit(node[0], newnode)
         return newnode
 
-    # TODO: add visit_switch_statement(self, node, parent)
+    def visit_switch_statement(self, node, parent):
+        newnode = tree.SwitchStatement()
+        newnode.params = self.iter_generic_visit(node[3], newnode)
+        newnode.condition = self.iter_generic_visit(node[5], newnode)
+        newnode.body = self.iter_generic_visit(node[7], newnode)
+        return newnode
+
     def visit_script_block(self, node):
         """
         Visit a ScriptBlock grammar node and return the AST
