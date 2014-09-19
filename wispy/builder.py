@@ -273,9 +273,16 @@ class Builder:
         return newnode
 
     # TODO: add visit_string
-    # TODO: add visit_number
     # TODO: add visit_argument
     # TODO: add visit_subscript
+
+    def visit_literal(self, node, parent):
+        return self.generic_visit(node[0], parent)
+
+    def visit_integer_literal(self, node, parent):
+        return tree.Number(value=node.string)
+
+    visit_real_literal = visit_integer_literal
 
     def visit_variable(self, node, parent):
         scope = None
