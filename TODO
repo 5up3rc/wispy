@@ -48,3 +48,5 @@ function My-Function
 }\n
 
 -> Pipeline instead FunctionStatement due the fact that there is a new line after the last brace
+
+* 1.4L is seen as a member access, not as a number.
