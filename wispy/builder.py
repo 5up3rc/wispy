@@ -225,7 +225,15 @@ class Builder:
         newnode.orelse = self.iter_generic_visit(orelse, newnode)
         return newnode
 
-    # TODO: add visit_data_statement(self, node, parent)
+    def visit_data_statement(self, node, parent):
+        commands = node.find_all(grammar.CommandNameExpr)
+        stmts = node.find_all(grammar.Statement)
+
+        newnode = tree.DataStatement()
+        newnode.allowed_commands = self.iter_generic_visit(commands, newnode)
+        newnode.body = self.iter_generic_visit(stmts, newnode)
+        return newnode
+
     def visit_elseif_clause(self, node, parent):
         newnode = tree.ElifClause()
         newnode.test = self.iter_generic_visit(node[5], newnode)
