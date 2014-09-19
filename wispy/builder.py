@@ -97,10 +97,15 @@ class Builder:
     # TODO: add visit_range(self, node, parent)
     # TODO: add visit_unary_op(self, node, parent)
     # TODO: add visit_bin_op(self, node, parent)
-    # TODO: add visit_labeled_statement(self, node, parent)
-    # TODO: add visit_trap_statement(self, node, parent)
-    # TODO: add visit_do_statement(self, node, parent)
     # TODO: add visit_for_statement(self, node, parent)
+
+    def visit_trap_statement(self, node, parent):
+        newnode = tree.TrapStatement()
+        statements = node.find_all(grammar.Statement)
+        newnode.body = self.iter_generic_visit(statements, newnode)
+        if node[2]:
+            newnode.exception = self.generic_visit(node[2], newnode)
+        return newnode
 
     def visit_while_statement(self, node, parent):
         newnode = tree.WhileStatement()
@@ -108,6 +113,22 @@ class Builder:
         newnode.condition = self.generic_visit(condition, newnode)
         statements = node.find_all(grammar.Statement)
         newnode.body = self.iter_generic_visit(statements, newnode)
+        return newnode
+
+    def visit_labeled_statement(self, node, parent):
+        newnode = tree.LabeledStatement()
+        newnode.stmt = self.generic_visit(node[1], newnode)
+        newnode.label = tree.Name(value=node[0]) if node[0] else None
+        return newnode
+
+    def visit_do_statement(self, node, parent):
+        newnode = tree.DoStatement()
+        condition = node.find(grammar.WhileCondition)
+        statements = node.find_all(grammar.Statement)
+        newnode.condition = self.generic_visit(condition, newnode)
+        newnode.body = self.iter_generic_visit(statements, newnode)
+        # TODO: Name or simple string?
+        newnode.type = node[4].string.lower()
         return newnode
 
     def visit_inlinescript_statement(self, node, parent):
