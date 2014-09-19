@@ -41,7 +41,7 @@ def build_tree(grammar_node):
     a new AST node.
     """
     builder = Builder()
-    return builder.visit_script_block(grammar_node)
+    return builder.generic_visit(grammar_node, None)
 
 
 class Builder:
