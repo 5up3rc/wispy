@@ -272,7 +272,6 @@ class Builder:
         newnode.types = self.iter_generic_visit(specs, newnode)
         return newnode
 
-    # TODO: add visit_name
     # TODO: add visit_string
     # TODO: add visit_number
     # TODO: add visit_argument
