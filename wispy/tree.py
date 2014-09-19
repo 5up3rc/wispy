@@ -176,11 +176,11 @@ class SwitchStatement(Statement):
 
 
 class ScriptBlock(Node):
-    _fields = ('statements', 'named_blocks')
+    _fields = ('body', 'named_blocks')
 
 
 class NamedBlock(Node):
-    _fields = ('block_name', 'statements')
+    _fields = ('block_name', 'body')
 
 
 class IfStatement(Node):

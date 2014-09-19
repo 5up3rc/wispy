@@ -199,8 +199,7 @@ class Builder:
         blocks = node.find_all(grammar.NamedBlock)
 
         newnode = tree.ScriptBlock()
-        newnode.body = self.visit_children(node)
-        newnode.statements = self.iter_generic_visit(stmts, newnode)
+        newnode.body = self.iter_generic_visit(stmts, newnode)
         newnode.named_blocks = self.iter_generic_visit(blocks, newnode)
         newnode.grammar = node
         return newnode
@@ -210,7 +209,7 @@ class Builder:
         stmts = node.find_all(grammar.Statement)
         newnode = tree.NamedBlock()
         newnode.block_name = tree.Name(value=node[0].string.lower())
-        newnode.statements = self.iter_generic_visit(stmts, newnode)
+        newnode.body = self.iter_generic_visit(stmts, newnode)
         return newnode
 
     def visit_if_statement(self, node, parent):
