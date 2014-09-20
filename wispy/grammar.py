@@ -378,12 +378,8 @@ class StringLiteral(Grammar):
                  VerbatimHereStringLiteral)
 
 
-class DecimalDigit(Grammar):
-    grammar = WORD('0-9', max=1)
-
-
 class DecimalDigits(Grammar):
-    grammar = REPEAT(DecimalDigit)
+    grammar = WORD('0-9')
 
 
 class NumericMultiplier(Grammar):

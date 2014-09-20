@@ -574,14 +574,13 @@ class GrammarTest(unittest.TestCase):
         suffixes = ["l", "L", "d", "D"]
         self._test_expected(NumericTypeSuffix, suffixes)
 
-    def test_decimal_digit(self):
+    def test_decimal_digits(self):
         numbers = list(map(str, range(10)))
-        self._test_expected(DecimalDigit, numbers)
+        self._test_expected(DecimalDigits, numbers)
 
         with self.assertRaises(ParseError):
-            self._parse(DecimalDigit, "a")
+            self._parse(DecimalDigits, "a")
 
-    def test_decimal_digits(self):
         numbers = ["10", "1"]
         self._test_expected(DecimalDigits, numbers)
 
