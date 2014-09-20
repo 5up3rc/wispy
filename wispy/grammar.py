@@ -204,12 +204,25 @@ class TypeIdentifier(Grammar):
 class TypeName(Grammar):
     grammar = LIST_OF(TypeIdentifier, sep=".")
 
-# End of grammars for type names
-
 
 class GenericTypeArguments(Grammar):
     grammar_whitespace_mode = "optional"
     grammar = LIST_OF(REF('TypeSpec'), sep=(",", OPTIONAL(WHITESPACE)))
+
+
+class TypeSpec(Grammar):
+    grammar = (
+        TypeName,
+        OPTIONAL(
+            ("[", OR(
+                GenericTypeArguments,
+                OPTIONAL(Dimension)
+            ), "]"))
+    )
+
+
+class TypeLiteral(Grammar):
+    grammar = ("[", TypeSpec, "]")
 
 
 class SimpleNameFirstCharacter(Grammar):
@@ -522,6 +535,11 @@ class StatementBlock(Grammar):
     grammar = ("{", OPTIONAL(StatementList), "}")
 
 
+class SubExpression(Grammar):
+    grammar_whitespace_mode = "optional"
+    grammar = ("$(", OPTIONAL(StatementList), ")")
+
+
 class BlockName(Grammar):
     grammar = OR(
         *ignore_case_literals("dynamicparam", "begin", "process", "end")
@@ -559,18 +577,6 @@ class ScriptBlock(Grammar):
     )
 
 
-class CommandName(Grammar):
-    grammar = OR(GenericToken, GenericTokenWithSubexprStart)
-
-
-class CommandNameExpr(Grammar):
-    grammar = OR(CommandName, REF('PrimaryExpression'))
-
-
-class CommandArgument(Grammar):
-    grammar = CommandNameExpr
-
-
 class VerbatimCommandString(Grammar):
     grammar = (DoubleQuoteCharacter, NonDoubleQuoteCharacters,
                DoubleQuoteCharacter)
@@ -599,21 +605,6 @@ class Keyword(Grammar):
     ))
 
 
-class TypeSpec(Grammar):
-    grammar = (
-        TypeName,
-        OPTIONAL(
-            ("[", OR(
-                GenericTypeArguments,
-                OPTIONAL(Dimension)
-            ), "]"))
-    )
-
-
-class TypeLiteral(Grammar):
-    grammar = ("[", TypeSpec, "]")
-
-
 class Token(Grammar):
     grammar = OR(
         Keyword,
@@ -629,27 +620,25 @@ class Token(Grammar):
     )
 
 
-class ExpandableHereStringLiteralWithSubexpr(Grammar):
-    # FIXME: Remove references
-    grammar = (
-        ExpandableHereStringWithSubexprStart,
-        OPTIONAL(StatementList),
-        REF('ExpandableHereStringWithSubexprCharacters'),
-        ExpandableHereStringWithSubexprEnd
-    )
-
-
 class ExpandableHereStringWithSubexprPart(Grammar):
-    # FIXME: Remove reference
-    grammar = OR(REF('SubExpression'), ExpandableHereStringPart)
+    grammar = OR(SubExpression, ExpandableHereStringPart)
 
 
 class ExpandableHereStringWithSubexprCharacters(Grammar):
     grammar = REPEAT(ExpandableHereStringWithSubexprPart)
 
 
+class ExpandableHereStringLiteralWithSubexpr(Grammar):
+    grammar = (
+        ExpandableHereStringWithSubexprStart,
+        OPTIONAL(StatementList),
+        ExpandableHereStringWithSubexprCharacters,
+        ExpandableHereStringWithSubexprEnd
+    )
+
+
 class ExpandableStringWithSubexprPart(Grammar):
-    grammar = OR(REF('SubExpression'), ExpandableStringPart)
+    grammar = OR(SubExpression, ExpandableStringPart)
 
 
 class ExpandableStringWithSubexprCharacters(Grammar):
@@ -682,7 +671,7 @@ class StringLiteralWithSubexpression(Grammar):
 class MemberName(Grammar):
     grammar = OR(
         # FIXME: Remove references
-        SimpleName, StringLiteral, REF('StringLiteralWithSubexpression'),
+        SimpleName, StringLiteral, StringLiteralWithSubexpression,
         REF('ExpressionWithUnaryOperator'), REF('Value')
     )
 
@@ -823,19 +812,13 @@ class ScriptBlockExpression(Grammar):
 
 
 class ArrayExpression(Grammar):
-    # FIXME: Remove reference
     grammar_whitespace_mode = "optional"
     grammar = ("@(", OPTIONAL(StatementList), ")")
 
 
-class SubExpression(Grammar):
-    # FIXME: Remove reference
-    grammar_whitespace_mode = "optional"
-    grammar = ("$(", OPTIONAL(StatementList), ")")
-
-
 class ParenthesizedExpression(Grammar):
     grammar_whitespace_mode = "optional"
+    # TODO: remove reference
     grammar = ("(", REF('Pipeline'), ")")
 
 
@@ -1022,6 +1005,18 @@ class ParameterList(Grammar):
     grammar = (ScriptParameter, OPTIONAL(ParameterListPrime))
 
 
+class CommandName(Grammar):
+    grammar = OR(GenericToken, GenericTokenWithSubexprStart)
+
+
+class CommandNameExpr(Grammar):
+    grammar = OR(CommandName, PrimaryExpression)
+
+
+class CommandArgument(Grammar):
+    grammar = CommandNameExpr
+
+
 class RedirectedFileName(Grammar):
     grammar = OR(CommandArgument, PrimaryExpression)
 
@@ -1072,6 +1067,7 @@ class PipelineTail(Grammar):
 
 
 class AssignmentExpression(Grammar):
+    # TODO: remove reference
     grammar = (Expression, OPTIONAL(WHITESPACE),
                AssignmentOperator, OPTIONAL(WHITESPACE),
                REF('Statement'))
