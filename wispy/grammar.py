@@ -91,10 +91,8 @@ class StatementTerminator(Grammar):
 
 class StatementTerminators(Grammar):
     grammar = REPEAT(StatementTerminator)
-# End of Grammars without dependencies
 
 
-# Grammar for line terminators
 class NewLines(Grammar):
     grammar = REPEAT(NewLineCharacter)
 
@@ -103,17 +101,6 @@ class Spaces(Grammar):
     grammar = (OPTIONAL(WHITESPACE),
                OPTIONAL(NewLines),
                OPTIONAL(WHITESPACE))
-# End of grammar for line terminators
-
-
-# Grammar for input character
-class InputCharacter(Grammar):
-    grammar = EXCEPT(ANY, NewLineCharacter, max=1)
-
-
-class InputCharacters(Grammar):
-    grammar = REPEAT(InputCharacter)
-# End of grammar for input character
 
 
 class Dash(Grammar):
@@ -603,21 +590,6 @@ class Keyword(Grammar):
         "function", "if", "in", "param", "process", "return", "switch", "var",
         "throw", "trap", "try", "until", "using", "while"
     ))
-
-
-class Token(Grammar):
-    grammar = OR(
-        Keyword,
-        Variable,
-        # FIXME: Remove REF
-        REF('Command'),
-        CommandParameter,
-        IntegerLiteral,
-        RealLiteral,
-        StringLiteral,
-        TypeLiteral,
-        OperatorOrPunctuator,
-    )
 
 
 class ExpandableHereStringWithSubexprPart(Grammar):
@@ -1373,6 +1345,14 @@ class Statement(Grammar):
     )
 
 
+class InputCharacter(Grammar):
+    grammar = EXCEPT(ANY, NewLineCharacter, max=1)
+
+
+class InputCharacters(Grammar):
+    grammar = REPEAT(InputCharacter)
+
+
 class Hashes(Grammar):
     grammar = REPEAT("#")
 
@@ -1421,6 +1401,20 @@ class Signature(Grammar):
 
 class SignatureBlock(Grammar):
     grammar = (SignatureBegin, Signature, SignatureEnd)
+
+
+class Token(Grammar):
+    grammar = OR(
+        Keyword,
+        Variable,
+        Command,
+        CommandParameter,
+        IntegerLiteral,
+        RealLiteral,
+        StringLiteral,
+        TypeLiteral,
+        OperatorOrPunctuator,
+    )
 
 
 class InputElement(Grammar):
