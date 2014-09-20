@@ -116,66 +116,12 @@ class InputCharacters(Grammar):
 # End of grammar for input character
 
 
-# Grammar for comments
 class Dash(Grammar):
     grammar = OR("\u002D", "\u2013", "\u2014", "\u2015")
 
 
 class DashDash(Grammar):
     grammar = (Dash, Dash)
-
-
-class Hashes(Grammar):
-    grammar = REPEAT("#")
-
-
-class NotGreaterThanOrHash(Grammar):
-    grammar = ANY_EXCEPT("#>", max=1)
-
-
-class DelimitedCommentSection(Grammar):
-    grammar = OR(">", (OPTIONAL(Hashes), NotGreaterThanOrHash))
-
-
-class DelimitedCommentText(Grammar):
-    grammar = REPEAT(DelimitedCommentSection)
-
-
-class DelimitedComment(Grammar):
-    grammar = ("<#", OPTIONAL(DelimitedCommentText), Hashes, ">")
-
-
-class RequiresComment(Grammar):
-    grammar = ("#requires", WHITESPACE, REF('CommandArgument'))
-
-
-class SingleLineComment(Grammar):
-    grammar = ("#", OPTIONAL(WHITESPACE), OPTIONAL(InputCharacters))
-
-
-class Comment(Grammar):
-    grammar = OR(SingleLineComment, RequiresComment, DelimitedComment)
-# Enf of grammar for comments
-
-
-# Grammar for siganature
-class SignatureBegin(Grammar):
-    grammar = (NewLineCharacter, "# SIG # Begin signature block",
-               NewLineCharacter)
-
-
-class SignatureEnd(Grammar):
-    grammar = (NewLineCharacter, "# SIG # End signature block",
-               NewLineCharacter)
-
-
-class Signature(Grammar):
-    grammar = LIST_OF(SingleLineComment, sep=NewLineCharacter)
-
-
-class SignatureBlock(Grammar):
-    grammar = (SignatureBegin, Signature, SignatureEnd)
-# Enf of grammar for signature
 
 
 # Grammar for Operators and punctuators
@@ -566,10 +512,34 @@ class CommandParameter(Grammar):
 # End of grammar for Commands
 
 
-# Syntactic grammar
+class StatementList(Grammar):
+    grammar_whitespace_mode = "optional"
+    grammar = LIST_OF(REF('Statement'), sep=OPTIONAL(WHITESPACE))
+
+
+class StatementBlock(Grammar):
+    grammar_whitespace_mode = "optional"
+    grammar = ("{", OPTIONAL(StatementList), "}")
+
+
+class BlockName(Grammar):
+    grammar = OR(
+        *ignore_case_literals("dynamicparam", "begin", "process", "end")
+    )
+
+
+class NamedBlock(Grammar):
+    grammar = (BlockName, Spaces,
+               StatementBlock,
+               OPTIONAL(StatementTerminators))
+
+
+class NamedBlockList(Grammar):
+    grammar = LIST_OF(NamedBlock, sep=Spaces)
+
+
 class ScriptBlockBody(Grammar):
-    # FIXME: Remove REF
-    grammar = OR(REF('NamedBlockList'), REF('StatementList'))
+    grammar = OR(NamedBlockList, StatementList)
 
 
 class ParamBlock(Grammar):
@@ -618,7 +588,6 @@ class VerbatimCommandArgumentChars(Grammar):
     grammar = REPEAT(VerbatimCommandArgumentPart)
 
 
-# Grammar fo Keywords
 class Keyword(Grammar):
 
     grammar = OR(*ignore_case_literals(
@@ -628,42 +597,8 @@ class Keyword(Grammar):
         "function", "if", "in", "param", "process", "return", "switch", "var",
         "throw", "trap", "try", "until", "using", "while"
     ))
-# End of grammar for Keywords
 
 
-# Grammar for tokens
-class Token(Grammar):
-    grammar = OR(
-        Keyword,
-        Variable,
-        # FIXME: Remove REF
-        REF('Command'),
-        CommandParameter,
-        IntegerLiteral,
-        RealLiteral,
-        StringLiteral,
-        # FIXME: Remove reference
-        REF('TypeLiteral'),
-        OperatorOrPunctuator,
-    )
-# End of grammar for tokens
-
-
-# Grammar for input
-class InputElement(Grammar):
-    grammar = OR(WHITESPACE, Comment, Token)
-
-
-class InputElements(Grammar):
-    grammar = LIST_OF(InputElement, sep=NewLineCharacter)
-
-
-class Input(Grammar):
-    grammar = OPTIONAL(InputElements), OPTIONAL(SignatureBlock)
-# End of grammar for Input
-
-
-# Grammar for Expressions
 class TypeSpec(Grammar):
     grammar = (
         TypeName,
@@ -679,11 +614,26 @@ class TypeLiteral(Grammar):
     grammar = ("[", TypeSpec, "]")
 
 
+class Token(Grammar):
+    grammar = OR(
+        Keyword,
+        Variable,
+        # FIXME: Remove REF
+        REF('Command'),
+        CommandParameter,
+        IntegerLiteral,
+        RealLiteral,
+        StringLiteral,
+        TypeLiteral,
+        OperatorOrPunctuator,
+    )
+
+
 class ExpandableHereStringLiteralWithSubexpr(Grammar):
     # FIXME: Remove references
     grammar = (
         ExpandableHereStringWithSubexprStart,
-        OPTIONAL(REF('StatementList')),
+        OPTIONAL(StatementList),
         REF('ExpandableHereStringWithSubexprCharacters'),
         ExpandableHereStringWithSubexprEnd
     )
@@ -709,13 +659,12 @@ class ExpandableStringWithSubexprCharacters(Grammar):
 class ExpandableStringLiteralWithSubexpr(Grammar):
     grammar = OR(
         (
-            ExpandableStringWithSubexprStart, OPTIONAL(REF('StatementList')),
+            ExpandableStringWithSubexprStart, OPTIONAL(StatementList),
             ")", ExpandableStringWithSubexprCharacters,
             ExpandableStringWithSubexprEnd
         ),
         (
-            ExpandableHereStringWithSubexprStart, OPTIONAL(
-                REF('StatementList')),
+            ExpandableHereStringWithSubexprStart, OPTIONAL(StatementList),
             ")", ExpandableHereStringWithSubexprCharacters,
             ExpandableHereStringWithSubexprEnd
         )
@@ -876,13 +825,13 @@ class ScriptBlockExpression(Grammar):
 class ArrayExpression(Grammar):
     # FIXME: Remove reference
     grammar_whitespace_mode = "optional"
-    grammar = ("@(", OPTIONAL(REF('StatementList')), ")")
+    grammar = ("@(", OPTIONAL(StatementList), ")")
 
 
 class SubExpression(Grammar):
     # FIXME: Remove reference
     grammar_whitespace_mode = "optional"
-    grammar = ("$(", OPTIONAL(REF('StatementList')), ")")
+    grammar = ("$(", OPTIONAL(StatementList), ")")
 
 
 class ParenthesizedExpression(Grammar):
@@ -892,11 +841,11 @@ class ParenthesizedExpression(Grammar):
 
 class Value(Grammar):
     grammar = OR(
-        REF("ParenthesizedExpression"),
-        REF("SubExpression"),
-        REF("ArrayExpression"),
-        REF("ScriptBlockExpression"),
-        REF("HashLiteralExpression"),
+        ParenthesizedExpression,
+        SubExpression,
+        ArrayExpression,
+        ScriptBlockExpression,
+        HashLiteralExpression,
         Literal,
         TypeLiteral,
         Variable
@@ -906,7 +855,7 @@ class Value(Grammar):
 class PrimaryExpressionPrime(Grammar):
     grammar = OR(MemberAccessPrime,
                  ElementAccessPrime,
-                 REF('InvocationExpressionPrime'),
+                 InvocationExpressionPrime,
                  PostIncrementExpressionPrime,
                  PostDecrementExpressionPrime)
 
@@ -927,7 +876,7 @@ class UnaryExpression(Grammar):
 
 
 class CastExpression(Grammar):
-    grammar = (TypeLiteral, REF('UnaryExpression'))
+    grammar = (TypeLiteral, UnaryExpression)
 
 
 class PreDecrementExpression(Grammar):
@@ -1052,17 +1001,6 @@ class AttributeList(Grammar):
     grammar = LIST_OF(Attribute, sep=OPTIONAL(WHITESPACE))
 
 
-# Syntactic grammar
-class StatementList(Grammar):
-    grammar_whitespace_mode = "optional"
-    grammar = LIST_OF(REF('Statement'), sep=OPTIONAL(WHITESPACE))
-
-
-class StatementBlock(Grammar):
-    grammar_whitespace_mode = "optional"
-    grammar = ("{", OPTIONAL(StatementList), "}")
-
-
 class ScriptParameterDefault(Grammar):
     grammar = (Spaces, "=", Spaces, Expression)
 
@@ -1082,22 +1020,6 @@ class ParameterListPrime(Grammar):
 
 class ParameterList(Grammar):
     grammar = (ScriptParameter, OPTIONAL(ParameterListPrime))
-
-
-class BlockName(Grammar):
-    grammar = OR(
-        *ignore_case_literals("dynamicparam", "begin", "process", "end")
-    )
-
-
-class NamedBlock(Grammar):
-    grammar = (BlockName, Spaces,
-               StatementBlock,
-               OPTIONAL(StatementTerminators))
-
-
-class NamedBlockList(Grammar):
-    grammar = LIST_OF(NamedBlock, sep=Spaces)
 
 
 class RedirectedFileName(Grammar):
@@ -1453,3 +1375,65 @@ class Statement(Grammar):
         SequenceStatement,
         (Pipeline, OPTIONAL(StatementTerminator))
     )
+
+
+class Hashes(Grammar):
+    grammar = REPEAT("#")
+
+
+class NotGreaterThanOrHash(Grammar):
+    grammar = ANY_EXCEPT("#>", max=1)
+
+
+class DelimitedCommentSection(Grammar):
+    grammar = OR(">", (OPTIONAL(Hashes), NotGreaterThanOrHash))
+
+
+class DelimitedCommentText(Grammar):
+    grammar = REPEAT(DelimitedCommentSection)
+
+
+class DelimitedComment(Grammar):
+    grammar = ("<#", OPTIONAL(DelimitedCommentText), Hashes, ">")
+
+
+class RequiresComment(Grammar):
+    grammar = ("#requires", WHITESPACE, CommandArgument)
+
+
+class SingleLineComment(Grammar):
+    grammar = ("#", OPTIONAL(WHITESPACE), OPTIONAL(InputCharacters))
+
+
+class Comment(Grammar):
+    grammar = OR(SingleLineComment, RequiresComment, DelimitedComment)
+
+
+class SignatureBegin(Grammar):
+    grammar = (NewLineCharacter, "# SIG # Begin signature block",
+               NewLineCharacter)
+
+
+class SignatureEnd(Grammar):
+    grammar = (NewLineCharacter, "# SIG # End signature block",
+               NewLineCharacter)
+
+
+class Signature(Grammar):
+    grammar = LIST_OF(SingleLineComment, sep=NewLineCharacter)
+
+
+class SignatureBlock(Grammar):
+    grammar = (SignatureBegin, Signature, SignatureEnd)
+
+
+class InputElement(Grammar):
+    grammar = OR(WHITESPACE, Comment, Token)
+
+
+class InputElements(Grammar):
+    grammar = LIST_OF(InputElement, sep=NewLineCharacter)
+
+
+class Input(Grammar):
+    grammar = OPTIONAL(InputElements), OPTIONAL(SignatureBlock)
