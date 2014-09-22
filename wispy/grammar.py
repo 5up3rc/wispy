@@ -97,12 +97,6 @@ class NewLines(Grammar):
     grammar = REPEAT(NewLineCharacter)
 
 
-class Spaces(Grammar):
-    grammar = (OPTIONAL(WHITESPACE),
-               OPTIONAL(NewLines),
-               OPTIONAL(WHITESPACE))
-
-
 class Dash(Grammar):
     grammar = OR("\u002D", "\u2013", "\u2014", "\u2015")
 
@@ -530,13 +524,13 @@ class BlockName(Grammar):
 
 
 class NamedBlock(Grammar):
-    grammar = (BlockName, Spaces,
+    grammar = (BlockName, OPTIONAL(WHITESPACE),
                StatementBlock,
                OPTIONAL(StatementTerminators))
 
 
 class NamedBlockList(Grammar):
-    grammar = LIST_OF(NamedBlock, sep=Spaces)
+    grammar = LIST_OF(NamedBlock, sep=OPTIONAL(WHITESPACE))
 
 
 class ScriptBlockBody(Grammar):
@@ -723,7 +717,7 @@ class ElementAccessPrime(Grammar):
 
 class MemberAccessPrime(Grammar):
     # Use this idiom to get rid of left recursion.
-    grammar = (OR(".", "::"), Spaces,
+    grammar = (OR(".", "::"), OPTIONAL(WHITESPACE),
                MemberName, OPTIONAL(REF('MemberAccessPrime')))
 
 
@@ -843,7 +837,7 @@ class ExpressionWithUnaryOperator(Grammar):
         (
             OR(",", RE_LITERAL("-bnot"), RE_LITERAL("-not"),
                RE_LITERAL("-split"), RE_LITERAL("-join"), "!", "+", Dash),
-            Spaces, UnaryExpression
+            OPTIONAL(WHITESPACE), UnaryExpression
         ),
         PreIncrementExpression,
         PreDecrementExpression,
@@ -853,7 +847,7 @@ class ExpressionWithUnaryOperator(Grammar):
 
 class ArrayLiteralExpression(Grammar):
     grammar = LIST_OF(UnaryExpression,
-                      sep=(OPTIONAL(WHITESPACE), ",", Spaces))
+                      sep=(OPTIONAL(WHITESPACE), ",", OPTIONAL(WHITESPACE)))
 
 
 class RangeExpression(Grammar):
@@ -925,7 +919,7 @@ class AttributeArgument(Grammar):
         (
             OPTIONAL(NewLines),
             SimpleName,
-            OPTIONAL(WHITESPACE), "=", OPTIONAL(Spaces),
+            OPTIONAL(WHITESPACE), "=", OPTIONAL(OPTIONAL(WHITESPACE)),
             Expression
         )
     )
@@ -933,7 +927,7 @@ class AttributeArgument(Grammar):
 
 class AttributeArguments(Grammar):
     grammar = LIST_OF(AttributeArgument,
-                      sep=(Spaces, ",", OPTIONAL(WHITESPACE)))
+                      sep=(OPTIONAL(WHITESPACE), ",", OPTIONAL(WHITESPACE)))
 
 
 class AttributeName(Grammar):
@@ -953,13 +947,13 @@ class AttributeList(Grammar):
 
 
 class ScriptParameterDefault(Grammar):
-    grammar = (Spaces, "=", Spaces, Expression)
+    grammar = (OPTIONAL(WHITESPACE), "=", OPTIONAL(WHITESPACE), Expression)
 
 
 class ScriptParameter(Grammar):
     grammar = (
         OPTIONAL(NewLines),
-        OPTIONAL(AttributeList), Spaces,
+        OPTIONAL(AttributeList), OPTIONAL(WHITESPACE),
         Variable, OPTIONAL(ScriptParameterDefault)
     )
 
@@ -1029,7 +1023,7 @@ class Command(Grammar):
 
 class PipelineTail(Grammar):
     grammar = (
-        Spaces, "|", Spaces,
+        OPTIONAL(WHITESPACE), "|", OPTIONAL(WHITESPACE),
         Command, OPTIONAL(REF('PipelineTail'))
     )
 
@@ -1050,15 +1044,21 @@ class Pipeline(Grammar):
 
 
 class InlinescriptStatement(Grammar):
-    grammar = (RE_LITERAL("inlinescript"), Spaces, StatementBlock)
+    grammar = (RE_LITERAL("inlinescript"),
+               OPTIONAL(WHITESPACE),
+               StatementBlock)
 
 
 class ParallelStatement(Grammar):
-    grammar = (RE_LITERAL("parallel"), Spaces, StatementBlock)
+    grammar = (RE_LITERAL("parallel"),
+               OPTIONAL(WHITESPACE),
+               StatementBlock)
 
 
 class SequenceStatement(Grammar):
-    grammar = (RE_LITERAL("sequence"), Spaces, StatementBlock)
+    grammar = (RE_LITERAL("sequence"),
+               OPTIONAL(WHITESPACE),
+               StatementBlock)
 
 
 class DataCommand(Grammar):
@@ -1066,40 +1066,57 @@ class DataCommand(Grammar):
 
 
 class DataCommandsList(Grammar):
-    grammar = LIST_OF(DataCommand, sep=(Spaces, ",", Spaces))
+    grammar = LIST_OF(
+        DataCommand,
+        sep=(OPTIONAL(WHITESPACE), ",", OPTIONAL(WHITESPACE))
+    )
 
 
 class DataCommandsAllowed(Grammar):
-    grammar = (RE_LITERAL("-supportedcommand"), Spaces, DataCommandsList)
+    grammar = (RE_LITERAL("-supportedcommand"),
+               OPTIONAL(WHITESPACE),
+               DataCommandsList)
 
 
 class DataStatement(Grammar):
     grammar = (
-        RE_LITERAL("data"), Spaces, OPTIONAL(DataCommandsAllowed),
-        Spaces, StatementBlock
+        RE_LITERAL("data"),
+        OPTIONAL(WHITESPACE),
+        OPTIONAL(DataCommandsAllowed),
+        OPTIONAL(WHITESPACE), StatementBlock
     )
 
 
 class ElseIfClause(Grammar):
     grammar = (
-        Spaces, RE_LITERAL("elseif"), Spaces,
-        "(", Spaces, Pipeline, Spaces, ")", Spaces,
+        OPTIONAL(WHITESPACE),
+        RE_LITERAL("elseif"),
+        OPTIONAL(WHITESPACE),
+        "(", OPTIONAL(WHITESPACE), Pipeline, OPTIONAL(WHITESPACE), ")",
+        OPTIONAL(WHITESPACE),
         StatementBlock
     )
 
 
 class ElseIfClauses(Grammar):
-    grammar = LIST_OF(ElseIfClause, sep=Spaces)
+    grammar = LIST_OF(ElseIfClause, sep=OPTIONAL(WHITESPACE))
 
 
 class ElseClause(Grammar):
-    grammar = (Spaces, RE_LITERAL("else"), Spaces, StatementBlock)
+    grammar = (
+        OPTIONAL(WHITESPACE),
+        RE_LITERAL("else"),
+        OPTIONAL(WHITESPACE),
+        StatementBlock
+    )
 
 
 class IfStatement(Grammar):
     grammar = (
         RE_LITERAL("if"),
-        Spaces, "(", Spaces, Pipeline, Spaces, ")", Spaces,
+        OPTIONAL(WHITESPACE),
+        "(", OPTIONAL(WHITESPACE), Pipeline, OPTIONAL(WHITESPACE), ")",
+        OPTIONAL(WHITESPACE),
         StatementBlock, OPTIONAL(ElseIfClauses),
         OPTIONAL(ElseClause)
     )
@@ -1113,7 +1130,7 @@ class FinallyClause(Grammar):
     grammar = (
         OPTIONAL(NewLines),
         RE_LITERAL("finally"),
-        Spaces, StatementBlock
+        OPTIONAL(WHITESPACE), StatementBlock
     )
 
 
@@ -1151,8 +1168,8 @@ class TryStatement(Grammar):
 
 class TrapStatement(Grammar):
     grammar = (
-        RE_LITERAL("trap"), Spaces, OPTIONAL(TypeLiteral),
-        Spaces, StatementBlock
+        RE_LITERAL("trap"), OPTIONAL(WHITESPACE), OPTIONAL(TypeLiteral),
+        OPTIONAL(WHITESPACE), StatementBlock
     )
 
 
@@ -1170,7 +1187,10 @@ class FlowControlStatement(Grammar):
 
 
 class FunctionParameterDeclaration(Grammar):
-    grammar = ("(", Spaces, ParameterList, Spaces, ")")
+    grammar = (
+        "(", OPTIONAL(WHITESPACE),
+        ParameterList, OPTIONAL(WHITESPACE), ")"
+    )
 
 
 class FunctionName(Grammar):
@@ -1184,9 +1204,9 @@ class FunctionStatement(Grammar):
             RE_LITERAL("filter"),
             RE_LITERAL("workflow")
         ),
-        Spaces, FunctionName, Spaces,
-        OPTIONAL(FunctionParameterDeclaration), Spaces,
-        "{", Spaces, ScriptBlock, Spaces, "}"
+        OPTIONAL(WHITESPACE), FunctionName, OPTIONAL(WHITESPACE),
+        OPTIONAL(FunctionParameterDeclaration), OPTIONAL(WHITESPACE),
+        "{", OPTIONAL(WHITESPACE), ScriptBlock, OPTIONAL(WHITESPACE), "}"
     )
 
 
@@ -1197,16 +1217,18 @@ class WhileCondition(Grammar):
 class DoStatement(Grammar):
     grammar = (
         RE_LITERAL("do"),
-        Spaces, StatementBlock, Spaces,
+        OPTIONAL(WHITESPACE), StatementBlock, OPTIONAL(WHITESPACE),
         OR(RE_LITERAL("while"), RE_LITERAL("until")),
-        Spaces, "(", WhileCondition, Spaces, ")"
+        OPTIONAL(WHITESPACE), "(", WhileCondition, OPTIONAL(WHITESPACE), ")"
     )
 
 
 class WhileStatement(Grammar):
     grammar = (
-        RE_LITERAL("while"), Spaces, "(", Spaces, WhileCondition,
-        Spaces, ")", Spaces, StatementBlock
+        RE_LITERAL("while"), OPTIONAL(WHITESPACE),
+        "(", OPTIONAL(WHITESPACE), WhileCondition,
+        OPTIONAL(WHITESPACE), ")", OPTIONAL(WHITESPACE),
+        StatementBlock
     )
 
 
@@ -1225,22 +1247,28 @@ class ForIterator(Grammar):
 class ForStatement(Grammar):
     grammar = OR(
         (
-            RE_LITERAL("for"), Spaces, "(",
-            Spaces, OPTIONAL(ForInitializer), StatementTerminator,
-            Spaces, OPTIONAL(ForCondition), StatementTerminator,
-            Spaces, OPTIONAL(ForIterator), Spaces, ")",
-            Spaces, StatementBlock
+            RE_LITERAL("for"), OPTIONAL(WHITESPACE), "(",
+            OPTIONAL(WHITESPACE),
+            OPTIONAL(ForInitializer), StatementTerminator,
+            OPTIONAL(WHITESPACE),
+            OPTIONAL(ForCondition), StatementTerminator,
+            OPTIONAL(WHITESPACE),
+            OPTIONAL(ForIterator), OPTIONAL(WHITESPACE), ")",
+            OPTIONAL(WHITESPACE), StatementBlock
         ),
         (
-            RE_LITERAL("for"), Spaces, "(",
-            Spaces, OPTIONAL(ForInitializer), StatementTerminator,
-            Spaces, OPTIONAL(ForCondition), Spaces, ")",
-            Spaces, StatementBlock
+            RE_LITERAL("for"), OPTIONAL(WHITESPACE), "(",
+            OPTIONAL(WHITESPACE),
+            OPTIONAL(ForInitializer), StatementTerminator,
+            OPTIONAL(WHITESPACE),
+            OPTIONAL(ForCondition), OPTIONAL(WHITESPACE), ")",
+            OPTIONAL(WHITESPACE), StatementBlock
         ),
         (
-            RE_LITERAL("for"), Spaces, "(", Spaces,
-            OPTIONAL(ForInitializer), Spaces, ")",
-            Spaces, StatementBlock
+            RE_LITERAL("for"), OPTIONAL(WHITESPACE),
+            "(", OPTIONAL(WHITESPACE),
+            OPTIONAL(ForInitializer), OPTIONAL(WHITESPACE), ")",
+            OPTIONAL(WHITESPACE), StatementBlock
         ),
     )
 
@@ -1251,9 +1279,14 @@ class ForeachParameter(Grammar):
 
 class ForeachStatement(Grammar):
     grammar = (
-        RE_LITERAL("foreach"), Spaces, OPTIONAL(ForeachParameter), Spaces,
-        "(", Spaces, Variable, Spaces, RE_LITERAL("in"), Spaces, Pipeline,
-        Spaces, ")", Spaces, StatementBlock
+        RE_LITERAL("foreach"),
+        OPTIONAL(WHITESPACE),
+        OPTIONAL(ForeachParameter),
+        OPTIONAL(WHITESPACE),
+        "(", OPTIONAL(WHITESPACE), Variable, OPTIONAL(WHITESPACE),
+        RE_LITERAL("in"), OPTIONAL(WHITESPACE), Pipeline,
+        OPTIONAL(WHITESPACE), ")", OPTIONAL(WHITESPACE),
+        StatementBlock
     )
 
 
@@ -1285,7 +1318,7 @@ class SwitchFilename(Grammar):
 class SwitchCondition(Grammar):
     grammar = OR(
         ("(", OPTIONAL(NewLines), Pipeline, OPTIONAL(NewLines), ")"),
-        ("-file", Spaces, SwitchFilename)
+        ("-file", OPTIONAL(WHITESPACE), SwitchFilename)
     )
 
 
@@ -1314,7 +1347,7 @@ class SwitchStatement(Grammar):
 
 class LabeledStatement(Grammar):
     grammar = (
-        OPTIONAL((":", SimpleName, Spaces)),
+        OPTIONAL((":", SimpleName, OPTIONAL(WHITESPACE))),
         OR(
             SwitchStatement,
             ForeachStatement,

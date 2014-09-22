@@ -1481,10 +1481,6 @@ class GrammarTest(unittest.TestCase):
         ]
         self._test_expected(ElseIfClauses, parts)
 
-    def test_spaces(self):
-        parts = ["", " ", "\n", "\n \n", "\r   \n"]
-        self._test_expected(Spaces, parts)
-
     def test_for_statement(self):
         parts = [
             'for ($i = 1; $i -le 10; ++$i) { "$i" }',
