@@ -199,9 +199,6 @@ class GrammarTest(unittest.TestCase):
         ]
         self._test_expected(ExpandableHereStringCharacters, literals)
 
-        with self.assertRaises(ParseError):
-            self._parse(ExpandableHereStringCharacters, "$$\n\n\n")
-
     def test_expandable_here_string_part(self):
         literals = [
             "x",
@@ -209,8 +206,6 @@ class GrammarTest(unittest.TestCase):
             "$x",
             "$\nx",
             "$\n\"x",
-            "\nx",
-            "\n\"x"
         ]
         self._test_expected(ExpandableHereStringPart, literals)
 
@@ -291,7 +286,7 @@ class GrammarTest(unittest.TestCase):
 
     def test_expandable_here_string_literal_with_subexpr(self):
         literals = [
-            "@\"\n$($({} {})$\nx\n\"@",
+            "@\"\n$($y)$\nx\n\"@",
             "@\"\n if($grade -ge 90){\"Grade A\"} $($({} {})$\nx\n\"@"
         ]
         self._test_expected(ExpandableHereStringLiteralWithSubexpr, literals)
@@ -521,14 +516,8 @@ class GrammarTest(unittest.TestCase):
     def test_newline(self):
         self._test_expected(NewLineCharacter, ["\r", "\n", "\r\n"])
 
-    def test_input_character(self):
-        self._test_expected(InputCharacter, string.ascii_letters)
-
-        with self.assertRaises(ParseError):
-            self._parse(InputCharacter, "\n")
-
     def test_input_characters(self):
-        elements = ["hoptrop", "troptzop", "t"]
+        elements = chain(["hoptrop", "troptzop", "t"], string.ascii_letters)
         self._test_expected(InputCharacters, elements)
 
         for element in ("\r", "\n", "\r\n"):
@@ -564,11 +553,13 @@ class GrammarTest(unittest.TestCase):
             self._parse(LongTypeSuffix, "d")
 
     def test_decimal_type_suffix(self):
-        suffixes = ["d", "D"]
+        suffixes = ["d", "D", "l", "L"]
         self._test_expected(DecimalTypeSuffix, suffixes)
 
         with self.assertRaises(ParseError):
-            self._parse(DecimalTypeSuffix, "l")
+            for char in string.ascii_letters:
+                if char not in suffixes:
+                    self._parse(DecimalTypeSuffix, char)
 
     def test_numeric_type_suffix(self):
         suffixes = ["l", "L", "d", "D"]
@@ -642,7 +633,8 @@ class GrammarTest(unittest.TestCase):
         literals = [
             "1.4", "1.4e44", "1.4e44kb",
             ".4", ".4e44", ".4e4d", ".4e4dkb", ".4Dkb",
-            "4e4", "4e4D", "4e4d", "4e4dkb"
+            "4e4", "4e4D", "4e4d", "4e4dkb",
+            "1.4L", "1.4e4L",
         ]
         self._test_expected(RealLiteral, literals)
 
@@ -966,9 +958,6 @@ class GrammarTest(unittest.TestCase):
             "2..100..\n3"
         ]
         self._test_expected(RangeArgumentExpression, literals)
-
-        with self.assertRaises(ParseError):
-            self._parse(RangeArgumentExpression, "1..10..\n1\n")
 
     def test_multiplicative_argument_expression(self):
         literals = [

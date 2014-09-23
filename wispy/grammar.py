@@ -385,7 +385,7 @@ class LongTypeSuffix(Grammar):
 
 
 class DecimalTypeSuffix(Grammar):
-    grammar = OR("d", "D")
+    grammar = OR("d", "D", "l", "L")
 
 
 class NumericTypeSuffix(Grammar):
