@@ -412,7 +412,7 @@ class HexadecimalDigits(Grammar):
 class RealLiteral(Grammar):
     grammar = OR(
         (DecimalDigits, ".", DecimalDigits, OPTIONAL(ExponentPart),
-         OPTIONAL(NumericMultiplier)),
+         OPTIONAL(DecimalTypeSuffix), OPTIONAL(NumericMultiplier)),
 
         (".", DecimalDigits, OPTIONAL(ExponentPart),
          OPTIONAL(DecimalTypeSuffix), OPTIONAL(NumericMultiplier)),
