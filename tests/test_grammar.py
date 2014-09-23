@@ -1963,6 +1963,7 @@ class GrammarTest(unittest.TestCase):
                    elseif ($grade -ge 70) { "Grade C" }
                    elseif ($grade -ge 60) { "Grade D" }
                    else { "Grade F" }'''),
+            '{ $value * 10 }',
         ]
         self._test_expected(StatementList, stmts)
 

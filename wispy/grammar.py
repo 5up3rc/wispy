@@ -1037,9 +1037,9 @@ class AssignmentExpression(Grammar):
 
 class Pipeline(Grammar):
     grammar = OR(
-        AssignmentExpression,
         (Expression, OPTIONAL(Redirection), OPTIONAL(PipelineTail)),
-        (Command, OPTIONAL(PipelineTail))
+        (Command, OPTIONAL(PipelineTail)),
+        AssignmentExpression,
     )
 
 
