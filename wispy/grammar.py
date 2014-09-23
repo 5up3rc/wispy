@@ -438,7 +438,7 @@ class IntegerLiteral(Grammar):
 
 
 class Literal(Grammar):
-    grammar = OR(IntegerLiteral, RealLiteral, StringLiteral)
+    grammar = OR(RealLiteral, IntegerLiteral, StringLiteral)
 # End of grammar for Literals
 
 
