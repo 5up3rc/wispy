@@ -50,3 +50,5 @@ function My-Function
 -> Pipeline instead FunctionStatement due the fact that there is a new line after the last brace
 
 * 1.4L is seen as a member access, not as a number.
+
+* We could use greedy=False for LIST_OF and REPEAT for better performance.
