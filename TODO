@@ -52,3 +52,6 @@ function My-Function
 * 1.4L is seen as a member access, not as a number.
 
 * We could use greedy=False for LIST_OF and REPEAT for better performance.
+
+* { $value * 10 } is wrongly detected by StatementList as a Pipeline,
+  composed by two statements '$value * 1' and '0'.
