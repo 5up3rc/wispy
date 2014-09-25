@@ -43,9 +43,7 @@ def ignore_case_literals(*args):
     return list(map(RE_LITERAL, args))
 
 
-# Grammars without dependencies
 class EscapedCharacter(Grammar):
-
     """An escaped character is a way to assign a special interpretation
     to a character by giving it a prefix Backtick character."""
 
@@ -105,7 +103,6 @@ class DashDash(Grammar):
     grammar = (Dash, Dash)
 
 
-# Grammar for Operators and punctuators
 class FormatOperator(Grammar):
     grammar = (Dash, "f")
 
@@ -572,7 +569,6 @@ class VerbatimCommandArgumentChars(Grammar):
 
 
 class Keyword(Grammar):
-
     grammar = OR(*ignore_case_literals(
         "workflow", "inlinescript", "parallel", "begin", "break", "catch",
         "class", "continue", "data", "define", "do", "dynamicparam", "elseif",
@@ -623,7 +619,6 @@ class ExpandableStringLiteralWithSubexpr(Grammar):
 
 
 class StringLiteralWithSubexpression(Grammar):
-    # grammar is added.
     grammar = OR(
         ExpandableStringLiteralWithSubexpr,
         ExpandableHereStringLiteralWithSubexpr
