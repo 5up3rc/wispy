@@ -1,11 +1,6 @@
 * The Command grammar can't parse the string "New-Object 'int[,]' 3,2"
 * Pathological case for Command grammar for the string "New-Object -ArgumentList 3,2 -TypeName 'int[,]'"
 
-* Pathological case for SwitchCondition
-
-($PSBoundParameters.GetEnumerator().
- Where({$_.Value -eq $true}).Key)
-
 * Pathological case for the following:
 
 for ($i = 1; $i -le 10; ++$i) { "$i $($i*$i)" }

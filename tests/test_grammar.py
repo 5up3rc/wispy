@@ -1571,9 +1571,8 @@ class GrammarTest(unittest.TestCase):
             '-file C:\\obito',
             '-file $ps1',
 
-            # TODO: other pathological case
-            # '($PSBoundParameters.GetEnumerator().\n'
-            # 'Where({$_.Value -eq $true}).Key)',
+            '($PSBoundParameters.GetEnumerator().\n'
+            'Where({$_.Value -eq $true}).Key)',
         ]
         self._test_expected(SwitchCondition, parts)
 

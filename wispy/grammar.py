@@ -699,7 +699,7 @@ class ArgumentList(Grammar):
 
 
 class InvocationExpressionPrime(Grammar):
-    grammar = (OR(".", "::"), MemberName,
+    grammar = (OR(".", "::"), OPTIONAL(WHITESPACE), MemberName,
                ArgumentList, OPTIONAL(REF("InvocationExpressionPrime")))
 
 
@@ -793,18 +793,18 @@ class Value(Grammar):
 
 
 class PrimaryExpressionPrime(Grammar):
-    grammar = OR(MemberAccessPrime,
+    grammar = OR(InvocationExpressionPrime,
+                 MemberAccessPrime,
                  ElementAccessPrime,
-                 InvocationExpressionPrime,
                  PostIncrementExpressionPrime,
                  PostDecrementExpressionPrime)
 
 
 class PrimaryExpression(Grammar):
+    pe = (OPTIONAL(WHITESPACE), REPEAT(PrimaryExpressionPrime))
     grammar = (
         Value,
-        OPTIONAL(OR(REPEAT(PrimaryExpressionPrime),
-                    REF('PrimaryExpression'))),
+        OPTIONAL(OR(REPEAT(pe), REF('PrimaryExpression')))
     )
 
 
