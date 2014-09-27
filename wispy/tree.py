@@ -123,7 +123,7 @@ class BinOp(Expression):
 
 
 class LabeledStatement(Statement):
-    _fields = ('name', 'stmt')
+    _fields = ('label', 'stmt')
 
 
 class TrapStatement(Statement):
