@@ -190,7 +190,7 @@ class Builder:
         newnode.body = self.iter_generic_visit(node[7], newnode)
         return newnode
 
-    def visit_script_block(self, node):
+    def visit_script_block(self, node, _):
         """
         Visit a ScriptBlock grammar node and return the AST
         representing it.
